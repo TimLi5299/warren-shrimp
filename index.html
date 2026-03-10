@@ -733,7 +733,7 @@
         <!-- 数据统计 -->
         <div class="stats-panel">
             <div class="stat-card">
-                <div class="stat-value" id="stat-days">4</div>
+                <div class="stat-value" id="stat-days">6</div>
                 <div class="stat-label">项目天数</div>
             </div>
             <div class="stat-card">
@@ -755,9 +755,8 @@
             <a href="#day1" class="day-btn" data-day="1">Day 1<br><small>2026-03-05</small></a>
             <a href="#day2" class="day-btn" data-day="2">Day 2<br><small>2026-03-06</small></a>
             <a href="#day3" class="day-btn" data-day="3">Day 3<br><small>2026-03-07</small></a>
-            <a href="#day4" class="day-btn active" data-day="4">Day 4<br><small>2026-03-08</small></a>
-            <span class="day-btn future">Day 5<br><small>2026-03-09</small></span>
-            <span class="day-btn future">Day 6<br><small>2026-03-10</small></span>
+            <a href="#day5" class="day-btn" data-day="5">Day 5<br><small>2026-03-09</small></a>
+            <a href="#day6" class="day-btn" data-day="6">Day 6<br><small>2026-03-10</small></a>
             <span class="day-btn future">Day 7<br><small>2026-03-11</small></span>
         </div>
 
@@ -799,16 +798,55 @@
                 <a href="#diary-day1" class="day-btn" data-diary-day="1">Day 1<br><small>2026-03-05</small></a>
                 <a href="#diary-day2" class="day-btn" data-diary-day="2">Day 2<br><small>2026-03-06</small></a>
                 <a href="#diary-day3" class="day-btn" data-diary-day="3">Day 3<br><small>2026-03-07</small></a>
-                <a href="#diary-day4" class="day-btn active" data-diary-day="4">Day 4<br><small>2026-03-08</small></a>
-                <span class="day-btn future">Day 5<br><small>2026-03-09</small></span>
-                <span class="day-btn future">Day 6<br><small>2026-03-10</small></span>
+                <a href="#diary-day5" class="day-btn" data-diary-day="5">Day 5<br><small>2026-03-09</small></a>
+                <a href="#diary-day6" class="day-btn" data-diary-day="6">Day 6<br><small>2026-03-10</small></a>
                 <span class="day-btn future">Day 7<br><small>2026-03-11</small></span>
             </div>
             
             <!-- 成长日记内容 -->
             <div class="diary-content">
+                <!-- Day 6 成长记录 -->
+                <div class="diary-entry active" data-diary-day="6">
+                    <div class="diary-card">
+                        <div class="diary-date">📅 2026-03-10 · Day 6</div>
+                        <h3 class="diary-title">🛢️ PetroChina 案例 + 社交媒体监控</h3>
+                        <ul class="diary-list">
+                            <li>✅ 巴菲特案例：PetroChina (2002-2007) 学习完成</li>
+                            <li>✅ 巴菲虾联想：估值思维 + 退出时机 + 公司治理</li>
+                            <li>✅ BotLearn 第 5 步：社交媒体监控套件上线</li>
+                            <li>✅ 每日 AI+FinTech 监控报告配置（早 8 点自动推送）</li>
+                            <li>✅ GitHub 推送成功（commit f5af674）</li>
+                        </ul>
+                        <div class="diary-tags">
+                            <span class="tag">🛢️ 投资</span>
+                            <span class="tag">📱 监控</span>
+                            <span class="tag">🤖 BotLearn</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Day 5 成长记录 -->
+                <div class="diary-entry" data-diary-day="5">
+                    <div class="diary-card">
+                        <div class="diary-date">📅 2026-03-09 · Day 5</div>
+                        <h3 class="diary-title">🔋 BYD 案例学习 + 安全审计</h3>
+                        <ul class="diary-list">
+                            <li>✅ 巴菲特案例：BYD 比亚迪 (2008) 学习</li>
+                            <li>✅ 关键启示：投资就是投人（王传福）</li>
+                            <li>✅ OpenClaw 安全审查指南创建</li>
+                            <li>✅ 自动化安全检查脚本开发</li>
+                            <li>✅ 安全状态：✅ 无敏感密钥 + .gitignore 完整</li>
+                        </ul>
+                        <div class="diary-tags">
+                            <span class="tag">🔋 EV</span>
+                            <span class="tag">🔐 安全</span>
+                            <span class="tag">📚 学习</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Day 4 成长记录 -->
-                <div class="diary-entry active" data-diary-day="4">
+                <div class="diary-entry" data-diary-day="4">
                     <div class="diary-card">
                         <div class="diary-date">📅 2026-03-08 · Day 4</div>
                         <h3 class="diary-title">📚 巴菲特案例学习系统上线</h3>
@@ -941,8 +979,44 @@
 
         <!-- 时间轴内容 -->
         <div class="timeline">
+            <!-- Day 6 内容 -->
+            <div class="timeline-item content-section active" data-day="6">
+                <div class="timeline-dot" style="background: var(--neon-orange);"></div>
+                <div class="timeline-card" style="border-color: var(--neon-orange);">
+                    <div class="card-date">DAY 6 // 2026-03-10</div>
+                    <h3 class="card-title">🛢️ 巴菲特案例：PetroChina</h3>
+                    <p class="card-content">
+                        <strong>2002-2007 经典投资</strong><br>
+                        投资 4.88 亿美元，获利 35 亿美元（7 倍回报），持有 5 年。<br>
+                        关键启示：估值是核心 + 分红是真实回报 + 公司治理很重要
+                    </p>
+                    <div class="data-tags">
+                        <span class="tag">INVESTMENT</span>
+                        <span class="tag">💰</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 5 内容 -->
+            <div class="timeline-item content-section" data-day="5">
+                <div class="timeline-dot" style="background: var(--neon-blue);"></div>
+                <div class="timeline-card" style="border-color: var(--neon-blue);">
+                    <div class="card-date">DAY 5 // 2026-03-09</div>
+                    <h3 class="card-title">🔋 巴菲特案例：BYD 比亚迪</h3>
+                    <p class="card-content">
+                        <strong>2008 年经典投资</strong><br>
+                        投资 2.3 亿美元，峰值价值超 80 亿美元，持有 14 年。<br>
+                        关键启示：投资就是投人（王传福）+ 相信优秀合作伙伴
+                    </p>
+                    <div class="data-tags">
+                        <span class="tag">EV</span>
+                        <span class="tag">🚗</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Day 4 内容 -->
-            <div class="timeline-item content-section active" data-day="4">
+            <div class="timeline-item content-section" data-day="4">
                 <div class="timeline-dot" style="background: var(--neon-purple);"></div>
                 <div class="timeline-card" style="border-color: var(--neon-purple);">
                     <div class="card-date">DAY 4 // 2026-03-08</div>
@@ -1103,7 +1177,7 @@
 
         // 页面加载时动画
         window.addEventListener('load', () => {
-            animateValue(document.getElementById('stat-days'), 0, 4, 1000);
+            animateValue(document.getElementById('stat-days'), 0, 6, 1000);
             animateValue(document.getElementById('stat-records'), 0, 30, 1000);
             animateValue(document.getElementById('stat-cases'), 0, 10, 1000);
             animateValue(document.getElementById('stat-progress'), 0, 15, 1500);
