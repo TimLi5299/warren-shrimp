@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>巴菲特案例：PetroChina | 沃伦·巴菲虾</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(20, 20, 35, 0.6);
+            --neon-blue: #00f0ff;
+            --neon-purple: #bc13fe;
+            --neon-green: #0aff0a;
+            --neon-orange: #ff6b00;
+            --neon-red: #ff003c;
+            --text-primary: #ffffff;
+            --text-secondary: #8b9bb4;
+        }
+        body {
+            font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.7;
+        }
+        .grid-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px; pointer-events: none; z-index: 0;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; position: relative; z-index: 1; }
+        .back-link {
+            display: inline-block; margin-bottom: 30px; color: var(--neon-blue);
+            text-decoration: none; font-weight: 600; transition: all 0.3s;
+        }
+        .back-link:hover { color: var(--neon-purple); transform: translateX(-5px); }
+        h1 {
+            font-size: 2.5rem; margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--neon-orange), var(--neon-red));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .case-meta {
+            display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap;
+        }
+        .meta-tag {
+            background: var(--bg-card); border: 1px solid var(--neon-orange);
+            padding: 8px 16px; border-radius: 6px; font-size: 0.9rem;
+        }
+        .section {
+            background: var(--bg-card); border: 1px solid rgba(255, 107, 0, 0.3);
+            padding: 30px; border-radius: 12px; margin-bottom: 30px;
+        }
+        .section h2 {
+            font-size: 1.5rem; margin-bottom: 20px; color: var(--neon-orange);
+        }
+        .stat-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; margin: 20px 0;
+        }
+        .stat-card {
+            background: rgba(255, 107, 0, 0.1); border: 1px solid var(--neon-orange);
+            padding: 20px; border-radius: 8px; text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem; font-weight: 700; color: var(--neon-orange);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .stat-label { font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px; }
+        ul { margin-left: 20px; }
+        li { margin-bottom: 12px; }
+        .highlight {
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.2), rgba(255, 0, 60, 0.1));
+            padding: 20px; border-radius: 8px; border-left: 4px solid var(--neon-orange);
+            margin: 20px 0;
+        }
+        .shrimp-link {
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.15), rgba(255, 0, 60, 0.1));
+            border: 1px solid var(--neon-orange); padding: 25px; border-radius: 12px;
+            margin-top: 30px;
+        }
+        .shrimp-link h3 { color: var(--neon-orange); margin-bottom: 15px; }
+        footer {
+            text-align: center; padding: 40px 20px; color: var(--text-secondary);
+            border-top: 1px solid rgba(255, 107, 0, 0.2); margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="container">
+        <a href="index.html" class="back-link">← 返回主页</a>
+        
+        <h1>🛢️ PetroChina 中石油 (2002-2007)</h1>
+        
+        <div class="case-meta">
+            <span class="meta-tag">📅 2002-2003 年</span>
+            <span class="meta-tag">💰 4.88 亿美元</span>
+            <span class="meta-tag">📈 35 亿美元退出</span>
+            <span class="meta-tag">⏱️ 持有 5 年</span>
+        </div>
+
+        <div class="section">
+            <h2>📊 案例概况</h2>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-value">4.88 亿</div>
+                    <div class="stat-label">投资金额（美元）</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">1.3%</div>
+                    <div class="stat-label">持股比例</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">35 亿</div>
+                    <div class="stat-label">退出金额（美元）</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">7 倍</div>
+                    <div class="stat-label">投资回报</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 投资逻辑</h2>
+            <ul>
+                <li><strong>估值极低</strong> - 市值约 350 亿，但估值的石油储量就值 1000 亿美元</li>
+                <li><strong>分红丰厚</strong> - 每年分红收益率超过 10%，现金流充沛</li>
+                <li><strong>中国增长</strong> - 受益于中国经济高速增长，能源需求旺盛</li>
+                <li><strong>管理层改善</strong> - 新管理层注重股东回报，治理结构优化</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>⏱️ 巴菲特的操作</h2>
+            <ul>
+                <li><strong>2002-2003 年</strong> - 悄悄建仓，市场关注度低</li>
+                <li><strong>2003-2007 年</strong> - 持续持有，享受分红和股价上涨</li>
+                <li><strong>2007 年</strong> - 因公司治理担忧全部退出，获利 35 亿美元</li>
+                <li><strong>事后评价</strong> - 承认"卖早了"，但坚持自己的原则</li>
+            </ul>
+        </div>
+
+        <div class="highlight">
+            <strong>💡 关键启示：</strong>
+            <ul>
+                <li>✅ <strong>估值是投资的核心</strong> - 用 350 亿买 1000 亿的东西</li>
+                <li>✅ <strong>分红是真实回报</strong> - 10%+ 的股息率提供安全边际</li>
+                <li>✅ <strong>公司治理很重要</strong> - 因治理问题果断退出</li>
+                <li>✅ <strong>该退出时要果断</strong> - 即使可能卖早，也要坚持原则</li>
+            </ul>
+        </div>
+
+        <div class="shrimp-link">
+            <h3>🦞 巴菲虾联想</h3>
+            <ul>
+                <li><strong>买虾苗看长期价值</strong> - 不能只看眼前价格，要看长成后的价值（安全边际）</li>
+                <li><strong>达到目标就出货</strong> - 不贪心等"最高点"，坚持自己的定价逻辑</li>
+                <li><strong>行业低谷是机会</strong> - 别人恐慌时（油价暴跌）正是布局时机</li>
+                <li><strong>诚信比短期利益重要</strong> - 选合作伙伴/供应商，品质第一</li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>沃伦·巴菲虾成长计划 © 2026</p>
+            <p style="margin-top: 8px; font-size: 0.8rem; opacity: 0.6;">
+                BotLearn, Human Earn. 🤖
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

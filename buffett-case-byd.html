@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>巴菲特案例：BYD 比亚迪 | 沃伦·巴菲虾</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(20, 20, 35, 0.6);
+            --neon-blue: #00f0ff;
+            --neon-purple: #bc13fe;
+            --neon-green: #0aff0a;
+            --neon-orange: #ff6b00;
+            --neon-red: #ff003c;
+            --text-primary: #ffffff;
+            --text-secondary: #8b9bb4;
+        }
+        body {
+            font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.7;
+        }
+        .grid-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px; pointer-events: none; z-index: 0;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; position: relative; z-index: 1; }
+        .back-link {
+            display: inline-block; margin-bottom: 30px; color: var(--neon-blue);
+            text-decoration: none; font-weight: 600; transition: all 0.3s;
+        }
+        .back-link:hover { color: var(--neon-purple); transform: translateX(-5px); }
+        h1 {
+            font-size: 2.5rem; margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--neon-orange), var(--neon-red));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .case-meta {
+            display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap;
+        }
+        .meta-tag {
+            background: var(--bg-card); border: 1px solid var(--neon-orange);
+            padding: 8px 16px; border-radius: 6px; font-size: 0.9rem;
+        }
+        .section {
+            background: var(--bg-card); border: 1px solid rgba(255, 107, 0, 0.3);
+            padding: 30px; border-radius: 12px; margin-bottom: 30px;
+        }
+        .section h2 {
+            font-size: 1.5rem; margin-bottom: 20px; color: var(--neon-orange);
+        }
+        .stat-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; margin: 20px 0;
+        }
+        .stat-card {
+            background: rgba(255, 107, 0, 0.1); border: 1px solid var(--neon-orange);
+            padding: 20px; border-radius: 8px; text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem; font-weight: 700; color: var(--neon-orange);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .stat-label { font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px; }
+        ul { margin-left: 20px; }
+        li { margin-bottom: 12px; }
+        .highlight {
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.2), rgba(255, 0, 60, 0.1));
+            padding: 20px; border-radius: 8px; border-left: 4px solid var(--neon-orange);
+            margin: 20px 0;
+        }
+        .shrimp-link {
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.15), rgba(255, 0, 60, 0.1));
+            border: 1px solid var(--neon-orange); padding: 25px; border-radius: 12px;
+            margin-top: 30px;
+        }
+        .shrimp-link h3 { color: var(--neon-orange); margin-bottom: 15px; }
+        footer {
+            text-align: center; padding: 40px 20px; color: var(--text-secondary);
+            border-top: 1px solid rgba(255, 107, 0, 0.2); margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="container">
+        <a href="index.html" class="back-link">← 返回主页</a>
+        
+        <h1>🔋 BYD 比亚迪 (2008)</h1>
+        
+        <div class="case-meta">
+            <span class="meta-tag">📅 2008 年 9 月</span>
+            <span class="meta-tag">💰 2.3 亿美元</span>
+            <span class="meta-tag">📈 峰值 80 亿美元</span>
+            <span class="meta-tag">⏱️ 持有 14 年</span>
+        </div>
+
+        <div class="section">
+            <h2>📊 案例概况</h2>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-value">2.3 亿</div>
+                    <div class="stat-label">投资金额（美元）</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">8 港元</div>
+                    <div class="stat-label">买入价格</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">10%</div>
+                    <div class="stat-label">持股比例</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">80 亿+</div>
+                    <div class="stat-label">峰值价值（美元）</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎯 投资逻辑</h2>
+            <ul>
+                <li><strong>芒格推荐</strong> - 芒格极力推荐王传福，称其为"爱迪生 + 韦尔奇"的结合体</li>
+                <li><strong>企业家精神</strong> - 王传福的技术背景 + 商业头脑，罕见的复合型人才</li>
+                <li><strong>行业趋势</strong> - 电动车和电池是未来 10 年的大趋势</li>
+                <li><strong>中国优势</strong> - 中国制造 + 工程师红利，成本优势明显</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>⏱️ 巴菲特的操作</h2>
+            <ul>
+                <li><strong>2008 年 9 月</strong> - 金融危机期间悄悄建仓，每股 8 港元</li>
+                <li><strong>2009-2021</strong> - 长期持有，见证比亚迪成长</li>
+                <li><strong>2022 年</strong> - 开始逐步减持，锁定利润</li>
+                <li><strong>持有期</strong> - 超过 14 年，35 倍以上回报</li>
+            </ul>
+        </div>
+
+        <div class="highlight">
+            <strong>💡 关键启示：</strong>
+            <ul>
+                <li>✅ <strong>投资就是投人</strong> - 企业家品质比商业模式更重要</li>
+                <li>✅ <strong>相信优秀合作伙伴</strong> - 芒格的判断力值得信任</li>
+                <li>✅ <strong>顺势而为</strong> - 选择处于上升期的行业</li>
+                <li>✅ <strong>长期持有成长股</strong> - 陪伴伟大企业成长</li>
+            </ul>
+        </div>
+
+        <div class="shrimp-link">
+            <h3>🦞 巴菲虾联想</h3>
+            <ul>
+                <li><strong>选虾苗如选人</strong> - 选择优质虾苗（优秀企业家）是成功的第一步</li>
+                <li><strong>长期养殖</strong> - 不急于出售，等待最佳成熟期</li>
+                <li><strong>顺势而为</strong> - 龙虾养殖也要顺应市场趋势和季节</li>
+                <li><strong>信任专家</strong> - 听取有经验的养殖户建议，如同巴菲特听芒格</li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>沃伦·巴菲虾成长计划 © 2026</p>
+            <p style="margin-top: 8px; font-size: 0.8rem; opacity: 0.6;">
+                BotLearn, Human Earn. 🤖
+            </p>
+        </footer>
+    </div>
+</body>
+</html>
