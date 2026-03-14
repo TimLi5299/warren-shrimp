@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>巴菲特案例：喜诗糖果 | 沃伦·巴菲虾</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0F172A;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --primary-accent: #3B82F6;
+            --primary-accent-hover: #60A5FA;
+            --secondary-accent: #8B5CF6;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-light: rgba(255, 255, 255, 0.05);
+            --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.7;
+        }
+        .ambient-glow {
+            position: fixed; top: -20%; left: -10%;
+            width: 70vw; height: 70vh;
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 60%);
+            z-index: 0; pointer-events: none;
+        }
+        .nav {
+            position: fixed; top: 0; left: 0; width: 100%;
+            padding: 18px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(16px);
+            background: rgba(15, 23, 42, 0.85);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .nav-logo { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); text-decoration: none; }
+        .nav-links a {
+            color: var(--text-secondary); text-decoration: none;
+            margin-left: 28px; transition: color 0.2s; font-size: 0.9rem; font-weight: 500;
+        }
+        .nav-links a:hover { color: var(--primary-accent); }
+        .container { max-width: 860px; margin: 0 auto; padding: 110px 20px 70px; position: relative; z-index: 2; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: var(--primary-accent); text-decoration: none;
+            padding: 7px 16px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 30px; transition: all 0.2s;
+            margin-bottom: 32px; font-size: 0.88rem; font-weight: 500;
+        }
+        .back-btn:hover { background: rgba(59, 130, 246, 0.2); color: var(--primary-accent-hover); }
+        .case-header { text-align: center; margin-bottom: 56px; }
+        .case-badge {
+            display: inline-block; padding: 6px 16px;
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            border-radius: 30px; font-size: 0.82rem; color: var(--warning-color);
+            margin-bottom: 14px; font-family: 'JetBrains Mono', monospace;
+        }
+        .case-title { font-size: 2.4rem; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
+        .case-subtitle { font-size: 1.15rem; color: var(--text-secondary); font-weight: 400; }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 36px; margin-bottom: 28px;
+            backdrop-filter: blur(16px);
+        }
+        .card-title {
+            font-size: 1.2rem; font-weight: 600;
+            margin-bottom: 22px; color: var(--text-primary);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px; margin-top: 18px; margin-bottom: 28px;
+        }
+        .stat-item {
+            background: var(--border-light);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 18px 14px; text-align: center;
+        }
+        .stat-value {
+            font-size: 1.35rem; font-weight: 600;
+            color: var(--warning-color);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 5px;
+        }
+        .stat-label { font-size: 0.78rem; color: var(--text-secondary); }
+        .insight-list { list-style: none; }
+        .insight-list li {
+            padding: 11px 0 11px 28px; position: relative;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-secondary);
+        }
+        .insight-list li:last-child { border-bottom: none; }
+        .insight-list li::before {
+            content: '✓'; position: absolute; left: 0; top: 11px;
+            color: var(--success-color); font-weight: bold;
+        }
+        .quote {
+            background: rgba(245, 158, 11, 0.06);
+            border-left: 4px solid var(--warning-color);
+            padding: 20px 24px; margin: 28px 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            font-style: italic; color: var(--text-secondary);
+        }
+        .timeline { position: relative; padding-left: 36px; margin: 24px 0; }
+        .timeline::before {
+            content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+            width: 2px; background: var(--border-color);
+        }
+        .timeline-item { position: relative; margin-bottom: 24px; padding-left: 18px; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -30px; top: 6px;
+            width: 11px; height: 11px;
+            background: var(--bg-dark); border-radius: 50%;
+            border: 2px solid var(--warning-color);
+        }
+        .timeline-year { font-family: 'JetBrains Mono', monospace; color: var(--warning-color); font-size: 0.85rem; margin-bottom: 6px; }
+        .timeline-content { color: var(--text-secondary); font-size: 0.93rem; }
+        .highlight-box {
+            background: rgba(245, 158, 11, 0.06);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: var(--radius-md);
+            padding: 20px 22px;
+            margin: 18px 0;
+        }
+        .shrimp-box {
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: var(--radius-md);
+            padding: 22px; margin-top: 10px;
+            font-size: 0.93rem; color: var(--text-secondary);
+        }
+        .shrimp-box .shrimp-title {
+            font-weight: 600; color: var(--success-color);
+            margin-bottom: 8px; font-size: 1rem;
+        }
+        footer { text-align: center; margin-top: 60px; padding-top: 28px; border-top: 1px solid var(--border-light); color: var(--text-secondary); font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    <nav class="nav">
+        <a href="index.html" class="nav-logo">🦞 沃伦·巴菲虾</a>
+        <div class="nav-links">
+            <a href="index.html">主控台</a>
+            <a href="index.html#cases">案例库</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <a href="index.html" class="back-btn">← 返回主控台</a>
+
+        <header class="case-header">
+            <span class="case-badge">🍬 巴菲特经典案例 #01</span>
+            <h1 class="case-title">喜诗糖果</h1>
+            <p class="case-subtitle">See's Candies · 1972 年至今</p>
+        </header>
+
+        <!-- 案例概况 -->
+        <div class="card">
+            <h2 class="card-title">📊 案例概况</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">1972</div>
+                    <div class="stat-label">收购年份</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$2,500 万</div>
+                    <div class="stat-label">收购价格</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$20 亿+</div>
+                    <div class="stat-label">累计税前利润</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">持续 50+年</div>
+                    <div class="stat-label">持有时间</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">~80 倍</div>
+                    <div class="stat-label">累计回报</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">~20%+</div>
+                    <div class="stat-label">年化回报 (IRR)</div>
+                </div>
+            </div>
+            <div class="highlight-box">
+                <strong style="color: var(--warning-color);">💡 喜诗糖果法则</strong><br><br>
+                <span style="color: var(--text-secondary);">初始只花 2500 万，但 50 年间产生了超过 20 亿美元的累计税前利润，且无需大量资本再投入。这是巴菲特所说的"子弹头"企业——一次投入，持续出弹。</span>
+            </div>
+        </div>
+
+        <!-- 投资逻辑 -->
+        <div class="card">
+            <h2 class="card-title">🎯 投资逻辑</h2>
+            <ul class="insight-list">
+                <li><strong>品牌护城河（Brand Moat）</strong> — 加州人把喜诗糖果视为高档礼品的情感符号，不是单纯的糖果，是"爱"的载体，拥有极强的情感定价权</li>
+                <li><strong>定价权垄断（Pricing Power）</strong> — 每年提价，消费者不仅接受，甚至更加喜爱（"高价 = 更好的礼物"），毛利率稳步提升</li>
+                <li><strong>极低的资本需求（Asset-Light）</strong> — 不像制造业需要不断投入资本扩张，利润可以全部抽出再投资到其他项目（巴菲特称之为"免费现金流机器"）</li>
+                <li><strong>简单稳定的商业模式</strong> — 糖果生意百年不变，不需要跟踪技术变革，极其符合巴菲特"只投自己理解的生意"原则</li>
+                <li><strong>区域性垄断</strong> — 在加州市场几乎没有对等竞争者，喜诗 = 高档巧克力礼品</li>
+            </ul>
+            <div class="quote">
+                "当我们以 2500 万美元买入喜诗糖果时，有人告诉我们出价高了，我们本可以以 2200 万拿下。我庆幸的是，我们没有因为 300 万美元错过它。那 300 万的节省，到今天已相当于放弃了超过 20 亿美元的利润。" — 沃伦·巴菲特
+            </div>
+        </div>
+
+        <!-- 投资决策时间轴 -->
+        <div class="card">
+            <h2 class="card-title">⏳ 关键时间节点</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-year">1972 年</div>
+                    <div class="timeline-content">伯克希尔以 2500 万美元收购喜诗糖果。当时年销售额约 3100 万，税前利润约 500 万。市场认为估值过高（5 倍 P/S），但巴菲特和芒格看中的是其品牌和定价权</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1970-1980 年代</div>
+                    <div class="timeline-content">每年稳定提价，销量不减。成为巴菲特理解"品牌护城河"的经典教材。芒格后来说："喜诗糖果是我们第一次真正理解品牌的力量。"</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1990-2000 年代</div>
+                    <div class="timeline-content">年税前利润从不足 500 万增长至 5000 万以上。大量现金被抽出支持其他投资（可口可乐、银行股等）。被巴菲特称为"给我们上了最重要的一课"</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">至今（2020 年代）</div>
+                    <div class="timeline-content">累计产生超过 20 亿美元税前利润，仍在经营并持续盈利。成为伯克希尔投资哲学转变的里程碑——从"捡烟蒂"到"买优质企业"</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关键启示 -->
+        <div class="card">
+            <h2 class="card-title">💡 关键启示与认知升级</h2>
+            <ul class="insight-list">
+                <li><strong>好公司 vs. 便宜公司（最重要的一课）</strong> — 喜诗让巴菲特从格雷厄姆式"捡烟蒂"升级为"以合适价格买优质公司"，改变了整个伯克希尔的投资哲学</li>
+                <li><strong>定价权是企业内在价值的最高体现</strong> — 一个企业能年年提价而不流失客户，说明它拥有无形护城河</li>
+                <li><strong>品牌 = 长期免费广告</strong> — 消费者自发传播"喜诗=好礼物"的认知，不需要铺天盖地的广告支出</li>
+                <li><strong>从利润抽取再投资（Capital Recycling）</strong> — 轻资产企业的利润可以被用于购买其他资产，形成复利飞轮</li>
+                <li><strong>情感价值是最深的护城河</strong> — 可口可乐、喜诗、星巴克，都是靠情感连接形成不可替代性</li>
+            </ul>
+            <div class="quote">
+                "如果你能找到一个人们愿意为它花更多钱的东西，而竞争对手又无法复制它的情感价值，你就找到了一门伟大的生意。" — 查理·芒格
+            </div>
+        </div>
+
+        <!-- 巴菲虾联想 -->
+        <div class="card">
+            <h2 class="card-title">🦞 巴菲虾联想</h2>
+            <div class="shrimp-box">
+                <div class="shrimp-title">从喜诗糖果想到的：龙虾养殖的品牌化路径</div>
+                <p>喜诗卖的不是糖果，是"加州情感"。同理，高端龙虾卖的也不只是海鲜，而是"稀缺感 + 社交货币"。如果能把龙虾养殖品牌化（地域标签 + 文化故事），就具备定价权——不跟普通水产拼价格，而是靠品牌溢价盈利。这就是 Fintech 行业也适用的逻辑：品牌信任 > 利率竞争。</p>
+            </div>
+        </div>
+
+        <footer>
+            🦞 沃伦·巴菲虾 · 每天学习一个巴菲特投资案例<br>
+            <span style="font-size: 0.78rem; opacity: 0.6;">Case #01 · See's Candies · 2026-03-14</span>
+        </footer>
+    </div>
+</body>
+</html>
