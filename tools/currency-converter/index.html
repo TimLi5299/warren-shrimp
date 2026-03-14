@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Currency Converter</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- Header Info -->
+        <header class="header-info">
+            <img src="finv-logo.png" alt="FinVolution" class="app-logo" id="app-logo">
+            <span class="update-time" id="last-updated-text">Last updated: --</span>
+        </header>
+
+        <!-- Main Converter Area -->
+        <main class="converter-area" id="converter-area">
+            
+            <!-- Base Currency (Top Fixed) -->
+            <div class="currency-card base-card" id="base-card">
+                <div class="card-left">
+                    <button class="currency-selector" id="base-currency-btn">
+                        <img src="https://flagcdn.com/w40/cn.png" alt="CNY" class="currency-flag" id="base-flag">
+                        <span class="currency-code" id="base-code">CNY</span>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </button>
+                </div>
+                <div class="card-right">
+                    <div class="amount-wrapper">
+                        <span class="currency-symbol" id="base-symbol">¥</span>
+                        <input type="number" id="base-amount" inputmode="decimal" placeholder="0" value="100.00" data-currency="CNY" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Target Currencies List -->
+            <ul class="target-list" id="target-list">
+                <!-- Target items injected by JS -->
+            </ul>
+
+            <div class="list-actions">
+                <button class="manage-btn" id="manage-currencies-btn">
+                    <i class="fa-solid fa-plus-minus"></i> Add / Remove Currencies
+                </button>
+            </div>
+
+            <!-- Historical Chart Section -->
+            <section class="chart-section" id="chart-section">
+                <h2 class="section-title">Exchange Rate Trends</h2>
+                
+                <div class="chart-currency-selectors">
+                    <button class="chart-currency-btn" id="chart-from-btn">
+                        <img src="https://flagcdn.com/w40/cn.png" alt="" class="currency-flag" id="chart-from-flag">
+                        <span id="chart-from-code">CNY</span>
+                    </button>
+                    <span class="chart-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+                    <button class="chart-currency-btn" id="chart-to-btn">
+                        <img src="https://flagcdn.com/w40/us.png" alt="" class="currency-flag" id="chart-to-flag">
+                        <span id="chart-to-code">USD</span>
+                    </button>
+                </div>
+
+                <div class="chart-rate-display">
+                    <span class="chart-current-rate" id="chart-current-rate">--</span>
+                    <span class="chart-change" id="chart-change"></span>
+                </div>
+
+                <div class="period-pills" id="period-pills">
+                    <button class="pill" data-period="1D">1D</button>
+                    <button class="pill" data-period="1W">1W</button>
+                    <button class="pill active" data-period="3M">3M</button>
+                    <button class="pill" data-period="1Y">1Y</button>
+                    <button class="pill" data-period="5Y">5Y</button>
+                    <button class="pill" data-period="10Y">10Y</button>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="rate-chart"></canvas>
+                    <div class="chart-loading" id="chart-loading">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Loading...
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Currency Selection Modal -->
+        <div class="modal-overlay" id="currency-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-title">Select Currency</h2>
+                    <button class="close-btn" id="close-modal-btn">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+                <div class="search-container">
+                    <i class="fa-solid fa-search search-icon"></i>
+                    <input type="text" id="currency-search" placeholder="Search currency or country">
+                </div>
+                <ul class="currency-list" id="currency-list">
+                    <!-- List items generated by JS -->
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Template for target list item -->
+    <template id="target-item-template">
+        <li class="currency-card target-item" data-code="">
+            <div class="card-left">
+                <button class="currency-selector target-selector">
+                    <img src="" alt="" class="currency-flag item-flag">
+                    <span class="currency-code item-code"></span>
+                </button>
+            </div>
+            <div class="card-middle">
+                <div class="amount-wrapper item-amount-wrapper">
+                    <span class="currency-symbol item-symbol"></span>
+                    <input type="number" inputmode="decimal" class="item-amount-input" placeholder="0" />
+                </div>
+                <div class="item-rate-info">
+                     1 <span class="base-code-ref"></span> = <span class="unit-rate"></span> <span class="target-code-ref"></span>
+                </div>
+            </div>
+            <div class="card-right target-card-right">
+                <button class="menu-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            </div>
+        </li>
+    </template>
+
+    <script src="app.js?v=2"></script>
+</body>
+</html>

@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全能计算器</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --calc-bg: rgba(30, 41, 59, 0.7);
+            --btn-bg: rgba(255, 255, 255, 0.05);
+            --btn-hover: rgba(255, 255, 255, 0.1);
+            --btn-active: rgba(255, 255, 255, 0.02);
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --primary-active: #1d4ed8;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--calc-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            transition: max-width 0.3s ease;
+        }
+
+        .container.financial-mode {
+            max-width: 480px;
+        }
+
+        .main-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+        }
+
+        .main-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .main-tab.active {
+            background: var(--btn-bg);
+            color: var(--text-main);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Standard Calculator Styles */
+        .display {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 24px 20px;
+            margin-bottom: 24px;
+            text-align: right;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .previous-operand {
+            color: var(--text-muted);
+            font-size: 1rem;
+            min-height: 24px;
+            margin-bottom: 4px;
+        }
+
+        .current-operand {
+            color: var(--text-main);
+            font-size: 2.5rem;
+            font-weight: 300;
+            line-height: 1.1;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .buttons button {
+            border: none;
+            outline: none;
+            background: var(--btn-bg);
+            color: var(--text-main);
+            font-size: 1.25rem;
+            border-radius: 16px;
+            padding: 16px 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .buttons button:hover {
+            background: var(--btn-hover);
+            transform: translateY(-2px);
+        }
+
+        .buttons button:active {
+            background: var(--btn-active);
+            transform: translateY(0);
+        }
+
+        .span-2 { grid-column: span 2; }
+        .operation { background: rgba(59, 130, 246, 0.2) !important; color: #60a5fa !important; font-size: 1.5rem !important; }
+        .operation:hover { background: rgba(59, 130, 246, 0.3) !important; }
+        .equals { background: var(--primary) !important; color: white !important; font-weight: 500 !important; box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39) !important; }
+        .equals:hover { background: var(--primary-hover) !important; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.23) !important; }
+        .clear { background: rgba(239, 68, 68, 0.2) !important; color: #f87171 !important; font-weight: 500 !important; }
+        .clear:hover { background: rgba(239, 68, 68, 0.3) !important; }
+
+        /* Financial Calculator Styles */
+        .fin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .fin-tab {
+            flex: 1;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .fin-tab.active {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .fin-form-group {
+            margin-bottom: 16px;
+        }
+
+        .fin-form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .fin-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .fin-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .fin-input:focus {
+            border-color: var(--accent);
+        }
+        
+        .fin-unit {
+            position: absolute;
+            right: 16px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .fin-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.3);
+        }
+
+        .fin-btn:hover {
+            background: #059669;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .fin-result {
+            margin-top: 24px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            display: none;
+        }
+
+        .fin-result.show {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+        }
+
+        .result-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .result-label { color: var(--text-muted); font-size: 0.9rem; }
+        .result-value { color: var(--text-main); font-weight: 500; }
+        .result-highlight { color: var(--accent); font-size: 1.2rem; font-weight: 600; }
+
+        /* fin subviews */
+        .fin-subview { display: none; }
+        .fin-subview.active { display: block; animation: fadeIn 0.3s ease; }
+    </style>
+</head>
+<body>
+    <div class="container" id="main-container">
+        <div class="main-tabs">
+            <div class="main-tab active" onclick="switchMainTab('standard')">标准计算</div>
+            <div class="main-tab" onclick="switchMainTab('financial')">金融计算</div>
+        </div>
+
+        <!-- Standard Calculator View -->
+        <div id="view-standard" class="view-section active">
+            <div class="display">
+                <div class="previous-operand" id="previous-operand"></div>
+                <div class="current-operand" id="current-operand">0</div>
+            </div>
+            <div class="buttons">
+                <button class="clear span-2" onclick="clearDisplay()">AC</button>
+                <button class="operation" onclick="deleteNumber()">DEL</button>
+                <button class="operation" onclick="chooseOperation('÷')">÷</button>
+
+                <button onclick="appendNumber('7')">7</button>
+                <button onclick="appendNumber('8')">8</button>
+                <button onclick="appendNumber('9')">9</button>
+                <button class="operation" onclick="chooseOperation('×')">×</button>
+
+                <button onclick="appendNumber('4')">4</button>
+                <button onclick="appendNumber('5')">5</button>
+                <button onclick="appendNumber('6')">6</button>
+                <button class="operation" onclick="chooseOperation('-')">-</button>
+
+                <button onclick="appendNumber('1')">1</button>
+                <button onclick="appendNumber('2')">2</button>
+                <button onclick="appendNumber('3')">3</button>
+                <button class="operation" onclick="chooseOperation('+')">+</button>
+
+                <button onclick="appendNumber('0')" class="span-2">0</button>
+                <button onclick="appendNumber('.')">.</button>
+                <button class="equals" onclick="compute()">=</button>
+            </div>
+        </div>
+
+        <!-- Financial Calculator View -->
+        <div id="view-financial" class="view-section">
+            <div class="fin-tabs">
+                <button class="fin-tab active" onclick="switchFinTab('loan')">房贷/等额本息</button>
+                <button class="fin-tab" onclick="switchFinTab('compound')">复利定投</button>
+                <button class="fin-tab" onclick="switchFinTab('irr')">计算IRR</button>
+            </div>
+
+            <!-- Loan Calculator -->
+            <div id="fin-loan" class="fin-subview active">
+                <div class="fin-form-group">
+                    <label>贷款本金</label>
+                    <div class="fin-input-wrapper">
+                        <input type="text" inputmode="decimal" id="loan-amount" class="fin-input amount-input" placeholder="输入金额" value="1,000,000">
+                        <span class="fin-unit">元</span>
+                    </div>
+                </div>
+                <div class="fin-form-group">
+                    <label>年利率</label>
+                    <div class="fin-input-wrapper">
+                        <input type="number" id="loan-rate" class="fin-input" placeholder="例如 4.9" step="0.01" value="4.2">
+                        <span class="fin-unit">%</span>
+                    </div>
+                </div>
+                <div class="fin-form-group">
+                    <label>贷款年限</label>
+                    <div class="fin-input-wrapper">
+                        <input type="number" id="loan-years" class="fin-input" placeholder="输入年数" value="30">
+                        <span class="fin-unit">年</span>
+                    </div>
+                </div>
+                <button class="fin-btn" onclick="calculateLoan()">计算房贷</button>
+
+                <div class="fin-result" id="loan-result">
+                    <div class="result-row">
+                        <span class="result-label">每月月供</span>
+                        <span class="result-value result-highlight" id="res-loan-payment">0.00 元</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">总利息</span>
+                        <span class="result-value" id="res-loan-interest">0.00 元</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">本息合计</span>
+                        <span class="result-value" id="res-loan-total">0.00 元</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compound Interest Calculator -->
+            <div id="fin-compound" class="fin-subview">
+                <div class="fin-form-group">
+                    <label>初始投资</label>
+                    <div class="fin-input-wrapper">
+                        <input type="text" inputmode="decimal" id="comp-initial" class="fin-input amount-input" placeholder="初始本金" value="10,000">
+                        <span class="fin-unit">元</span>
+                    </div>
+                </div>
+                <div class="fin-form-group">
+                    <label>每月定投</label>
+                    <div class="fin-input-wrapper">
+                        <input type="text" inputmode="decimal" id="comp-monthly" class="fin-input amount-input" placeholder="每月追加金额" value="2,000">
+                        <span class="fin-unit">元</span>
+                    </div>
+                </div>
+                <div class="fin-form-group">
+                    <label>预计年化收益率</label>
+                    <div class="fin-input-wrapper">
+                        <input type="number" id="comp-rate" class="fin-input" placeholder="例如 8.0" step="0.1" value="8.0">
+                        <span class="fin-unit">%</span>
+                    </div>
+                </div>
+                <div class="fin-form-group">
+                    <label>投资年限</label>
+                    <div class="fin-input-wrapper">
+                        <input type="number" id="comp-years" class="fin-input" placeholder="投资时间" value="10">
+                        <span class="fin-unit">年</span>
+                    </div>
+                </div>
+                <button class="fin-btn" onclick="calculateCompound()">计算复利收益</button>
+
+                <div class="fin-result" id="comp-result">
+                    <div class="result-row">
+                        <span class="result-label">期末总资产</span>
+                        <span class="result-value result-highlight" id="res-comp-total">0.00 元</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">总投入本金</span>
+                        <span class="result-value" id="res-comp-principal">0.00 元</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">累计利息收益</span>
+                        <span class="result-value" id="res-comp-interest">0.00 元</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IRR Calculator -->
+            <div id="fin-irr" class="fin-subview">
+                <div class="fin-form-group">
+                    <label>初始投资 (第0期现金流，通常为负)</label>
+                    <div class="fin-input-wrapper">
+                        <input type="text" inputmode="decimal" id="irr-cf-0" class="fin-input amount-input irr-input" placeholder="例如: -10000" value="-10,000">
+                        <span class="fin-unit">元</span>
+                    </div>
+                </div>
+                
+                <div id="irr-cashflows-container">
+                    <div class="fin-form-group irr-cf-group">
+                        <label>第1期现金流</label>
+                        <div class="fin-input-wrapper">
+                            <input type="text" inputmode="decimal" class="fin-input amount-input irr-input" placeholder="输入金额" value="2,000">
+                            <span class="fin-unit">元</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                    <button class="fin-btn" style="background: rgba(255,255,255,0.1); color: var(--text-main); margin-top: 0;" onclick="addCashFlow()">+ 添加一期</button>
+                    <button class="fin-btn" style="background: rgba(239,68,68,0.2); color: #f87171; margin-top: 0;" onclick="removeCashFlow()">- 删除一期</button>
+                </div>
+                
+                <button class="fin-btn" onclick="calculateIRR()">计算内部收益率 (IRR)</button>
+
+                <div class="fin-result" id="irr-result">
+                    <div class="result-row">
+                        <span class="result-label">内部收益率 (IRR)</span>
+                        <span class="result-value result-highlight" id="res-irr-value">0.00%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Tab Switching Logic ---
+        function switchMainTab(tab) {
+            document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`view-${tab}`).classList.add('active');
+
+            const container = document.getElementById('main-container');
+            if(tab === 'financial') {
+                container.classList.add('financial-mode');
+            } else {
+                container.classList.remove('financial-mode');
+            }
+        }
+
+        function switchFinTab(tab) {
+            document.querySelectorAll('.fin-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.fin-subview').forEach(v => v.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`fin-${tab}`).classList.add('active');
+        }
+
+        // --- Standard Calculator Logic ---
+        let currentOperand = '0';
+        let previousOperand = '';
+        let operation = undefined;
+        let shouldResetScreen = false;
+
+        const currentOperandElement = document.getElementById('current-operand');
+        const previousOperandElement = document.getElementById('previous-operand');
+
+        function appendNumber(number) {
+            if (number === '.' && currentOperand.includes('.')) return;
+            if (shouldResetScreen || (currentOperand === '0' && number !== '.')) {
+                currentOperand = '';
+                shouldResetScreen = false;
+            }
+            currentOperand = currentOperand.toString() + number.toString();
+            updateDisplay();
+        }
+
+        function chooseOperation(op) {
+            if (currentOperand === '' && op === '-') {
+                currentOperand = '-';
+                updateDisplay();
+                return;
+            }
+            if (currentOperand === '' || currentOperand === '-') return;
+            if (previousOperand !== '') compute();
+            operation = op;
+            previousOperand = currentOperand;
+            currentOperand = '';
+            updateDisplay();
+        }
+
+        function compute() {
+            let computation;
+            const prev = parseFloat(previousOperand);
+            const current = parseFloat(currentOperand);
+            if (isNaN(prev) || isNaN(current)) return;
+            
+            switch (operation) {
+                case '+': computation = prev + current; break;
+                case '-': computation = prev - current; break;
+                case '×': computation = prev * current; break;
+                case '÷': 
+                    if (current === 0) {
+                        alert("不能除以0 / Cannot divide by zero");
+                        clearDisplay();
+                        return;
+                    }
+                    computation = prev / current; 
+                    break;
+                default: return;
+            }
+            computation = Math.round(computation * 10000000000) / 10000000000;
+            currentOperand = computation.toString();
+            operation = undefined;
+            previousOperand = '';
+            shouldResetScreen = true;
+            updateDisplay();
+        }
+
+        function clearDisplay() {
+            currentOperand = '0';
+            previousOperand = '';
+            operation = undefined;
+            updateDisplay();
+        }
+
+        function deleteNumber() {
+            if (shouldResetScreen) { clearDisplay(); return; }
+            if (currentOperand === '0') return;
+            currentOperand = currentOperand.toString().slice(0, -1);
+            if (currentOperand === '' || currentOperand === '-') currentOperand = '0';
+            updateDisplay();
+        }
+
+        function getDisplayNumber(number) {
+            const stringNumber = number.toString();
+            const integerDigits = parseFloat(stringNumber.split('.')[0]);
+            const decimalDigits = stringNumber.split('.')[1];
+            let integerDisplay;
+            
+            if (isNaN(integerDigits)) {
+                integerDisplay = '';
+            } else {
+                integerDisplay = integerDigits.toLocaleString('en', { maximumFractionDigits: 0 });
+            }
+            
+            // if we have just a minus sign
+            if (stringNumber === '-') return '-';
+
+            if (decimalDigits != null) {
+                return `${integerDisplay}.${decimalDigits}`;
+            } else {
+                return integerDisplay;
+            }
+        }
+
+        function updateDisplay() {
+            currentOperandElement.innerText = getDisplayNumber(currentOperand);
+            if (operation != null) {
+                previousOperandElement.innerText = `${getDisplayNumber(previousOperand)} ${operation}`;
+            } else {
+                previousOperandElement.innerText = '';
+            }
+        }
+
+        // --- Financial Calculator Logic ---
+        function formatCurrency(num) {
+            return new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(num);
+        }
+
+        function getInputValue(id) {
+            const el = document.getElementById(id);
+            if (!el) return NaN;
+            return parseFloat(el.value.replace(/,/g, ''));
+        }
+
+        // Format input values as user types
+        function attachCurrencyFormatting(input) {
+            input.addEventListener('input', function(e) {
+                // Get cursor position
+                let cursorPosition = this.selectionStart;
+                let oldLength = this.value.length;
+                
+                let isNegative = this.value.startsWith('-');
+                
+                // Remove non-numeric characters except period
+                let val = this.value.replace(/,/g, '').replace(/[^\d.]/g, '');
+                
+                // Handle decimals correctly
+                let parts = val.split('.');
+                if (parts.length > 2) parts = [parts[0], parts.slice(1).join('')];
+                
+                if (parts[0] !== '') {
+                    parts[0] = parseInt(parts[0], 10).toLocaleString('en');
+                    this.value = (isNegative ? '-' : '') + parts.join('.');
+                } else if (isNegative) {
+                    this.value = '-';
+                } else {
+                    this.value = val;
+                }
+                
+                // Restore cursor position
+                let newLength = this.value.length;
+                cursorPosition = cursorPosition + (newLength - oldLength);
+                if (cursorPosition >= 0) {
+                    this.setSelectionRange(cursorPosition, cursorPosition);
+                }
+            });
+        }
+        
+        document.querySelectorAll('.amount-input').forEach(attachCurrencyFormatting);
+
+        function calculateLoan() {
+            const principal = getInputValue('loan-amount');
+            const annualRate = getInputValue('loan-rate');
+            const years = getInputValue('loan-years');
+
+            if (isNaN(principal) || isNaN(annualRate) || isNaN(years) || principal <= 0 || years <= 0) {
+                alert("请输入有效的贷款数据");
+                return;
+            }
+
+            // 等额本息法 EMI = P * r * (1 + r)^n / ((1 + r)^n - 1)
+            const r = (annualRate / 100) / 12; // 月利率
+            const n = years * 12; // 总期数(月)
+            
+            let monthlyPayment, totalPayment, totalInterest;
+            
+            if (r === 0) {
+                monthlyPayment = principal / n;
+                totalPayment = principal;
+                totalInterest = 0;
+            } else {
+                monthlyPayment = principal * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+                totalPayment = monthlyPayment * n;
+                totalInterest = totalPayment - principal;
+            }
+
+            document.getElementById('res-loan-payment').innerText = formatCurrency(monthlyPayment);
+            document.getElementById('res-loan-interest').innerText = formatCurrency(totalInterest);
+            document.getElementById('res-loan-total').innerText = formatCurrency(totalPayment);
+            
+            document.getElementById('loan-result').classList.add('show');
+        }
+
+        function calculateCompound() {
+            const initial = getInputValue('comp-initial') || 0;
+            const monthly = getInputValue('comp-monthly') || 0;
+            const annualRate = getInputValue('comp-rate');
+            const years = getInputValue('comp-years');
+
+            if (isNaN(annualRate) || isNaN(years) || years <= 0) {
+                alert("请输入有效的投资数据");
+                return;
+            }
+
+            const r = (annualRate / 100) / 12; // 月利率
+            const n = years * 12; // 总期数(月)
+
+            let totalPrincipal = initial + (monthly * n);
+            let futureValue = 0;
+
+            // 初始本金的期末价值 (复利)
+            futureValue += initial * Math.pow(1 + r, n);
+
+            // 每月定投的期末价值 (普通年金终值)
+            if (r > 0) {
+                futureValue += monthly * (Math.pow(1 + r, n) - 1) / r;
+            } else {
+                futureValue += monthly * n;
+            }
+
+            const totalInterest = futureValue - totalPrincipal;
+
+            document.getElementById('res-comp-total').innerText = formatCurrency(futureValue);
+            document.getElementById('res-comp-principal').innerText = formatCurrency(totalPrincipal);
+            document.getElementById('res-comp-interest').innerText = formatCurrency(totalInterest);
+
+            document.getElementById('comp-result').classList.add('show');
+        }
+
+        // --- IRR Calculator Logic ---
+        let cfCount = 1;
+
+        function addCashFlow() {
+            cfCount++;
+            const container = document.getElementById('irr-cashflows-container');
+            const newGroup = document.createElement('div');
+            newGroup.className = 'fin-form-group irr-cf-group';
+            newGroup.innerHTML = `
+                <label>第${cfCount}期现金流</label>
+                <div class="fin-input-wrapper">
+                    <input type="text" inputmode="decimal" class="fin-input amount-input irr-input" placeholder="输入金额" value="0">
+                    <span class="fin-unit">元</span>
+                </div>
+            `;
+            container.appendChild(newGroup);
+            
+            const input = newGroup.querySelector('.amount-input');
+            attachCurrencyFormatting(input);
+        }
+
+        function removeCashFlow() {
+            if (cfCount <= 1) return;
+            const container = document.getElementById('irr-cashflows-container');
+            container.removeChild(container.lastElementChild);
+            cfCount--;
+        }
+
+        function calculateIRR() {
+            const initialEl = document.getElementById('irr-cf-0');
+            const initialCF = parseFloat(initialEl.value.replace(/,/g, ''));
+            
+            const cfElements = document.querySelectorAll('#irr-cashflows-container .irr-input');
+            const cashFlows = [initialCF];
+            cfElements.forEach(el => {
+                cashFlows.push(parseFloat(el.value.replace(/,/g, '')) || 0);
+            });
+
+            if (cashFlows.filter(c => c > 0).length === 0 || cashFlows.filter(c => c < 0).length === 0) {
+                alert("计算 IRR 需要至少一个正现金流和一个负现金流");
+                return;
+            }
+
+            // Newton-Raphson approximation
+            const maxIter = 1000;
+            const tol = 1e-6;
+            let r = 0.1; 
+            let irrFound = false;
+
+            for (let i = 0; i < maxIter; i++) {
+                let npv = 0;
+                let dNpv = 0;
+                for (let t = 0; t < cashFlows.length; t++) {
+                    const v = cashFlows[t];
+                    npv += v / Math.pow(1 + r, t);
+                    if (t > 0) dNpv -= t * v / Math.pow(1 + r, t + 1);
+                }
+                
+                if (Math.abs(npv) < tol) {
+                    irrFound = true;
+                    break;
+                }
+                
+                const newR = r - npv / dNpv;
+                if (Math.abs(newR - r) < tol) {
+                    r = newR;
+                    irrFound = true;
+                    break;
+                }
+                r = newR;
+            }
+
+            if (irrFound) {
+                const irrPct = (r * 100).toFixed(2) + "%";
+                document.getElementById('res-irr-value').innerText = irrPct;
+            } else {
+                document.getElementById('res-irr-value').innerText = "未收敛，无法计算";
+            }
+            document.getElementById('irr-result').classList.add('show');
+        }
+
+        // --- Keyboard Support ---
+        window.addEventListener('keydown', (e) => {
+            // Only capture keyboard for standard calc if it's visible AND we are not typing in an input field
+            const isStandardVisible = document.getElementById('view-standard').classList.contains('active');
+            const isTypingInInput = e.target.tagName.toLowerCase() === 'input';
+
+            if (isStandardVisible && !isTypingInInput) {
+                if (e.key >= 0 && e.key <= 9) appendNumber(e.key);
+                if (e.key === '.') appendNumber(e.key);
+                if (e.key === '=' || e.key === 'Enter') {
+                    e.preventDefault();
+                    compute();
+                }
+                if (e.key === 'Backspace') deleteNumber();
+                if (e.key === 'Escape') clearDisplay();
+                if (e.key === '+' || e.key === '-') chooseOperation(e.key);
+                if (e.key === '*' || e.key === 'x') chooseOperation('×');
+                if (e.key === '/') {
+                    e.preventDefault();
+                    chooseOperation('÷');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
