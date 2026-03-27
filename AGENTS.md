@@ -59,6 +59,18 @@ Capture what matters. Decisions, context, things to remember. Skip the secrets u
 - When you make a mistake → document it so future-you doesn't repeat it
 - **Text > Brain** 📝
 
+### 🎓 Lesson Learned System (Since 2026-03-11)
+
+**When delivery doesn't match expectations:**
+
+1. **Record immediately** - Create new file in `docs/lessons-learned/`
+2. **Deep analysis** - Find root cause, not just symptoms
+3. **Abstract patterns** - Extract reusable principles and tools
+4. **Update templates** - Apply lessons to project templates
+
+**Knowledge base:** `docs/lessons-learned/README.md`
+**First lesson:** `docs/lessons-learned/001-case-library-links-missing.md`
+
 ## Safety
 
 - Don't exfiltrate private data. Ever.

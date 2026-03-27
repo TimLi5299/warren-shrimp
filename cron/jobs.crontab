@@ -1,0 +1,27 @@
+# 沃伦巴菲虾 - Cron 定时任务配置
+# 使用方法：crontab /home/admin/.openclaw/workspace/cron/jobs.crontab
+
+# 环境变量
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+WORKSPACE=/home/admin/.openclaw/workspace
+
+# ====================
+# 每日报告自动化
+# ====================
+
+# 每天晚上 20:00 执行每日报告（案例学习 + 网站更新 + 飞书推送）
+0 20 * * * cd $WORKSPACE && ./scripts/daily-report.sh >> $WORKSPACE/logs/daily-report.log 2>&1
+
+# 每天早晨 8:00 生成早报（如果需要）
+# 0 8 * * * cd $WORKSPACE && ./scripts/daily-briefing.sh >> $WORKSPACE/logs/morning-brief.log 2>&1
+
+# ====================
+# 定期维护任务
+# ====================
+
+# 每周日凌晨 2:00 运行完整性检查（确保周末更新正常）
+0 2 * * 0 cd $WORKSPACE && ./scripts/check-cases.sh >> $WORKSPACE/logs/weekly-check.log 2>&1
+
+# 每月 1 号凌晨 3:00 清理旧日志（保留最近 30 天）
+0 3 1 * * find $WORKSPACE/logs -name "*.log" -mtime +30 -delete

@@ -1,0 +1,49 @@
+# 网站页面配置示例
+# 用途：定义网站的所有页面及其状态
+# 配合 scripts/site-integrity-check.sh 使用
+
+# 页面列表
+pages:
+  - id: "001"
+    name: "首页"
+    file: "index.html"
+    status: "published"  # published | pending | draft
+
+  - id: "002"
+    name: "关于我们"
+    file: "about.html"
+    status: "published"
+
+  - id: "003"
+    name: "产品列表"
+    file: "products.html"
+    status: "pending"
+
+  - id: "004"
+    name: "联系我们"
+    file: "contact.html"
+    status: "published"
+
+# 可选：定义检查规则
+settings:
+  # 检查主页中是否有这些页面的链接
+  check_links_in: "index.html"
+  
+  # 只检查 published 状态的页面
+  check_status: "published"
+  
+  # 最大显示数量（用于生成导航）
+  max_display: 10
+
+---
+
+# 使用示例：
+
+# 1. 检查网站完整性
+# ./scripts/site-integrity-check.sh site-config.yaml /var/www/my-site
+
+# 2. 在 Heartbeat 中配置
+# ## 网站完整性检查
+# - 时间：每次部署后
+# - 内容：运行 site-integrity-check.sh
+# - 目的：确保所有页面都能正常访问

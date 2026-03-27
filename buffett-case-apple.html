@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>巴菲特案例：苹果 | 沃伦·巴菲虾</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(20, 20, 35, 0.6);
+            --neon-blue: #00f0ff;
+            --neon-purple: #bc13fe;
+            --neon-green: #0aff0a;
+            --neon-orange: #ff6b00;
+            --neon-red: #ff003c;
+            --text-primary: #ffffff;
+            --text-secondary: #8b9bb4;
+        }
+        body {
+            font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            line-height: 1.7;
+        }
+        .grid-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: 0;
+            animation: gridPulse 20s infinite;
+        }
+        @keyframes gridPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .nav {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(10, 10, 15, 0.8);
+            border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+        }
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-left: 30px;
+            transition: color 0.3s;
+            font-size: 0.95rem;
+        }
+        .nav-links a:hover { color: var(--neon-blue); }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 120px 20px 60px;
+            position: relative;
+            z-index: 2;
+        }
+        .case-header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        .case-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(188, 19, 254, 0.15);
+            border: 1px solid var(--neon-purple);
+            border-radius: 30px;
+            font-size: 0.9rem;
+            color: var(--neon-purple);
+            margin-bottom: 20px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .case-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .case-subtitle {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s, box-shadow 0.3s;
+            animation: fadeInUp 0.8s ease-out backwards;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 240, 255, 0.1);
+            border-color: rgba(0, 240, 255, 0.3);
+        }
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--neon-blue);
+        }
+        .card-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, var(--neon-blue), var(--neon-purple));
+            border-radius: 2px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .stat-item {
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid rgba(0, 240, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--neon-blue);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .stat-sublabel {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        .insight-list { list-style: none; }
+        .insight-list li {
+            padding: 15px 0;
+            padding-left: 35px;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            line-height: 1.6;
+        }
+        .insight-list li:last-child { border-bottom: none; }
+        .insight-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            top: 16px;
+            color: var(--neon-green);
+            font-weight: bold;
+        }
+        .quote {
+            background: rgba(188, 19, 254, 0.08);
+            border-left: 4px solid var(--neon-purple);
+            padding: 25px 30px;
+            margin: 30px 0;
+            border-radius: 0 12px 12px 0;
+            font-style: italic;
+            color: var(--text-secondary);
+            position: relative;
+        }
+        .quote::before {
+            content: '"';
+            font-size: 4rem;
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            color: var(--neon-purple);
+            opacity: 0.3;
+            font-family: Georgia, serif;
+        }
+        .anecdote-card {
+            background: linear-gradient(135deg, rgba(255, 107, 0, 0.05), rgba(188, 19, 254, 0.05));
+            border: 1px solid rgba(255, 107, 0, 0.15);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .anecdote-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--neon-orange);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .anecdote-title::before { content: '💡'; }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 10px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            transition: all 0.3s;
+            margin-bottom: 30px;
+        }
+        .back-btn:hover {
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+        @media (max-width: 768px) {
+            .case-title { font-size: 2rem; }
+            .nav { padding: 15px 20px; }
+            .container { padding-top: 100px; }
+            .card { padding: 25px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <nav class="nav">
+        <a href="index.html" class="nav-logo">🦞 沃伦·巴菲虾</a>
+        <div class="nav-links">
+            <a href="index.html">时间轴</a>
+            <a href="index.html#cases">案例库</a>
+        </div>
+    </nav>
+    <div class="container">
+        <a href="index.html" class="back-btn">← 返回时间轴</a>
+        <header class="case-header">
+            <span class="case-badge">📚 巴菲特经典案例 #08</span>
+            <h1 class="case-title">📱 Apple 苹果</h1>
+            <p class="case-subtitle">2016 年至今 · 伯克希尔第一大持仓</p>
+        </header>
+
+        <div class="card">
+            <h2 class="card-title">📊 案例概况</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">2016</div>
+                    <div class="stat-label">开始投资</div>
+                    <div class="stat-sublabel">建仓年份</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$350 亿</div>
+                    <div class="stat-label">总投资</div>
+                    <div class="stat-sublabel">累计投入</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">5.5%</div>
+                    <div class="stat-label">持股比例</div>
+                    <div class="stat-sublabel">伯克希尔最大持仓</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$1700 亿</div>
+                    <div class="stat-label">当前价值</div>
+                    <div class="stat-sublabel">2024 年估值</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">~5 倍</div>
+                    <div class="stat-label">投资收益</div>
+                    <div class="stat-sublabel">8 年回报</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">~40%</div>
+                    <div class="stat-label">仓位占比</div>
+                    <div class="stat-sublabel">股票组合权重</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">🎯 投资逻辑</h2>
+            <ul class="insight-list">
+                <li><strong>消费品牌重新定位</strong> — 从科技股重新定义为消费品牌，巴菲特"看懂了"</li>
+                <li><strong>生态系统护城河</strong> — iOS 生态系统用户粘性极强，转换成本极高，10 亿 + 活跃用户</li>
+                <li><strong>现金流机器</strong> — 每年产生超过 1000 亿美元自由现金流，堪比一家银行</li>
+                <li><strong>大规模回购</strong> — 持续回购股票，已回购超过 6000 亿美元，显著提升每股价值</li>
+                <li><strong>定价权</strong> — 产品可以持续高价销售，用户愿意为品牌溢价买单</li>
+                <li><strong>优秀管理层</strong> — 蒂姆·库克的运营能力和资本配置能力被低估</li>
+            </ul>
+            <div class="quote">
+                "苹果太好而不能错过。它已经从一家科技公司变成了一家消费品牌公司，拥有世界上最忠诚的用户群体。" — 沃伦·巴菲特
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">💡 巴菲特的转变</h2>
+            
+            <div class="anecdote-card">
+                <div class="anecdote-title">从"不投科技股"到"第一大持仓"</div>
+                <p style="color: var(--text-secondary); line-height: 1.6;">
+                    巴菲特曾经公开表示不投资科技股，因为"看不懂"。他错过了微软、谷歌等早期机会。但 2016 年，他承认错误，开始大举买入苹果，理由是："库克把苹果变成了消费品牌公司，我看得懂了。"
+                </p>
+            </div>
+
+            <div class="anecdote-card">
+                <div class="anecdote-title">为什么是库克时代？</div>
+                <p style="color: var(--text-secondary); line-height: 1.6;">
+                    乔布斯时代的苹果是创新公司，但波动大。库克时代的苹果变成了"消费品 + 服务"公司，有稳定的现金流、强大的品牌忠诚度和持续的回购计划。这正是巴菲特喜欢的类型。
+                </p>
+            </div>
+
+            <div class="anecdote-card">
+                <div class="anecdote-title">持续加仓的底气</div>
+                <p style="color: var(--text-secondary); line-height: 1.6;">
+                    2016-2018 年，巴菲特持续加仓苹果，从初始的几百万股增加到超过 10 亿股。他说："当我们发现一个好机会时，我们会下重注。苹果就是我们发现的好机会。"
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">💡 关键启示</h2>
+            <ul class="insight-list">
+                <li><strong>认知可以进化</strong> — 不要固守成见，巴菲特也承认错误并调整，从"不投科技"到"重仓苹果"</li>
+                <li><strong>生态系统是最深护城河</strong> — iOS 生态让用户难以离开，这是比产品更深的竞争优势</li>
+                <li><strong>用户粘性 = 定价权 = 利润</strong> — 10 亿 + 活跃用户愿意付溢价，这是商业模式的终极形态</li>
+                <li><strong>大机会来临时要下重注</strong> — 苹果占伯克希尔股票仓位约 40%，看准了就重仓</li>
+                <li><strong>回购是资本配置利器</strong> — 苹果已回购超过 6000 亿美元股票，这是回报股东的最佳方式之一</li>
+            </ul>
+            <div class="quote">
+                "苹果教会我们：认知可以进化，护城河可以很深，大机会要下重注。最重要的是，好公司 + 好管理层 + 好价格 = 伟大投资。"
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">🦞 巴菲虾联想</h2>
+            
+            <div class="anecdote-card">
+                <div class="anecdote-title">🦐 养殖类比</div>
+                <ul style="color: var(--text-secondary); line-height: 1.8; padding-left: 20px;">
+                    <li><strong>认知进化：</strong>就像养虾，一开始觉得很难，后来发现是认知问题不是能力问题</li>
+                    <li><strong>生态系统思维：</strong>龙虾养殖不是单一环节，是种苗 + 饲料 + 水质 + 销售的生态系统</li>
+                    <li><strong>用户粘性：</strong>好的龙虾品质让客户重复购买，就像 iOS 用户离不开苹果</li>
+                    <li><strong>大规模投入：</strong>看准了就下重注，巴菲特重仓苹果，你重仓龙虾养殖</li>
+                </ul>
+            </div>
+
+            <div class="anecdote-card">
+                <div class="anecdote-title">💡 个人成长类比</div>
+                <ul style="color: var(--text-secondary); line-height: 1.8; padding-left: 20px;">
+                    <li><strong>认知可以进化：</strong>不要说"我不懂 AI"，要像巴菲特学习苹果一样去理解</li>
+                    <li><strong>建立个人生态系统：</strong>AI + 智能硬件 + 专业技能，形成自己的护城河</li>
+                    <li><strong>持续回购自己：</strong>投资自己的学习和成长，提升"每股价值"</li>
+                    <li><strong>看准趋势下重注：</strong>AI 是时代趋势，值得投入大量时间和精力</li>
+                </ul>
+            </div>
+
+            <div class="anecdote-card">
+                <div class="anecdote-title">🤖 BotLearn 项目类比</div>
+                <ul style="color: var(--text-secondary); line-height: 1.8; padding-left: 20px;">
+                    <li><strong>从"看不懂"到"重仓"：</strong>一开始觉得 AI 很难，后来发现是最佳杠杆</li>
+                    <li><strong>建立学习生态系统：</strong>每天一个案例，持续迭代，形成复利</li>
+                    <li><strong>自动化回购时间：</strong>用自动化节省时间，把时间"回购"来做更高价值的事</li>
+                    <li><strong>大机会要下重注：</strong>AI 时代是百年机遇，值得全力以赴</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 60px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                🦞 沃伦·巴菲虾 · 每天学习一个巴菲特投资案例
+            </p>
+            <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 10px;">
+                Day 7 · 2026-03-11 · CASE #08
+            </p>
+        </div>
+    </div>
+</body>
+</html>

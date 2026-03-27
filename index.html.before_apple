@@ -722,9 +722,6 @@
             <a href="buffett-case-wapo.html" target="_blank" style="margin-left:15px;">华盛顿邮报↗</a>
             <a href="buffett-case-byd.html" target="_blank" style="margin-left:15px;">BYD↗</a>
             <a href="buffett-case-petrochina.html" target="_blank" style="margin-left:15px;">中石油↗</a>
-            <a href="buffett-case-apple.html" target="_blank" style="margin-left:15px;">苹果↗</a>
-            <a href="buffett-case-boa.html" target="_blank" style="margin-left:15px;">美国银行↗</a>
-            <a href="buffett-case-chevron.html" target="_blank" style="margin-left:15px;">雪佛龙↗</a>
         </div>
     </nav>
 
@@ -779,13 +776,6 @@
                     <div class="case-desc">投资 1100 万美元，回报超 100 倍。好价格买好公司 + 优秀管理层 + 长期持有的典范</div>
                 </a>
                 
-                <a href="buffett-case-apple.html" class="case-card">
-                    <div class="case-number">CASE #08 · 2026-03-11</div>
-                    <div class="case-name">📱 苹果 Apple</div>
-                    <div class="case-year">2016 年 · 持有 8 年+</div>
-                    <div class="case-desc">投资 350 亿美元，现值超 1700 亿。认知进化 + 生态护城河 + 大机会下重注</div>
-                </a>
-                
                 <a href="buffett-case-byd.html" class="case-card">
                     <div class="case-number">CASE #07 · 2026-03-11</div>
                     <div class="case-name">🔋 BYD 比亚迪</div>
@@ -800,20 +790,14 @@
                     <div class="case-desc">投资 4.88 亿美元，获利 35 亿美元。估值极低 + 高分红，因公司治理退出</div>
                 </a>
                 
-                <a href="buffett-case-boa.html" class="case-card">
-                    <div class="case-number">CASE #09 · 2026-03-12</div>
-                    <div class="case-name">🏦 美国银行</div>
-                    <div class="case-year">2011 年 · 持有 13 年+</div>
-                    <div class="case-desc">投资 50 亿美元，回报超 300 亿。危机中找机会 + 结构化交易 + 别人恐惧时我贪婪</div>
-                </a>
-                
-                <a href="buffett-case-chevron.html" class="case-card">
-                    <div class="case-number">CASE #10 · 2026-03-14</div>
-                    <div class="case-name">⛽ 雪佛龙</div>
-                    <div class="case-year">2020 年 · 持有 4 年+</div>
-                    <div class="case-desc">投资 150 亿美元，前五大持仓。疫情低谷买入 + 成本优势 + 高分红 + 能源转型</div>
-                </a>
+                <span class="case-card" style="opacity: 0.5; cursor: default;">
+                    <div class="case-number">CASE #05 · 即将上线</div>
+                    <div class="case-name">🥤 可口可乐</div>
+                    <div class="case-year">1988 年 · 持有 35 年+</div>
+                    <div class="case-desc">投资 13 亿美元，现值超 250 亿。全球品牌 + 定价权 + 简单易懂的生意</div>
+                </span>
             </div>
+        <!-- 成长日记区域 -->
         <section class="diary-section" id="diary">
             <h2 style="font-size: 1.8rem; margin-bottom: 30px; text-align: center; background: linear-gradient(135deg, var(--neon-green), var(--neon-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">📖 成长日记</h2>
             

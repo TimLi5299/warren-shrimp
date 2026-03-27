@@ -1,0 +1,31 @@
+# Heartbeat State
+
+```json
+{
+  "lastChecks": {
+    "email": null,
+    "calendar": null,
+    "weather": null,
+    "buffett_case": 1743171840,
+    "case_integrity": 1743171840,
+    "morning_report": 1743171840
+  },
+  "lastMorningReport": "2026-03-27",
+  "caseDay": 23,
+  "lastCase": "03-washington-post-1973"
+}
+```
+
+## Today's Summary (2026-03-27)
+
+✅ **Buffett Case Study #23:** The Washington Post (1973)
+- $11M investment → peak value over $1B (40+ years hold)
+- Classic "good company at great price" with strong moat
+- Key lessons: management quality, monopoly position, long-term holding
+
+✅ **Case Integrity Check:** All 6 published cases properly linked
+
+✅ **Morning Report:** Ready for delivery at 7:04 AM
+
+---
+Last updated: 2026-03-27 7:04 AM
