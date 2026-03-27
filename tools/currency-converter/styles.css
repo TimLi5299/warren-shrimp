@@ -1,0 +1,568 @@
+:root {
+    /* iOS Light Mode Color Palette (Xe Style) */
+    --bg-main: #F2F2F7;
+    --bg-card: #FFFFFF;
+    --bg-card-active: #E5E5EA;
+    --bg-modal: #FFFFFF;
+    --text-primary: #1C1C1E;
+    --text-secondary: #8E8E93;
+    --accent-color: #0066FF;
+    --accent-hover: #0055DD;
+    --border-color: #E5E5EA;
+    --overlay-bg: rgba(0, 0, 0, 0.4);
+    --success: #34C759;
+    --danger: #FF3B30;
+    
+    /* Layout Variables */
+    --card-radius: 8px;
+    --modal-radius: 24px;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --safe-area-top: env(safe-area-inset-top, 44px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 34px);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    overflow: hidden;
+}
+
+/* App Container */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    max-width: 500px;
+    margin: 0 auto;
+    position: relative;
+    background-color: var(--bg-main);
+}
+
+/* Header Info */
+.header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: calc(var(--safe-area-top) + var(--spacing-sm)) var(--spacing-lg) var(--spacing-sm);
+    background: transparent;
+}
+
+.app-logo {
+    height: 22px;
+    width: auto;
+    object-fit: contain;
+}
+
+.update-time {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* Main Converter Area */
+.converter-area {
+    flex: 1;
+    padding: 0 var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    overflow-y: auto;
+    padding-bottom: calc(var(--safe-area-bottom) + var(--spacing-lg));
+}
+
+.converter-area::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+}
+
+/* Base Currency Card */
+.base-card {
+    background-color: var(--bg-card);
+    border: 2px solid var(--accent-color);
+    border-radius: var(--card-radius);
+    padding: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 102, 255, 0.1);
+    margin-bottom: var(--spacing-sm);
+}
+
+/* Shared Card Layouts */
+.card-left {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    min-width: 80px;
+}
+
+.card-middle {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0 var(--spacing-md);
+    overflow: hidden;
+}
+
+.card-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.target-card-right {
+    border-left: 1px solid var(--border-color);
+    padding-left: var(--spacing-md);
+}
+
+/* Currency Selectors */
+.currency-selector {
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-primary);
+    font-size: 17px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.currency-flag {
+    width: 28px;
+    height: 20px;
+    border-radius: 2px;
+    object-fit: cover;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+}
+
+.chevron {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-left: 2px;
+}
+
+/* Amount Input (shared styles for base AND target rows) */
+.amount-wrapper {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.currency-symbol {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 4px;
+}
+
+.base-card .amount-wrapper input,
+.item-amount-input {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 20px;
+    font-weight: 600;
+    text-align: right;
+    width: 100%;
+    outline: none;
+    font-family: inherit;
+}
+
+.base-card .amount-wrapper input::placeholder,
+.item-amount-input::placeholder {
+    color: var(--text-secondary);
+}
+
+/* Active input highlight */
+.currency-card.active-source {
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 2px 10px rgba(0, 102, 255, 0.1);
+}
+
+/* Target List items */
+.target-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.target-item {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-radius);
+    padding: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.target-item .currency-selector .chevron {
+    display: none;
+}
+
+.target-item .amount-wrapper {
+    margin-bottom: 4px;
+}
+
+.item-rate-info {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: right;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 18px;
+    cursor: pointer;
+    padding: var(--spacing-sm);
+}
+
+/* List Actions */
+.list-actions {
+    margin-top: var(--spacing-md);
+    display: flex;
+    justify-content: center;
+    padding-bottom: var(--spacing-lg);
+}
+
+.manage-btn {
+    background-color: transparent;
+    border: 1.5px dashed var(--accent-color);
+    color: var(--accent-color);
+    padding: 12px 24px;
+    border-radius: 20px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.2s;
+}
+
+.manage-btn:active {
+    opacity: 0.6;
+}
+
+/* ======================== */
+/* Chart Section            */
+/* ======================== */
+.chart-section {
+    background-color: var(--bg-card);
+    border-radius: var(--card-radius);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+    color: var(--text-primary);
+}
+
+/* Chart Currency Selectors */
+.chart-currency-selectors {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.chart-currency-btn {
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.chart-currency-btn:active {
+    border-color: var(--accent-color);
+}
+
+.chart-arrow {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* Chart Rate Display */
+.chart-rate-display {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: var(--spacing-md);
+}
+
+.chart-current-rate {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.chart-change {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.chart-change.positive {
+    color: var(--success);
+}
+
+.chart-change.negative {
+    color: var(--danger);
+}
+
+/* Period Pills */
+.period-pills {
+    display: flex;
+    gap: 6px;
+    margin-bottom: var(--spacing-md);
+    overflow-x: auto;
+}
+
+.pill {
+    flex: 1;
+    background-color: var(--bg-main);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 6px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.pill.active {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.pill:active {
+    opacity: 0.7;
+}
+
+/* Chart Container */
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 200px;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.chart-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(255,255,255,0.8);
+    color: var(--text-secondary);
+    font-size: 14px;
+    gap: 8px;
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.chart-loading.active {
+    opacity: 1;
+}
+
+/* ======================== */
+/* Modal Overlay            */
+/* ======================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--overlay-bg);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.modal-content {
+    background-color: var(--bg-modal);
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    height: 85vh;
+    border-radius: var(--modal-radius) var(--modal-radius) 0 0;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 -5px 25px rgba(0,0,0,0.1);
+}
+
+.modal-overlay.active .modal-content {
+    transform: translateY(0);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg) var(--spacing-md) var(--spacing-md);
+}
+
+.modal-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: var(--bg-card-active);
+    border: none;
+    color: var(--text-secondary);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.search-container {
+    margin: 0 var(--spacing-md) var(--spacing-md);
+    background-color: var(--bg-card-active);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    height: 36px;
+}
+
+.search-icon {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.search-container input {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    width: 100%;
+    height: 100%;
+    padding: 0 8px;
+    font-size: 16px;
+    outline: none;
+}
+
+.search-container input::placeholder {
+    color: var(--text-secondary);
+}
+
+.currency-list {
+    list-style: none;
+    overflow-y: auto;
+    flex: 1;
+    padding-bottom: var(--safe-area-bottom);
+}
+
+.currency-list::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+}
+
+.currency-list-item {
+    display: flex;
+    align-items: center;
+    padding: 12px var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.currency-list-item:active {
+    background-color: var(--bg-card-active);
+}
+
+.list-flag {
+    width: 32px;
+    height: 24px;
+    border-radius: 3px;
+    object-fit: cover;
+    margin-right: 12px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+}
+
+.list-details {
+    flex: 1;
+}
+
+.list-code {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.list-name {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.list-check {
+    color: var(--accent-color);
+    font-size: 16px;
+    opacity: 0;
+}
+
+.currency-list-item.selected .list-check {
+    opacity: 1;
+}

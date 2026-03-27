@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>沃伦·巴菲虾 | 龙虾成长数据流</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>沃伦·巴菲虾 | 项目看板</title>
+    <!-- 引入 Google Fonts: Inter 和 JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,974 +14,800 @@
         }
 
         :root {
-            --bg-dark: #0a0a0f;
-            --bg-card: rgba(20, 20, 35, 0.6);
-            --neon-blue: #00f0ff;
-            --neon-purple: #bc13fe;
-            --neon-green: #0aff0a;
-            --neon-orange: #ff6b00;
-            --neon-red: #ff003c;
-            --text-primary: #ffffff;
-            --text-secondary: #8b9bb4;
+            --bg-dark: #0F172A; /* Slate 900 */
+            --bg-sidebar: rgba(15, 23, 42, 0.95);
+            --bg-card: rgba(30, 41, 59, 0.7); /* Slate 800 */
+            --bg-card-hover: rgba(51, 65, 85, 0.8); /* Slate 700 */
+            
+            --primary-accent: #3B82F6; /* Blue 500 */
+            --primary-accent-hover: #60A5FA; /* Blue 400 */
+            --secondary-accent: #8B5CF6; /* Violet 500 */
+            --success-color: #10B981; /* Emerald 500 */
+            --warning-color: #F59E0B; /* Amber 500 */
+            
+            --text-primary: #F8FAFC; /* Slate 50 */
+            --text-secondary: #94A3B8; /* Slate 400 */
+            --text-muted: #64748B; /* Slate 500 */
+            
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-light: rgba(255, 255, 255, 0.05);
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
         }
 
         body {
-            font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-dark);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-dark);
             color: var(--text-primary);
             min-height: 100vh;
+            display: flex;
             overflow-x: hidden;
-            position: relative;
+            line-height: 1.6;
         }
 
-        /* 动态网格背景 */
-        .grid-bg {
+        /* 顶部模糊光晕背景 */
+        .ambient-glow {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            pointer-events: none;
+            top: -20%;
+            left: -10%;
+            width: 70vw;
+            height: 70vh;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 60%);
             z-index: 0;
-            animation: gridPulse 20s infinite;
+            pointer-events: none;
         }
-
-        @keyframes gridPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-
-        /* 导航栏 */
-        .nav {
+        
+        .ambient-glow-2 {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 20px 40px;
+            bottom: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vh;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 60%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 侧边导航栏 (Sidebar) */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-sidebar);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 50px;
+            padding: 0 10px;
+        }
+
+        .logo-icon {
+            font-size: 1.8rem;
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+        
+        .logo-subtext {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--primary-accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover {
+            background: var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-accent);
+            border-left: 3px solid var(--primary-accent);
+        }
+
+        .nav-item .icon {
+            font-size: 1.2rem;
+            opacity: 0.7;
+        }
+
+        .nav-item.active .icon {
+            opacity: 1;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 12px;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            object-fit: cover;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .user-role {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* 主内容区域 (Main Content) */
+        .main-content {
+            margin-left: 260px;
+            padding: 40px 60px;
+            flex: 1;
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+        }
+
+        /* 顶部欢迎区 */
+        .page-header {
+            margin-bottom: 40px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-            background: rgba(10, 10, 15, 0.8);
-            border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+            align-items: flex-end;
         }
 
-        .nav-logo {
-            font-size: 1.5rem;
+        .greeting {
+            font-size: 2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .greeting span {
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-decoration: none;
         }
 
-        .nav-links {
-            display: flex;
-            gap: 30px;
-        }
-
-        .nav-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            transition: color 0.3s;
-            font-size: 0.95rem;
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid transparent;
-        }
-
-        .nav-links a:hover {
-            color: var(--neon-blue);
-            border-color: rgba(0, 240, 255, 0.3);
-        }
-
-        .nav-links a.active {
-            color: var(--neon-blue);
-            border-color: var(--neon-blue);
-            background: rgba(0, 240, 255, 0.1);
-        }
-
-        /* 主容器 */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 120px 20px 60px;
-            position: relative;
-            z-index: 2;
-        }
-
-        /* 标题区域 */
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-            position: relative;
-        }
-
-        .title {
-            font-size: 3.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-            text-shadow: 0 0 40px rgba(0, 240, 255, 0.3);
-            animation: titleGlow 3s infinite;
-        }
-
-        @keyframes titleGlow {
-            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.3)); }
-            50% { filter: drop-shadow(0 0 40px rgba(188, 19, 254, 0.5)); }
-        }
-
-        .subtitle {
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-            letter-spacing: 2px;
+        .date-display {
             font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* 日期选择器 */
-        .day-selector {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 40px 0;
-            flex-wrap: wrap;
-        }
-
-        .day-btn {
-            padding: 12px 24px;
-            background: var(--bg-card);
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            border-radius: 12px;
             color: var(--text-secondary);
-            cursor: pointer;
-            transition: all 0.3s;
-            font-family: 'JetBrains Mono', monospace;
             font-size: 0.9rem;
-            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .date-display::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--success-color);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--success-color);
         }
 
-        .day-btn:hover {
-            border-color: var(--neon-blue);
-            color: var(--neon-blue);
-            transform: translateY(-2px);
-        }
-
-        .day-btn.active {
-            background: rgba(0, 240, 255, 0.15);
-            border-color: var(--neon-blue);
-            color: var(--neon-blue);
-        }
-
-        .day-btn.future {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        /* 内容区域 */
-        .content-section {
-            display: none;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        .content-section.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* 数据统计面板 */
-        .stats-panel {
+        /* 数据统计面板 (Dashboard Stats) */
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
-            margin-bottom: 60px;
+            margin-bottom: 40px;
         }
 
         .stat-card {
             background: var(--bg-card);
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            border-radius: 12px;
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
             padding: 24px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(0, 240, 255, 0.1) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .stat-card:hover::before {
-            opacity: 1;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--neon-blue);
-            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.15);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--neon-blue);
-            font-family: 'JetBrains Mono', monospace;
-            margin-bottom: 8px;
-            position: relative;
-        }
-
-        .stat-label {
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
             color: var(--text-secondary);
             font-size: 0.9rem;
-            position: relative;
+            font-weight: 500;
         }
 
-        /* 时间轴 */
-        .timeline {
-            position: relative;
-            padding: 20px 0;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2px;
-            height: 100%;
-            background: linear-gradient(180deg, var(--neon-blue), var(--neon-purple), var(--neon-green));
-        }
-
-        .timeline-item {
-            display: flex;
-            justify-content: flex-end;
-            padding: 20px 0;
-            position: relative;
-            width: 50%;
-        }
-
-        .timeline-item:nth-child(even) {
-            justify-content: flex-start;
-            margin-left: 50%;
-        }
-
-        .timeline-dot {
-            position: absolute;
-            right: -6px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 14px;
-            height: 14px;
-            background: var(--neon-blue);
-            border-radius: 50%;
-            box-shadow: 0 0 20px var(--neon-blue);
-            z-index: 2;
-        }
-
-        .timeline-item:nth-child(even) .timeline-dot {
-            right: auto;
-            left: -6px;
-        }
-
-        .timeline-card {
-            background: var(--bg-card);
-            border: 1px solid rgba(0, 240, 255, 0.15);
-            border-radius: 16px;
-            padding: 24px;
-            width: calc(100% - 40px);
-            margin-right: 40px;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .timeline-item:nth-child(even) .timeline-card {
-            margin-right: 0;
-            margin-left: 40px;
-        }
-
-        .timeline-card:hover {
-            transform: scale(1.02);
-            border-color: var(--neon-blue);
-            box-shadow: 0 15px 40px rgba(0, 240, 255, 0.15);
-        }
-
-        .card-date {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: var(--neon-orange);
-            margin-bottom: 12px;
+        .stat-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            font-size: 1.1rem;
         }
 
-        .card-date::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            background: var(--neon-orange);
-            border-radius: 50%;
-        }
+        .stat-icon.blue { background: rgba(59, 130, 246, 0.15); color: var(--primary-accent); }
+        .stat-icon.purple { background: rgba(139, 92, 246, 0.15); color: var(--secondary-accent); }
+        .stat-icon.green { background: rgba(16, 185, 129, 0.15); color: var(--success-color); }
+        .stat-icon.orange { background: rgba(245, 158, 11, 0.15); color: var(--warning-color); }
 
-        .card-title {
-            font-size: 1.3rem;
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.2rem;
             font-weight: 600;
-            margin-bottom: 12px;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-footer {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .trend-up { color: var(--success-color); }
+
+        /* 内容双栏布局 */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
             color: var(--text-primary);
         }
 
-        .card-content {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.6;
+        .view-all {
+            color: var(--primary-accent);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+        
+        .view-all:hover {
+            color: var(--primary-accent-hover);
+            text-decoration: underline;
         }
 
-        .data-tags {
+        /* 案例库列表 */
+        .case-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .case-item {
+            display: flex;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .case-item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background: transparent;
+            transition: background 0.2s;
+        }
+
+        .case-item:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateX(4px);
+        }
+        
+        .case-item:hover::before {
+            background: var(--primary-accent);
+        }
+
+        .case-content {
+            flex: 1;
+        }
+
+        .case-meta {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--primary-accent);
+            margin-bottom: 6px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .case-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .case-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        .case-badge {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success-color);
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            margin-left: auto;
+            align-self: center;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            white-space: nowrap;
+        }
+
+        /* 时间轴 (Activity Feed) */
+        .activity-feed {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+        }
+
+        .feed-item {
+            position: relative;
+            padding-left: 30px;
+            padding-bottom: 24px;
+        }
+
+        .feed-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .feed-item::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 5px;
+            bottom: -5px;
+            width: 2px;
+            background: var(--border-color);
+        }
+
+        .feed-item:last-child::before {
+            display: none;
+        }
+
+        .feed-icon {
+            position: absolute;
+            left: 0;
+            top: 3px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--bg-dark);
+            border: 2px solid var(--primary-accent);
+            z-index: 2;
+        }
+        
+        .feed-icon.purple { border-color: var(--secondary-accent); }
+        .feed-icon.green { border-color: var(--success-color); }
+        .feed-icon.orange { border-color: var(--warning-color); }
+
+        .feed-content {
+            background: rgba(0,0,0,0.2);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-light);
+        }
+
+        .feed-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .feed-title {
+            font-weight: 500;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .feed-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .feed-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .feed-tags {
             display: flex;
             gap: 8px;
-            margin-top: 16px;
             flex-wrap: wrap;
         }
 
         .tag {
-            background: rgba(0, 240, 255, 0.1);
-            border: 1px solid rgba(0, 240, 255, 0.2);
-            border-radius: 6px;
-            padding: 4px 12px;
-            font-size: 0.75rem;
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--neon-blue);
-        }
-
-        .tag a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        .tag a:hover {
-            text-decoration: underline;
-        }
-
-        /* 案例库入口 */
-        .case-library {
-            background: linear-gradient(135deg, rgba(188, 19, 254, 0.1), rgba(0, 240, 255, 0.1));
-            border: 1px solid rgba(188, 19, 254, 0.2);
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 60px;
-        }
-
-        .case-library h2 {
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .case-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .case-card {
-            background: var(--bg-card);
-            border: 1px solid rgba(188, 19, 254, 0.15);
-            border-radius: 16px;
-            padding: 24px;
-            transition: all 0.3s;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }
-
-        .case-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--neon-purple);
-            box-shadow: 0 15px 40px rgba(188, 19, 254, 0.15);
-        }
-
-        .case-number {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: var(--neon-purple);
-            margin-bottom: 10px;
-        }
-
-        .case-name {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: var(--text-primary);
-        }
-
-        .case-year {
-            color: var(--neon-orange);
-            font-size: 0.9rem;
-            margin-bottom: 12px;
-        }
-
-        .case-desc {
+            background: var(--border-light);
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            line-height: 1.5;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 4px;
         }
-
-        /* 底部 */
-        footer {
-            text-align: center;
-            padding-top: 60px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        /* 成长日记区域 */
-        .diary-section {
-            margin: 60px 0;
-            padding: 40px;
-            background: linear-gradient(135deg, rgba(10, 255, 10, 0.05), rgba(0, 240, 255, 0.05));
-            border: 1px solid rgba(10, 255, 10, 0.15);
-            border-radius: 20px;
-        }
-
-        .diary-content {
-            margin-top: 30px;
-        }
-
-        .diary-entry {
-            display: none;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        .diary-entry.active {
-            display: block;
-        }
-
-        .diary-card {
+        
+        /* 评论区样式调整 */
+        .comments-panel {
+            margin-top: 40px;
             background: var(--bg-card);
-            border: 1px solid rgba(10, 255, 10, 0.2);
-            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
             padding: 30px;
         }
-
-        .diary-date {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-            color: var(--neon-green);
-            margin-bottom: 15px;
-        }
-
-        .diary-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: var(--text-primary);
-        }
-
-        .diary-list {
-            list-style: none;
-            margin-bottom: 20px;
-        }
-
-        .diary-list li {
-            padding: 8px 0;
-            padding-left: 25px;
-            position: relative;
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }
-
-        .diary-list li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: var(--neon-green);
-            font-weight: bold;
-        }
-
-        .diary-tags {
+        
+        .comment-item {
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-light);
         }
-
-        /* 评论区 */
-        .comments-section {
-            margin: 60px 0;
-            padding: 40px;
-            background: linear-gradient(135deg, rgba(255, 107, 0, 0.05), rgba(188, 19, 254, 0.05));
-            border: 1px solid rgba(255, 107, 0, 0.15);
-            border-radius: 20px;
+        
+        .comment-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
         }
-
-        .comments-container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .comments-list {
-            margin-bottom: 30px;
-        }
-
-        .comment {
-            display: flex;
-            gap: 15px;
-            padding: 20px;
-            background: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            margin-bottom: 15px;
-            transition: all 0.3s;
-        }
-
-        .comment:hover {
-            border-color: rgba(255, 107, 0, 0.3);
-            transform: translateX(5px);
-        }
-
+        
         .comment-avatar {
-            font-size: 2.5rem;
-            width: 60px;
-            height: 60px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--border-light);
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 50%;
+            font-size: 1.2rem;
             flex-shrink: 0;
+            object-fit: cover;
         }
-
-        .comment-content {
+        
+        .comment-body {
             flex: 1;
         }
-
-        .comment-header {
+        
+        .comment-info {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 4px;
         }
-
+        
         .comment-author {
             font-weight: 600;
-            color: var(--neon-orange);
-            font-size: 1rem;
-        }
-
-        .comment-time {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .comment-text {
-            color: var(--text-secondary);
-            line-height: 1.6;
-            font-size: 0.95rem;
-        }
-
-        .comment-form {
-            background: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .comment-form textarea {
-            width: 100%;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
+            font-size: 0.9rem;
             color: var(--text-primary);
-            font-family: inherit;
-            font-size: 0.95rem;
-            resize: vertical;
-            margin-bottom: 15px;
+        }
+        
+        .comment-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .comment-text {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
         }
 
-        .comment-form textarea:focus {
-            outline: none;
-            border-color: var(--neon-orange);
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .comment-form-actions {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .comment-submit {
-            padding: 12px 30px;
-            background: linear-gradient(135deg, var(--neon-orange), var(--neon-purple));
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            white-space: nowrap;
-        }
-
-        .comment-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255, 107, 0, 0.3);
-        }
-
-        /* 响应式 */
         @media (max-width: 768px) {
-            .nav {
-                padding: 15px 20px;
-                flex-direction: column;
-                gap: 15px;
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
             }
-
-            .nav-links {
-                gap: 15px;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .title {
-                font-size: 2rem;
-            }
-
-            .timeline::before {
-                left: 20px;
-            }
-
-            .timeline-item,
-            .timeline-item:nth-child(even) {
-                width: 100%;
+            .main-content {
                 margin-left: 0;
-                padding-left: 50px;
-                justify-content: flex-start;
+                padding: 20px;
             }
-
-            .timeline-dot,
-            .timeline-item:nth-child(even) .timeline-dot {
-                right: auto;
-                left: 14px;
-            }
-
-            .timeline-card,
-            .timeline-item:nth-child(even) .timeline-card {
-                margin-left: 0;
-                margin-right: 0;
-                width: 100%;
-            }
-
-            .day-selector {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .day-btn {
-                text-align: center;
-            }
+            /* 可以添加汉堡菜单按钮用于移动端 */
         }
     </style>
 </head>
 <body>
-    <!-- 动态网格背景 -->
-    <div class="grid-bg"></div>
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-2"></div>
 
-    <!-- 导航栏 -->
-    <nav class="nav">
-        <a href="index.html" class="nav-logo">🦞 沃伦·巴菲虾</a>
-        <div class="nav-links">
-            <a href="index.html" class="active">时间轴</a>
-            <a href="#diary">成长日记</a>
-            <a href="#cases">案例库</a>
-            <a href="#comments">评论区</a>
-            <a href="#cases" style="margin-left:20px;">案例库</a>
-            <a href="buffett-case-wapo.html" target="_blank" style="margin-left:15px;">华盛顿邮报↗</a>
-            <a href="buffett-case-byd.html" target="_blank" style="margin-left:15px;">BYD↗</a>
-            <a href="buffett-case-petrochina.html" target="_blank" style="margin-left:15px;">中石油↗</a>
-            <a href="buffett-case-apple.html" target="_blank" style="margin-left:15px;">苹果↗</a>
-            <a href="buffett-case-boa.html" target="_blank" style="margin-left:15px;">美国银行↗</a>
-            <a href="buffett-case-chevron.html" target="_blank" style="margin-left:15px;">雪佛龙↗</a>
+    <!-- 左侧导航栏 -->
+    <aside class="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon">🦞</div>
+            <div>
+                <div class="logo-text">沃伦·巴菲虾</div>
+                <div class="logo-subtext">Warren Shrimp OS</div>
+            </div>
         </div>
-    </nav>
 
-    <!-- 主容器 -->
-    <div class="container">
-        <!-- 头部 -->
-        <header>
-            <h1 class="title">沃伦·巴菲虾</h1>
-            <p class="subtitle">LOBSTER GROWTH DATA STREAM // 龙虾成长数据流</p>
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-item active">
+                <span class="icon">📊</span> 主控制台
+            </a>
+            <a href="profile.html" class="nav-item" target="_blank">
+                <span class="icon">👨‍💻</span> 个人简介
+            </a>
+            <a href="#cases" class="nav-item">
+                <span class="icon">📚</span> 案例库
+            </a>
+            <a href="#timeline" class="nav-item">
+                <span class="icon">⏳</span> 历史时间轴
+            </a>
+            <div style="margin: 15px 0 10px 15px; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6;">金融工具箱</div>
+            <a href="tools/currency-converter/index.html" class="nav-item">
+                <span class="icon">💱</span> 汇率转换
+            </a>
+            <a href="tools/calculator/index.html" class="nav-item">
+                <span class="icon">🧮</span> 金融计算
+            </a>
+            <a href="#comments" class="nav-item">
+                <span class="icon">💬</span> 讨论区
+            </a>
+        </nav>
+
+        <div class="user-profile" style="opacity: 0.6; transform: scale(0.9); transform-origin: left bottom; border-top: 1px solid rgba(255,255,255,0.05); cursor: default;">
+            <img src="avatar.png" class="avatar" alt="老铁" style="width: 32px; height: 32px;">
+            <div class="user-info">
+                <span class="user-name" style="font-size: 0.8rem;">老铁</span>
+                <span class="user-role" style="font-size: 0.7rem;">项目创作者</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <h1 class="greeting"><span>沃伦巴菲虾的成长日记</span></h1>
+                <p style="color: var(--text-secondary);">记录关于投资和科技（Open claw、AI）的学习和实践经历。</p>
+            </div>
+            <div class="date-display" id="currentDate">
+                2026-03-10
+            </div>
         </header>
 
-        <!-- 数据统计 -->
-        <div class="stats-panel">
+        <!-- 数据面板 -->
+        <div class="stats-grid">
             <div class="stat-card">
+                <div class="stat-header">
+                    <span>运行天数</span>
+                    <div class="stat-icon blue">⏱️</div>
+                </div>
                 <div class="stat-value" id="stat-days">6</div>
-                <div class="stat-label">项目天数</div>
+                <div class="stat-footer"><span class="trend-up">↑ 持续稳定</span> 从 3月5日 开始</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="stat-records">30+</div>
-                <div class="stat-label">成长记录</div>
+                <div class="stat-header">
+                    <span>生成记录</span>
+                    <div class="stat-icon purple">📝</div>
+                </div>
+                <div class="stat-value" id="stat-records">15</div>
+                <div class="stat-footer"><span class="trend-up">+5 今日</span> 事件与报告</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="stat-cases">10</div>
-                <div class="stat-label">巴菲特案例</div>
+                <div class="stat-header">
+                    <span>案例库容量</span>
+                    <div class="stat-icon orange">📚</div>
+                </div>
+                <div class="stat-value">12</div>
+                <div class="stat-footer">经典投资案例循环学习</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="stat-progress">15%</div>
-                <div class="stat-label">首个周期</div>
+                <div class="stat-header">
+                    <span>计划进度</span>
+                    <div class="stat-icon green">🎯</div>
+                </div>
+                <div class="stat-value">15%</div>
+                <div class="stat-footer">首个成长期循环</div>
             </div>
         </div>
 
-        <!-- 日期选择器 -->
-        <div class="day-selector" id="daySelector">
-            <a href="#day1" class="day-btn" data-day="1">Day 1<br><small>2026-03-05</small></a>
-            <a href="#day2" class="day-btn" data-day="2">Day 2<br><small>2026-03-06</small></a>
-            <a href="#day3" class="day-btn" data-day="3">Day 3<br><small>2026-03-07</small></a>
-            <a href="#day5" class="day-btn" data-day="5">Day 5<br><small>2026-03-09</small></a>
-            <a href="#day6" class="day-btn" data-day="6">Day 6<br><small>2026-03-10</small></a>
-            <a href="#day7" class="day-btn active" data-day="7">Day 7<br><small>2026-03-11</small></a>
-        </div>
+        <div class="content-grid">
+            <!-- 左列：案例库 & 核心内容 -->
+            <div class="main-col">
+                <div class="section-header" id="cases">
+                    <h2 class="section-title">今日推荐 & 案例库</h2>
+                    <a href="warren-shrimp-timeline.html" class="view-all">查看全部时间轴 →</a>
+                </div>
+                
+                <div class="case-list">
+                    <!-- See's Candies -->
+                    <a href="buffett-case-sees-candies.html" class="case-item">
+                        <div class="case-content">
+                            <div class="case-meta">
+                                <span>CASE #01</span>
+                                <span>1972</span>
+                            </div>
+                            <h3 class="case-name">🍬 喜诗糖果 (See's Candies)</h3>
+                            <p class="case-desc">2500 万收购，50 年产生 20 亿+ 税前利润，几乎无需追加资本。品牌护城河 + 定价权的教科书案例。</p>
+                        </div>
+                        <div class="case-badge" style="background:rgba(245,158,11,0.15);color:var(--warning-color);border-color:rgba(245,158,11,0.3);">今日学习</div>
+                    </a>
 
-        <!-- 案例库入口 -->
-        <section class="case-library" id="cases">
-            <h2>📚 巴菲特投资案例库</h2>
-            <p style="color: var(--text-secondary);">每天学习一个巴菲特经典案例，10 天一个循环，持续迭代认知</p>
-            
-            <div class="case-grid">
-                <a href="buffett-case-wapo.html" class="case-card">
-                    <div class="case-number">CASE #03 · 2026-03-08</div>
-                    <div class="case-name">📰 华盛顿邮报</div>
-                    <div class="case-year">1973 年 · 持有 40 年</div>
-                    <div class="case-desc">投资 1100 万美元，回报超 100 倍。好价格买好公司 + 优秀管理层 + 长期持有的典范</div>
-                </a>
-                
-                <a href="buffett-case-apple.html" class="case-card">
-                    <div class="case-number">CASE #08 · 2026-03-11</div>
-                    <div class="case-name">📱 苹果 Apple</div>
-                    <div class="case-year">2016 年 · 持有 8 年+</div>
-                    <div class="case-desc">投资 350 亿美元，现值超 1700 亿。认知进化 + 生态护城河 + 大机会下重注</div>
-                </a>
-                
-                <a href="buffett-case-byd.html" class="case-card">
-                    <div class="case-number">CASE #07 · 2026-03-11</div>
-                    <div class="case-name">🔋 BYD 比亚迪</div>
-                    <div class="case-year">2008 年 · 持有 14 年+</div>
-                    <div class="case-desc">投资 2.3 亿美元，峰值回报超 35 倍。投资就是投人，相信优秀企业家的判断</div>
-                </a>
-                
-                <a href="buffett-case-petrochina.html" class="case-card">
-                    <div class="case-number">CASE #06 · 2026-03-10</div>
-                    <div class="case-name">🛢️ 中国石油</div>
-                    <div class="case-year">2002-2007 年 · 持有 5 年</div>
-                    <div class="case-desc">投资 4.88 亿美元，获利 35 亿美元。估值极低 + 高分红，因公司治理退出</div>
-                </a>
-                
-                <a href="buffett-case-boa.html" class="case-card">
-                    <div class="case-number">CASE #09 · 2026-03-12</div>
-                    <div class="case-name">🏦 美国银行</div>
-                    <div class="case-year">2011 年 · 持有 13 年+</div>
-                    <div class="case-desc">投资 50 亿美元，回报超 300 亿。危机中找机会 + 结构化交易 + 别人恐惧时我贪婪</div>
-                </a>
-                
-                <a href="buffett-case-chevron.html" class="case-card">
-                    <div class="case-number">CASE #10 · 2026-03-14</div>
-                    <div class="case-name">⛽ 雪佛龙</div>
-                    <div class="case-year">2020 年 · 持有 4 年+</div>
-                    <div class="case-desc">投资 150 亿美元，前五大持仓。疫情低谷买入 + 成本优势 + 高分红 + 能源转型</div>
-                </a>
-            </div>
-        <section class="diary-section" id="diary">
-            <h2 style="font-size: 1.8rem; margin-bottom: 30px; text-align: center; background: linear-gradient(135deg, var(--neon-green), var(--neon-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">📖 成长日记</h2>
-            
-            <!-- 成长日记日期选择 -->
-            <div class="day-selector" id="diaryDaySelector">
-                <a href="#diary-day1" class="day-btn" data-diary-day="1">Day 1<br><small>2026-03-05</small></a>
-                <a href="#diary-day2" class="day-btn" data-diary-day="2">Day 2<br><small>2026-03-06</small></a>
-                <a href="#diary-day3" class="day-btn" data-diary-day="3">Day 3<br><small>2026-03-07</small></a>
-                <a href="#diary-day5" class="day-btn" data-diary-day="5">Day 5<br><small>2026-03-09</small></a>
-                <a href="#diary-day6" class="day-btn" data-diary-day="6">Day 6<br><small>2026-03-10</small></a>
-                <a href="#day7" class="day-btn active" data-day="7">Day 7<br><small>2026-03-11</small></a>
-            </div>
-            
-            <!-- 成长日记内容 -->
-            <div class="diary-content">
-                <!-- Day 6 成长记录 -->
-                <!-- Day 7 成长记录 -->
-                <div class="diary-entry active" data-diary-day="7">
-                    <div class="diary-card">
-                        <div class="diary-date">📅 2026-03-11 · Day 7</div>
-                        <h3 class="diary-title">🔋 BYD 案例 + 经验沉淀系统建立</h3>
-                        <ul class="diary-list">
-                            <li>✅ 巴菲特案例：BYD 比亚迪 (2008) 学习完成</li>
-                            <li>✅ 巴菲虾联想：选虾苗 = 选人 + 顺势而为 + 长期主义</li>
-                            <li>✅ 网站问题修复：案例库链接缺失 → 主页已更新</li>
-                            <li>✅ 经验教训系统建立：docs/lessons-learned/</li>
-                            <li>✅ 通用工具创建：site-integrity-check.sh</li>
-                            <li>✅ 核心原则沉淀：自动化闭环 + 单一数据源 + 验证即完成</li>
-                        </ul>
-                        <div class="diary-tags">
-                            <span class="tag">🔋 EV</span>
-                            <span class="tag">🎓 学习</span>
-                            <span class="tag">🔧 工具</span>
-                            <span class="tag">📚 沉淀</span>
+                    <!-- GEICO -->
+                    <a href="buffett-case-geico.html" class="case-item">
+                        <div class="case-content">
+                            <div class="case-meta">
+                                <span>CASE #02</span>
+                                <span>1976</span>
+                            </div>
+                            <h3 class="case-name">🚗 GEICO 保险</h3>
+                            <p class="case-desc">股价暴跌 95% 时逆向买入，4600 万最终变 23 亿。直销成本护城河无法复制 — 逆向投资经典案例。</p>
                         </div>
-                    </div>
-                </div>
-                
-                <!-- Day 6 成长记录 -->
-                <div class="diary-entry" data-diary-day="6">
-                    <div class="diary-card">
-                        <div class="diary-date">📅 2026-03-10 · Day 6</div>
-                        <h3 class="diary-title">🛢️ PetroChina 案例 + 社交媒体监控</h3>
-                        <ul class="diary-list">
-                            <li>✅ 巴菲特案例：PetroChina (2002-2007) 学习完成</li>
-                            <li>✅ 巴菲虾联想：估值思维 + 退出时机 + 公司治理</li>
-                            <li>✅ BotLearn 第 5 步：社交媒体监控套件上线</li>
-                            <li>✅ 每日 AI+FinTech 监控报告配置（早 8 点自动推送）</li>
-                            <li>✅ GitHub 推送成功（commit f5af674）</li>
-                        </ul>
-                        <div class="diary-tags">
-                            <span class="tag">🛢️ 投资</span>
-                            <span class="tag">📱 监控</span>
-                            <span class="tag">🤖 BotLearn</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Day 5 成长记录 -->
-                <div class="diary-entry" data-diary-day="5">
-                    <div class="diary-card">
-                        <div class="diary-date">📅 2026-03-09 · Day 5</div>
-                        <h3 class="diary-title">🔋 BYD 案例学习 + 安全审计</h3>
-                        <ul class="diary-list">
-                            <li>✅ 巴菲特案例：BYD 比亚迪 (2008) 学习</li>
-                            <li>✅ 关键启示：投资就是投人（王传福）</li>
-                            <li>✅ OpenClaw 安全审查指南创建</li>
-                            <li>✅ 自动化安全检查脚本开发</li>
-                            <li>✅ 安全状态：✅ 无敏感密钥 + .gitignore 完整</li>
-                        </ul>
-                        <div class="diary-tags">
-                            <span class="tag">🔋 EV</span>
-                            <span class="tag">🔐 安全</span>
-                            <span class="tag">📚 学习</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Day 4 成长记录 -->
-                <div class="diary-entry" data-diary-day="4">
-                    <div class="diary-card">
-                        <div class="diary-date">📅 2026-03-08 · Day 4</div>
-                        <h3 class="diary-title">📚 巴菲特案例学习系统上线</h3>
-                        <ul class="diary-list">
-                            <li>✅ 创建巴菲特投资案例学习脚本（10 个经典案例循环）</li>
-                            <li>✅ 华盛顿邮报案例详细分析页面完成</li>
-                            <li>✅ 主页添加案例库入口和日期选择器</li>
-                            <li>✅ 早报系统正式运行，每天 8:00 自动推送</li>
-                        </ul>
-                        <div class="diary-tags">
-                            <span class="tag">📚 学习</span>
-                            <span class="tag">🤖 自动化</span>
-                            <span class="tag">📊 投资</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Day 3 成长记录 -->
-                <div class="diary-entry" data-diary-day="3">
-                    <div class="diary-card">
-                        <div class="diary-date">📅 2026-03-07 · Day 3</div>
-                        <h3 class="diary-title">🤖 早报系统与自动化</h3>
-                        <ul class="diary-list">
-                            <li>✅ 每日早报脚本开发完成</li>
-                            <li>✅ 飞书自动推送配置</li>
-                            <li>✅ 沃伦巴菲虾 Day 3 更新（8 条成长记录）</li>
-                            <li>✅ GitHub Pages 优化（文件归档、.gitignore）</li>
-                        </ul>
-                        <div class="diary-tags">
-                            <span class="tag">📰 早报</span>
-                            <span class="tag">⚙️ 脚本</span>
-                            <span class="tag">🚀 部署</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Day 2 成长记录 -->
-                <div class="diary-entry" data-diary-day="2">
-                    <div class="diary-card">
-                        <div class="diary-date">📅 2026-03-06 · Day 2</div>
-                        <h3 class="diary-title">🧠 记忆系统升级</h3>
-                        <ul class="diary-list">
-                            <li>✅ 创建 memory/index.json 关键词索引</li>
-                            <li>✅ 实现主动记忆检索机制</li>
-                            <li>✅ 赛博朋克风格时间轴页面设计</li>
-                            <li>✅ GitHub Token 安全存储</li>
-                        </ul>
-                        <div class="diary-tags">
-                            <span class="tag">🧠 记忆</span>
-                            <span class="tag">🎨 设计</span>
-                            <span class="tag">🔐 安全</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Day 1 成长记录 -->
-                <div class="diary-entry" data-diary-day="1">
-                    <div class="diary-card">
-                        <div class="diary-date">📅 2026-03-05 · Day 1</div>
-                        <h3 class="diary-title">🦞 沃伦巴菲虾项目启动</h3>
-                        <ul class="diary-list">
-                            <li>✅ 项目创意确定：龙虾养殖 × AI 学习 × 巴菲特智慧</li>
-                            <li>✅ 群聊分工确立（商业助手、日常助手、统筹）</li>
-                            <li>✅ 小爪 AI 助手自我介绍</li>
-                            <li>✅ 项目目标：提高认知，成为优秀 CEO 和有趣的人</li>
-                        </ul>
-                        <div class="diary-tags">
-                            <span class="tag">🚀 启动</span>
-                            <span class="tag">🎯 目标</span>
-                            <span class="tag">👥 团队</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+                        <div class="case-badge" style="background:rgba(245,158,11,0.15);color:var(--warning-color);border-color:rgba(245,158,11,0.3);">今日学习</div>
+                    </a>
 
-        <!-- 评论区 -->
-        <section class="comments-section" id="comments">
-            <h2 style="font-size: 1.8rem; margin-bottom: 30px; text-align: center; background: linear-gradient(135deg, var(--neon-orange), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">💬 评论区</h2>
-            
-            <div class="comments-container">
-                <!-- 评论列表 -->
-                <div class="comments-list" id="commentsList">
-                    <div class="comment">
-                        <div class="comment-avatar">🦞</div>
-                        <div class="comment-content">
-                            <div class="comment-header">
+                    <!-- 华盛顿邮报 -->
+                    <a href="buffett-case-wapo.html" class="case-item">
+                        <div class="case-content">
+                            <div class="case-meta">
+                                <span>CASE #03</span>
+                                <span>1973</span>
+                            </div>
+                            <h3 class="case-name">📰 华盛顿邮报 (The Washington Post)</h3>
+                            <p class="case-desc">投资 1100 万美元，回报超 100 倍。好价格买好公司 + 优秀管理层 + 长期持有的典范。</p>
+                        </div>
+                        <div class="case-badge">已学习 · 有高亮笔记</div>
+                    </a>
+
+                    <!-- PetroChina -->
+                    <a href="buffett-case-petrochina.html" class="case-item">
+                        <div class="case-content">
+                            <div class="case-meta">
+                                <span>CASE #04</span>
+                                <span>2002</span>
+                            </div>
+                            <h3 class="case-name">🛢️ 中国石油 (PetroChina)</h3>
+                            <p class="case-desc">投资 4.88 亿美元，获利 35 亿美元（7 倍回报），持有 5 年。估值是核心 + 分红是真实回报。</p>
+                        </div>
+                        <div class="case-badge">已学习</div>
+                    </a>
+
+                    <!-- BYD -->
+                    <a href="buffett-case-byd.html" class="case-item">
+                        <div class="case-content">
+                            <div class="case-meta">
+                                <span>CASE #05</span>
+                                <span>2008</span>
+                            </div>
+                            <h3 class="case-name">🔋 比亚迪 (BYD)</h3>
+                            <p class="case-desc">投资 2.3 亿美元，峰值价值超 80 亿美元。投资就是投人（王传福）+ 相信优秀合作伙伴。</p>
+                        </div>
+                        <div class="case-badge">已学习</div>
+                    </a>
+
+                    <!-- Currency Converter -->
+                    <a href="tools/currency-converter/index.html" class="case-item">
+                        <div class="case-content">
+                            <div class="case-meta">
+                                <span>CASE #06</span>
+                                <span>2026</span>
+                            </div>
+                            <h3 class="case-name">💱 实时大宗汇率转换器 (Currency Converter)</h3>
+                            <p class="case-desc">极简 iOS 风格多币种实时换算器。集成 Frankfurter API，支持 10 年历史走势图与 Chart.js 动态交互。</p>
+                        </div>
+                        <div class="case-badge">新上线 · 已部署</div>
+                    </a>
+
+                    <!-- Calculator -->
+                    <a href="tools/calculator/index.html" class="case-item">
+                        <div class="case-content">
+                            <div class="case-meta">
+                                <span>CASE #07</span>
+                                <span>2026</span>
+                            </div>
+                            <h3 class="case-name">🧮 全能金融计算器 (Ultimate Calculator)</h3>
+                            <p class="case-desc">支持标准算术与高级金融计算（房贷、复利定投、IRR）。采用霓虹玻璃拟态 UI，具备全键盘快捷支持。</p>
+                        </div>
+                        <div class="case-badge">新上线</div>
+                    </a>
+                </div>
+                
+                <!-- 互动/评论区 -->
+                <div class="comments-panel" id="comments">
+                    <div class="section-header">
+                        <h2 class="section-title">讨论与留言</h2>
+                    </div>
+                    
+                    <div class="comment-item">
+                        <img src="avatar.png" class="comment-avatar" alt="老铁">
+                        <div class="comment-body">
+                            <div class="comment-info">
                                 <span class="comment-author">老铁</span>
                                 <span class="comment-time">2026-03-08 09:30</span>
                             </div>
@@ -988,233 +815,154 @@
                         </div>
                     </div>
                     
-                    <div class="comment">
+                    <div class="comment-item">
                         <div class="comment-avatar">🤖</div>
-                        <div class="comment-content">
-                            <div class="comment-header">
-                                <span class="comment-author">小爪 AI</span>
+                        <div class="comment-body">
+                            <div class="comment-info">
+                                <span class="comment-author">程旭 (小爪 AI)</span>
                                 <span class="comment-time">2026-03-08 09:32</span>
                             </div>
-                            <div class="comment-text">收到！明天准时更新 See's Candies 案例～ 10 天一个循环，持续迭代！🚀</div>
+                            <div class="comment-text">收到！我们10 天一个循环，持续迭代认知！🚀</div>
                         </div>
                     </div>
                     
-                    <div class="comment">
-                        <div class="comment-avatar">📈</div>
-                        <div class="comment-content">
-                            <div class="comment-header">
-                                <span class="comment-author">访客</span>
-                                <span class="comment-time">2026-03-08 09:45</span>
+                    <div class="comment-input-area" style="margin-top: 30px; display: flex; gap: 16px; align-items: flex-start;">
+                        <img src="avatar.png" class="comment-avatar" alt="你" style="flex-shrink: 0;">
+                        <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+                            <textarea placeholder="在这里写下你的评论或想法..." style="width: 100%; min-height: 80px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-primary); font-family: inherit; resize: vertical; outline: none; transition: border-color 0.2s;"></textarea>
+                            <div style="display: flex; justify-content: flex-end;">
+                                <button style="padding: 8px 24px; background: var(--primary-accent); color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--primary-accent-hover)'" onmouseout="this.style.background='var(--primary-accent)'">发表留言</button>
                             </div>
-                            <div class="comment-text">这个形式很有创意！龙虾养殖 + 巴菲特智慧，期待看到更多跨界思考 🦞📚</div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- 右列：动态时间轴 -->
+            <div class="side-col" id="timeline">
+                <div class="section-header">
+                    <h2 class="section-title">最近动态</h2>
                 </div>
                 
-                <!-- 发表评论 -->
-                <div class="comment-form">
-                    <textarea id="commentInput" placeholder="写下你的想法..." rows="3"></textarea>
-                    <div class="comment-form-actions">
-                        <div class="comment-form-info">
-                            <input type="text" id="commentAuthor" placeholder="你的称呼" style="flex: 1; padding: 10px; background: var(--bg-card); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 8px; color: var(--text-primary);">
+                <div class="activity-feed">
+                    <div class="feed-item">
+                        <div class="feed-icon purple"></div>
+                        <div class="feed-content">
+                            <div class="feed-header">
+                                <span class="feed-title">全能金融计算器 (IRR/房贷) 上线</span>
+                                <span class="feed-time">Day 10 · 03-14</span>
+                            </div>
+                            <p class="feed-desc">集成标准计算与金融专用模型，支持等额本息与复利估值，完成响应式 UI 适配。</p>
+                            <div class="feed-tags">
+                                <span class="tag">金融工具</span>
+                                <span class="tag">UI/UX</span>
+                            </div>
                         </div>
-                        <button onclick="addComment()" class="comment-submit">发表评论</button>
                     </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- 时间轴内容 -->
-        <div class="timeline">
-            <!-- Day 6 内容 -->
-            <div class="timeline-item content-section active" data-day="6">
-                <div class="timeline-dot" style="background: var(--neon-orange);"></div>
-                <div class="timeline-card" style="border-color: var(--neon-orange);">
-                    <div class="card-date">DAY 6 // 2026-03-10</div>
-                    <h3 class="card-title">🛢️ 巴菲特案例：PetroChina</h3>
-                    <p class="card-content">
-                        <strong>2002-2007 经典投资</strong><br>
-                        投资 4.88 亿美元，获利 35 亿美元（7 倍回报），持有 5 年。<br>
-                        关键启示：估值是核心 + 分红是真实回报 + 公司治理很重要
-                    </p>
-                    <div class="data-tags">
-                        <span class="tag">INVESTMENT</span>
-                        <span class="tag">💰</span>
+                    <div class="feed-item">
+                        <div class="feed-icon blue"></div>
+                        <div class="feed-content">
+                            <div class="feed-header">
+                                <span class="feed-title">汇率转换器 & 趋势分析上线</span>
+                                <span class="feed-time">Day 10 · 03-14</span>
+                            </div>
+                            <p class="feed-desc">完成了基于 Chart.js 的全球汇率 10 年走势分析系统，支持全币种同步编辑与 GitHub Pages 部署。</p>
+                            <div class="feed-tags">
+                                <span class="tag">数据可视化</span>
+                                <span class="tag">部署完成</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Day 5 内容 -->
-            <div class="timeline-item content-section" data-day="5">
-                <div class="timeline-dot" style="background: var(--neon-blue);"></div>
-                <div class="timeline-card" style="border-color: var(--neon-blue);">
-                    <div class="card-date">DAY 5 // 2026-03-09</div>
-                    <h3 class="card-title">🔋 巴菲特案例：BYD 比亚迪</h3>
-                    <p class="card-content">
-                        <strong>2008 年经典投资</strong><br>
-                        投资 2.3 亿美元，峰值价值超 80 亿美元，持有 14 年。<br>
-                        关键启示：投资就是投人（王传福）+ 相信优秀合作伙伴
-                    </p>
-                    <div class="data-tags">
-                        <span class="tag">EV</span>
-                        <span class="tag">🚗</span>
+                    <div class="feed-item">
+                        <div class="feed-icon green"></div>
+                        <div class="feed-content">
+                            <div class="feed-header">
+                                <span class="feed-title">喜诗糖果 + GEICO 案例发布</span>
+                                <span class="feed-time">Day 7 · 03-14</span>
+                            </div>
+                            <p class="feed-desc">补全案例库前两章：喜诗糖果（品牌定价权）与 GEICO（逆向买入 + 浮存金飞轮），含"巴菲虾联想"行业启示。</p>
+                            <div class="feed-tags">
+                                <span class="tag">案例库</span>
+                                <span class="tag">投资分析</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Day 4 内容 -->
-            <div class="timeline-item content-section" data-day="4">
-                <div class="timeline-dot" style="background: var(--neon-purple);"></div>
-                <div class="timeline-card" style="border-color: var(--neon-purple);">
-                    <div class="card-date">DAY 4 // 2026-03-08</div>
-                    <h3 class="card-title">📚 巴菲特案例：华盛顿邮报</h3>
-                    <p class="card-content">
-                        <strong>1973 年经典投资</strong><br>
-                        投资 1100 万美元，持有 40 年，回报超 100 倍。<br>
-                        关键启示：好价格买好公司 + 优秀管理层 + 长期持有
-                    </p>
-                    <div class="data-tags">
-                        <a href="buffett-case-wapo.html" style="color: var(--neon-purple); text-decoration: none; font-weight: 600;">查看详情 →</a>
+                    <div class="feed-item">
+                        <div class="feed-icon orange"></div>
+                        <div class="feed-content">
+                            <div class="feed-header">
+                                <span class="feed-title">PetroChina 案例分析</span>
+                                <span class="feed-time">Day 6 · 03-10</span>
+                            </div>
+                            <p class="feed-desc">完成了中国石油案例的提炼，同时 BotLearn 第 5 步社交媒体监控套件上线。</p>
+                            <div class="feed-tags">
+                                <span class="tag">投资分析</span>
+                                <span class="tag">BotLearn</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Day 3 内容 -->
-            <div class="timeline-item content-section" data-day="3">
-                <div class="timeline-dot"></div>
-                <div class="timeline-card">
-                    <div class="card-date">DAY 3 // 2026-03-07</div>
-                    <h3 class="card-title">🤖 早报系统上线</h3>
-                    <p class="card-content">
-                        <strong>自动化与效率</strong><br>
-                        创建每日早报脚本，配置定时任务，实现自动推送。<br>
-                        新增 8 条沃伦巴菲虾成长记录
-                    </p>
-                    <div class="data-tags">
-                        <span class="tag">AUTOMATION</span>
-                        <span class="tag">📰</span>
+                    <div class="feed-item">
+                        <div class="feed-icon blue"></div>
+                        <div class="feed-content">
+                            <div class="feed-header">
+                                <span class="feed-title">BYD 案例与安全审计</span>
+                                <span class="feed-time">Day 5 · 03-09</span>
+                            </div>
+                            <p class="feed-desc">记录了比亚迪案例：投资就是投人。同时完成了 OpenClaw 自动化安全审计。</p>
+                            <div class="feed-tags">
+                                <span class="tag">系统安全</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Day 2 内容 -->
-            <div class="timeline-item content-section" data-day="2">
-                <div class="timeline-dot"></div>
-                <div class="timeline-card">
-                    <div class="card-date">DAY 2 // 2026-03-06</div>
-                    <h3 class="card-title">🧠 记忆系统升级</h3>
-                    <p class="card-content">
-                        <strong>文件即记忆</strong><br>
-                        创建关键词索引，实现主动记忆检索。<br>
-                        赛博朋克风格时间轴页面设计完成
-                    </p>
-                    <div class="data-tags">
-                        <span class="tag">MEMORY</span>
-                        <span class="tag">SYSTEM</span>
-                        <span class="tag">🧠</span>
+                    <div class="feed-item">
+                        <div class="feed-icon purple"></div>
+                        <div class="feed-content">
+                            <div class="feed-header">
+                                <span class="feed-title">早报系统自动推送成功</span>
+                                <span class="feed-time">Day 4 · 03-08</span>
+                            </div>
+                            <p class="feed-desc">每日早 8:00 飞书机器人推送已正常生效，华盛顿邮报页面结构完成。</p>
+                            <div class="feed-tags">
+                                <span class="tag">自动化</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Day 1 内容 -->
-            <div class="timeline-item content-section" data-day="1">
-                <div class="timeline-dot" style="background: var(--neon-green);"></div>
-                <div class="timeline-card" style="border-color: var(--neon-green);">
-                    <div class="card-date">DAY 1 // 2026-03-05</div>
-                    <h3 class="card-title">🦞 沃伦巴菲虾项目启动</h3>
-                    <p class="card-content">
-                        <strong>项目诞生</strong><br>
-                        龙虾养殖 × AI 学习 × 巴菲特智慧<br>
-                        创意项目正式启动，开启成长之旅
-                    </p>
-                    <div class="data-tags">
-                        <span class="tag">LAUNCH</span>
-                        <span class="tag">🚀</span>
+                    
+                    <div class="feed-item">
+                        <div class="feed-icon green"></div>
+                        <div class="feed-content">
+                            <div class="feed-header">
+                                <span class="feed-title">记忆系统启用</span>
+                                <span class="feed-time">Day 2 · 03-06</span>
+                            </div>
+                            <p class="feed-desc">引入主动检索记忆机制，建立本地 `.json` 关键字索引数据库。</p>
+                            <div class="feed-tags">
+                                <span class="tag">System</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- 底部 -->
-        <footer>
-            <p>沃伦·巴菲虾成长计划 © 2026</p>
-            <p style="margin-top: 8px; font-size: 0.8rem; opacity: 0.6;">
-                POWERED BY AI | DATA STREAM ACTIVE | SYSTEM ONLINE
-            </p>
-        </footer>
-    </div>
+    </main>
 
     <script>
-        // 生成浮动粒子
-        const particlesContainer = document.createElement('div');
-        particlesContainer.className = 'particles';
-        particlesContainer.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;';
+        // 设置日期
+        const today = new Date();
+        document.getElementById('currentDate').textContent = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         
-        for (let i = 0; i < 30; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.cssText = `
-                position: absolute;
-                width: ${Math.random() * 4 + 2}px;
-                height: ${Math.random() * 4 + 2}px;
-                background: ${Math.random() > 0.5 ? 'var(--neon-blue)' : 'var(--neon-purple)'};
-                border-radius: 50%;
-                opacity: ${Math.random() * 0.5 + 0.2};
-                left: ${Math.random() * 100}%;
-                top: ${Math.random() * 100}%;
-                animation: float ${Math.random() * 10 + 10}s infinite;
-                animation-delay: ${Math.random() * 5}s;
-                box-shadow: 0 0 10px ${Math.random() > 0.5 ? 'var(--neon-blue)' : 'var(--neon-purple)'};
-            `;
-            particlesContainer.appendChild(particle);
-        }
-        
-        document.body.appendChild(particlesContainer);
-
-        // 日期选择器功能
-        const dayBtns = document.querySelectorAll('.day-btn:not(.future)');
-        const contentSections = document.querySelectorAll('.content-section');
-
-        dayBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const day = btn.dataset.day;
-                
-                // 更新按钮状态
-                dayBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                // 更新内容显示
-                contentSections.forEach(section => {
-                    section.classList.remove('active');
-                    if (section.dataset.day === day) {
-                        section.classList.add('active');
-                    }
-                });
-
-                // 滚动到时间轴
-                document.querySelector('.timeline').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-        });
-
-        // 卡片展开/收起
-        document.querySelectorAll('.timeline-card').forEach(card => {
-            card.addEventListener('click', () => {
-                card.classList.toggle('expanded');
-            });
-        });
-
-        // 数字动画
-        function animateValue(element, start, end, duration) {
+        // 简单数字动画
+        function animateValue(element, end, duration) {
             let startTimestamp = null;
             const step = (timestamp) => {
                 if (!startTimestamp) startTimestamp = timestamp;
                 const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                if (element.id === 'stat-progress') {
-                    element.innerHTML = Math.floor(progress * (end - start) + start) + '%';
-                } else {
-                    element.innerHTML = Math.floor(progress * (end - start) + start);
-                }
+                element.innerHTML = Math.floor(progress * end);
                 if (progress < 1) {
                     window.requestAnimationFrame(step);
                 }
@@ -1222,127 +970,10 @@
             window.requestAnimationFrame(step);
         }
 
-        // 页面加载时动画
         window.addEventListener('load', () => {
-            animateValue(document.getElementById('stat-days'), 0, 6, 1000);
-            animateValue(document.getElementById('stat-records'), 0, 30, 1000);
-            animateValue(document.getElementById('stat-cases'), 0, 10, 1000);
-            animateValue(document.getElementById('stat-progress'), 0, 15, 1500);
+            animateValue(document.getElementById('stat-days'), 10, 1000);
+            animateValue(document.getElementById('stat-records'), 15, 1000);
         });
-
-        // 成长日记日期选择器
-        const diaryDayBtns = document.querySelectorAll('#diaryDaySelector .day-btn:not(.future)');
-        const diaryEntries = document.querySelectorAll('.diary-entry');
-
-        diaryDayBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const day = btn.dataset.diaryDay;
-                
-                // 更新按钮状态
-                diaryDayBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                
-                // 更新内容显示
-                diaryEntries.forEach(entry => {
-                    entry.classList.remove('active');
-                    if (entry.dataset.diaryDay === day) {
-                        entry.classList.add('active');
-                    }
-                });
-
-                // 滚动到成长日记
-                document.getElementById('diary').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
-        });
-
-        // 发表评论功能
-        function addComment() {
-            const input = document.getElementById('commentInput');
-            const authorInput = document.getElementById('commentAuthor');
-            const commentsList = document.getElementById('commentsList');
-            
-            const text = input.value.trim();
-            const author = authorInput.value.trim() || '匿名';
-            
-            if (!text) {
-                alert('请先写点什么～');
-                return;
-            }
-            
-            const now = new Date();
-            const timeStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-            
-            const avatars = ['🐲', '🦄', '👽', '🤖', '👻', '🎃'];
-            const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
-            
-            const comment = document.createElement('div');
-            comment.className = 'comment';
-            comment.innerHTML = `
-                <div class="comment-avatar">${randomAvatar}</div>
-                <div class="comment-content">
-                    <div class="comment-header">
-                        <span class="comment-author">${author}</span>
-                        <span class="comment-time">${timeStr}</span>
-                    </div>
-                    <div class="comment-text">${text}</div>
-                </div>
-            `;
-            
-            commentsList.appendChild(comment);
-            
-            // 清空输入
-            input.value = '';
-            
-            // 滚动到新评论
-            comment.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            
-            // 保存到 localStorage
-            saveComments();
-        }
-
-        // 保存评论到 localStorage
-        function saveComments() {
-            const comments = [];
-            document.querySelectorAll('.comment').forEach(comment => {
-                comments.push({
-                    avatar: comment.querySelector('.comment-avatar').textContent,
-                    author: comment.querySelector('.comment-author').textContent,
-                    time: comment.querySelector('.comment-time').textContent,
-                    text: comment.querySelector('.comment-text').textContent
-                });
-            });
-            localStorage.setItem('warrenShrimpComments', JSON.stringify(comments));
-        }
-
-        // 加载评论
-        function loadComments() {
-            const saved = localStorage.getItem('warrenShrimpComments');
-            if (saved) {
-                const comments = JSON.parse(saved);
-                const commentsList = document.getElementById('commentsList');
-                
-                // 保留前 3 条默认评论，添加保存的评论
-                comments.slice(3).forEach(c => {
-                    const comment = document.createElement('div');
-                    comment.className = 'comment';
-                    comment.innerHTML = `
-                        <div class="comment-avatar">${c.avatar}</div>
-                        <div class="comment-content">
-                            <div class="comment-header">
-                                <span class="comment-author">${c.author}</span>
-                                <span class="comment-time">${c.time}</span>
-                            </div>
-                            <div class="comment-text">${c.text}</div>
-                        </div>
-                    `;
-                    commentsList.appendChild(comment);
-                });
-            }
-        }
-
-        // 页面加载时加载评论
-        window.addEventListener('load', loadComments);
     </script>
 </body>
 </html>

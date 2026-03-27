@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>巴菲特案例：GEICO 保险 | 沃伦·巴菲虾</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0F172A;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --primary-accent: #3B82F6;
+            --primary-accent-hover: #60A5FA;
+            --secondary-accent: #8B5CF6;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --danger-color: #EF4444;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-light: rgba(255, 255, 255, 0.05);
+            --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark); color: var(--text-primary);
+            min-height: 100vh; line-height: 1.7;
+        }
+        .ambient-glow {
+            position: fixed; top: -20%; left: -10%;
+            width: 70vw; height: 70vh;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 60%);
+            z-index: 0; pointer-events: none;
+        }
+        .nav {
+            position: fixed; top: 0; left: 0; width: 100%;
+            padding: 18px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; backdrop-filter: blur(16px);
+            background: rgba(15, 23, 42, 0.85);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .nav-logo { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); text-decoration: none; }
+        .nav-links a {
+            color: var(--text-secondary); text-decoration: none;
+            margin-left: 28px; transition: color 0.2s; font-size: 0.9rem; font-weight: 500;
+        }
+        .nav-links a:hover { color: var(--primary-accent); }
+        .container { max-width: 860px; margin: 0 auto; padding: 110px 20px 70px; position: relative; z-index: 2; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: var(--primary-accent); text-decoration: none;
+            padding: 7px 16px; background: rgba(59, 130, 246, 0.1);
+            border-radius: 30px; transition: all 0.2s;
+            margin-bottom: 32px; font-size: 0.88rem; font-weight: 500;
+        }
+        .back-btn:hover { background: rgba(59, 130, 246, 0.2); color: var(--primary-accent-hover); }
+        .case-header { text-align: center; margin-bottom: 56px; }
+        .case-badge {
+            display: inline-block; padding: 6px 16px;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            border-radius: 30px; font-size: 0.82rem; color: var(--primary-accent);
+            margin-bottom: 14px; font-family: 'JetBrains Mono', monospace;
+        }
+        .case-title { font-size: 2.4rem; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
+        .case-subtitle { font-size: 1.15rem; color: var(--text-secondary); font-weight: 400; }
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg); padding: 36px; margin-bottom: 28px;
+            backdrop-filter: blur(16px);
+        }
+        .card-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 22px; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px; margin-top: 18px; margin-bottom: 28px;
+        }
+        .stat-item {
+            background: var(--border-light); border: 1px solid var(--border-light);
+            border-radius: var(--radius-md); padding: 18px 14px; text-align: center;
+        }
+        .stat-value {
+            font-size: 1.35rem; font-weight: 600; color: var(--primary-accent);
+            font-family: 'JetBrains Mono', monospace; margin-bottom: 5px;
+        }
+        .stat-label { font-size: 0.78rem; color: var(--text-secondary); }
+        .insight-list { list-style: none; }
+        .insight-list li {
+            padding: 11px 0 11px 28px; position: relative;
+            border-bottom: 1px solid var(--border-light); color: var(--text-secondary);
+        }
+        .insight-list li:last-child { border-bottom: none; }
+        .insight-list li::before { content: '✓'; position: absolute; left: 0; top: 11px; color: var(--success-color); font-weight: bold; }
+        .quote {
+            background: rgba(59, 130, 246, 0.05);
+            border-left: 4px solid var(--primary-accent);
+            padding: 20px 24px; margin: 28px 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            font-style: italic; color: var(--text-secondary);
+        }
+        .timeline { position: relative; padding-left: 36px; margin: 24px 0; }
+        .timeline::before {
+            content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+            width: 2px; background: var(--border-color);
+        }
+        .timeline-item { position: relative; margin-bottom: 24px; padding-left: 18px; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -30px; top: 6px;
+            width: 11px; height: 11px;
+            background: var(--bg-dark); border-radius: 50%;
+            border: 2px solid var(--primary-accent);
+        }
+        .timeline-year { font-family: 'JetBrains Mono', monospace; color: var(--primary-accent); font-size: 0.85rem; margin-bottom: 6px; }
+        .timeline-content { color: var(--text-secondary); font-size: 0.93rem; }
+        .highlight-box {
+            background: rgba(59, 130, 246, 0.06);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: var(--radius-md); padding: 20px 22px; margin: 18px 0;
+        }
+        .danger-box {
+            background: rgba(239, 68, 68, 0.06);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: var(--radius-md); padding: 20px 22px; margin: 18px 0;
+        }
+        .shrimp-box {
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: var(--radius-md); padding: 22px; margin-top: 10px;
+            font-size: 0.93rem; color: var(--text-secondary);
+        }
+        .shrimp-box .shrimp-title { font-weight: 600; color: var(--success-color); margin-bottom: 8px; font-size: 1rem; }
+        footer { text-align: center; margin-top: 60px; padding-top: 28px; border-top: 1px solid var(--border-light); color: var(--text-secondary); font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    <nav class="nav">
+        <a href="index.html" class="nav-logo">🦞 沃伦·巴菲虾</a>
+        <div class="nav-links">
+            <a href="index.html">主控台</a>
+            <a href="index.html#cases">案例库</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <a href="index.html" class="back-btn">← 返回主控台</a>
+
+        <header class="case-header">
+            <span class="case-badge">🚗 巴菲特经典案例 #02</span>
+            <h1 class="case-title">GEICO 保险</h1>
+            <p class="case-subtitle">Government Employees Insurance · 1976 年逆向投资</p>
+        </header>
+
+        <!-- 案例概况 -->
+        <div class="card">
+            <h2 class="card-title">📊 案例概况</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">1976</div>
+                    <div class="stat-label">逆向买入时间</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$4,560 万</div>
+                    <div class="stat-label">初始投资额</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label">最终持股比例</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$23 亿</div>
+                    <div class="stat-label">1996 全购价格</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">~50 倍</div>
+                    <div class="stat-label">20 年回报</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">现今</div>
+                    <div class="stat-label">仍是伯克希尔核心资产</div>
+                </div>
+            </div>
+            <div class="highlight-box">
+                <strong style="color: var(--primary-accent);">🔑 GEICO 的经典之处</strong><br><br>
+                <span style="color: var(--text-secondary);">在公司濒临破产、股价暴跌 90%+ 的时候买入，不是赌博，而是基于对"商业模式根本是否被破坏"的深入研究。结论是：没有，只是管理失误引发的流动性危机，护城河完好。</span>
+            </div>
+        </div>
+
+        <!-- 背景与危机 -->
+        <div class="card">
+            <h2 class="card-title">🔥 危机背景：为什么是逆向投资机会？</h2>
+            <div class="danger-box">
+                <strong style="color: var(--danger-color);">⚠️ 1975-1976 年的 GEICO 陷入了什么困境？</strong>
+                <ul style="color: var(--text-secondary); padding-left: 20px; margin-top: 12px; line-height: 1.8;">
+                    <li>管理层错误定价，保费收取远低于赔付成本，账面亏损巨大</li>
+                    <li>需要向监管机构报告数亿美元的准备金不足</li>
+                    <li>保险牌照面临被吊销风险，股价从 $61 暴跌至 $2</li>
+                    <li>市场普遍认为公司即将破产，机构投资者大规模抛售</li>
+                    <li>媒体头条：<em>"GEICO 或成为史上最大保险公司破产案"</em></li>
+                </ul>
+            </div>
+            <div class="highlight-box" style="margin-top: 16px;">
+                <strong style="color: var(--primary-accent);">💡 巴菲特的判断：问题是什么？</strong><br><br>
+                <span style="color: var(--text-secondary);">GEICO 的<strong>商业模式没有问题</strong>——直销保险、低成本运营的核心竞争力完好无损。危机来自<strong>管理层的定价错误</strong>，而不是护城河被竞争对手摧毁。这是一个可修复的问题。</span>
+            </div>
+        </div>
+
+        <!-- 投资逻辑 -->
+        <div class="card">
+            <h2 class="card-title">🎯 投资逻辑</h2>
+            <ul class="insight-list">
+                <li><strong>成本结构护城河（Structural Moat）</strong> — GEICO 通过直销（没有代理人），运营成本比竞争对手低 20-30%，这个结构性优势是竞争者无法复制的</li>
+                <li><strong>问题是可修复的（Fixable Problem）</strong> — 危机根源是定价失误和准备金不足，而非商业模式失效。换一个有能力的 CEO 就能修复</li>
+                <li><strong>市场恐慌创造了安全边际</strong> — 股价从 $61 跌至 $2，远低于清算价值，这是极端恐慌而非理性的定价</li>
+                <li><strong>保险浮存金（Float）的价值</strong> — 保险公司收到保费后、理赔前可以用这笔钱投资，本质上是"无息贷款"，GEICO 的浮存金极有价值</li>
+                <li><strong>行业的刚需属性</strong> — 汽车保险是法律强制要求，需求不会消失，只要公司活下来就有未来</li>
+            </ul>
+            <div class="quote">
+                "研究 GEICO 让我真正明白了保险行业。1951 年我第一次研究它时就相信它是杰出公司。1976 年它遇到困难，我知道困难是暂时的，所以我毫不犹豫地大笔买入。" — 沃伦·巴菲特
+            </div>
+        </div>
+
+        <!-- 投资时间轴 -->
+        <div class="card">
+            <h2 class="card-title">⏳ 投资时间轴</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-year">1951 年</div>
+                    <div class="timeline-content">21 岁的巴菲特在恩师格雷厄姆门下求学时，专门坐火车去 GEICO 总部，敲门找到了当时的财务主管 Lorimer Davidson，学习商业模式。第一次买入了 GEICO 的股票</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1975-1976 年</div>
+                    <div class="timeline-content">GEICO 陷入流动性危机，股价暴跌 95%，市场认为必破产。巴菲特仔细研究后认为商业模式完好，开始分批买入，最终投入 4560 万美元，持股约 33%</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1976-1980 年</div>
+                    <div class="timeline-content">新 CEO Jack Byrne 上任，执行严格的成本控制和定价修正，公司快速盈利。股价从 $2 反弹至 $20+，巴菲特的投资翻倍。他形容 Byrne 是"能把濒死企业救活的人"</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1980-1995 年</div>
+                    <div class="timeline-content">GEICO 持续扩张，直销模式在汽车保险行业独树一帜。巴菲特继续增持，成为最大股东。公司市值从 4000 万增长至超过 10 亿</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1996 年</div>
+                    <div class="timeline-content">伯克希尔以 23 亿美元全资收购 GEICO 剩余 50% 股权，实现 100% 控股。完成了从 1976 年 4560 万的逆向投资到完整收购的完整旅途。至今是伯克希尔最核心的保险资产</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关键启示 -->
+        <div class="card">
+            <h2 class="card-title">💡 关键启示</h2>
+            <ul class="insight-list">
+                <li><strong>恐慌是最好的买入时机（前提是你做了功课）</strong> — 当所有人在卖出时，真正掌握信息的人可以反向低价买入，但前提是深入研究而非盲目乐观</li>
+                <li><strong>区分"可修复的危机"和"根本性崩溃"</strong> — 管理失误可以换人修复，但如果是商业模式被摧毁（如柯达、诺基亚），则无法救活。要识别这个区别</li>
+                <li><strong>结构性成本优势是持久护城河</strong> — GEICO 比竞争对手便宜 20-30%，这不是价格战，而是商业模式的固有优势</li>
+                <li><strong>深度研究产生高确信度</strong> — 巴菲特 1951 年就研究过 GEICO，1976 年危机时有高度确信，所以可以大规模买入而不恐慌</li>
+                <li><strong>保险浮存金是资本配置的超级武器</strong> — 这次投资让巴菲特真正理解了"保险 + 投资"的商业飞轮，奠定了伯克希尔后期几十年的增长引擎</li>
+            </ul>
+            <div class="quote">
+                "GEICO 是一个几乎被管理层错误毁掉的伟大企业。我知道商业模式没问题，所以在市场最恐惧的时候我最贪婪。" — 沃伦·巴菲特
+            </div>
+        </div>
+
+        <!-- 巴菲虾联想 -->
+        <div class="card">
+            <h2 class="card-title">🦞 巴菲虾联想</h2>
+            <div class="shrimp-box">
+                <div class="shrimp-title">从 GEICO 想到的：Fintech 借贷中的"可修复危机"</div>
+                <p>Fintech Lending 行业经常出现因政策收紧、坏账上升导致的股价暴跌。GEICO 告诉我们：在别人恐慌时，首先要判断"护城河是否还在？"——如果风控体系、用户信任、数据积累没有被摧毁，只是短期的流动性/监管压力，那这就是买入机会而非卖出信号。区分这两种情况，是 CEO 最重要的认知能力之一。</p>
+            </div>
+        </div>
+
+        <footer>
+            🦞 沃伦·巴菲虾 · 每天学习一个巴菲特投资案例<br>
+            <span style="font-size: 0.78rem; opacity: 0.6;">Case #02 · GEICO · 2026-03-14</span>
+        </footer>
+    </div>
+</body>
+</html>

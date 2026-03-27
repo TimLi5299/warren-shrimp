@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人简介</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-light: #818cf8;
+      --bg-color: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans SC', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.15), transparent 25%);
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 40px 20px;
+    }
+
+    /* Animated background elements */
+    .bg-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      z-index: -1;
+      animation: float 10s infinite ease-in-out alternate;
+    }
+
+    .shape-1 {
+      width: 300px;
+      height: 300px;
+      background: rgba(99, 102, 241, 0.2);
+      top: 10%;
+      left: 10%;
+    }
+
+    .shape-2 {
+      width: 400px;
+      height: 400px;
+      background: rgba(168, 85, 247, 0.2);
+      bottom: -10%;
+      right: -5%;
+      animation-delay: -5s;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(-30px) scale(1.05); }
+    }
+
+    .profile-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 40px;
+      width: 100%;
+      max-width: 520px; /* Widened slightly more for the new timeline content */
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      transform: translateY(20px);
+      opacity: 0;
+      animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position: relative;
+      overflow: hidden;
+      margin: auto;
+    }
+
+    /* Subtle top highlight */
+    .profile-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    }
+
+    @keyframes slideUp {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .avatar-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #a855f7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 3rem;
+      color: white;
+      border: 4px solid var(--bg-color);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+      z-index: 1;
+      transition: transform 0.3s ease;
+      object-fit: cover;
+    }
+
+    .profile-card:hover .avatar {
+      transform: scale(1.05);
+    }
+
+    .info-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .name {
+      font-size: 2.25rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      background: linear-gradient(to right, #fff, #cbd5e1);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .badges-container {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .age-badge {
+      background: rgba(99, 102, 241, 0.15);
+      color: var(--primary-light);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .profession-badge {
+      background: rgba(168, 85, 247, 0.15);
+      color: #d8b4fe;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .hobby-badge {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .travel-badge {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .section-title {
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+      margin-left: 12px;
+    }
+
+    .hobbies-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      list-style: none;
+    }
+
+    .hobby-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      cursor: default;
+    }
+
+    .hobby-item:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .hobby-icon {
+      font-size: 1.1rem;
+    }
+
+    /* Timeline styling for journey */
+    .journey-timeline {
+      position: relative;
+      padding-left: 24px;
+      margin-top: 16px;
+    }
+
+    .journey-timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary), #a855f7);
+      opacity: 0.3;
+    }
+
+    .journey-point {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .journey-point:last-child {
+      margin-bottom: 0;
+    }
+
+    .journey-point::before {
+      content: '';
+      position: absolute;
+      left: -21px;
+      top: 6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--bg-color);
+      border: 2px solid var(--primary-light);
+      z-index: 1;
+    }
+    
+    .journey-point:nth-child(2)::before { border-color: #34d399; }
+    .journey-point:nth-child(3)::before { border-color: #fbbf24; }
+    .journey-point:nth-child(4)::before { border-color: #a855f7; }
+
+    .journey-title {
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Background decorative shapes -->
+  <div class="bg-shape shape-1"></div>
+  <div class="bg-shape shape-2"></div>
+
+  <div class="profile-card">
+    <div class="avatar-container">
+      <img src="avatar.png" alt="老铁" class="avatar">
+    </div>
+    
+    <div class="info-header">
+      <h1 class="name">老铁</h1>
+      <div class="badges-container">
+        <span class="badge age-badge">中年男子</span>
+        <span class="badge profession-badge">Fintech</span>
+        <span class="badge hobby-badge">运动读书</span>
+        <span class="badge travel-badge">铁锭 (每年飞行>20万公里)</span>
+      </div>
+    </div>
+
+    <div class="details-section">
+      <h2 class="section-title">兴趣与爱好</h2>
+      <ul class="hobbies-list">
+        <li class="hobby-item">
+          <span class="hobby-icon">🏃‍♂️</span> 跑步
+        </li>
+        <li class="hobby-item">
+          <span class="hobby-icon">🏊‍♂️</span> 游泳
+        </li>
+        <li class="hobby-item">
+          <span class="hobby-icon">🏸</span> 羽毛球
+        </li>
+        <li class="hobby-item">
+          <span class="hobby-icon">📖</span> 读人物传记
+        </li>
+        <li class="hobby-item">
+          <span class="hobby-icon">🏢</span> 研究企业传记
+        </li>
+      </ul>
+    </div>
+
+    <div class="details-section" style="margin-top: 32px;">
+      <h2 class="section-title">人生轨迹</h2>
+      <div class="journey-timeline">
+        <div class="journey-point">
+          <div class="journey-title"><span class="hobby-icon" style="font-size:1.3rem;">🌲</span> 林场</div>
+        </div>
+        <div class="journey-point">
+          <div class="journey-title"><span class="hobby-icon" style="font-size:1.3rem;">🌾</span> 大米</div>
+        </div>
+        <div class="journey-point">
+          <div class="journey-title"><span class="hobby-icon" style="font-size:1.3rem;">🛢️</span> 石油</div>
+        </div>
+        <div class="journey-point">
+          <div class="journey-title"><span class="hobby-icon" style="font-size:1.3rem;">🏙️</span> 大上海</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="details-section" style="margin-top: 24px;">
+      <h2 class="section-title">教育背景</h2>
+      <ul class="hobbies-list" style="flex-direction: column; gap: 10px;">
+        <li class="hobby-item" style="justify-content: flex-start;">
+          <span class="hobby-icon">🎓</span> 中欧国际工商学院 
+        </li>
+        <li class="hobby-item" style="justify-content: flex-start;">
+          <span class="hobby-icon">🎒</span> 上海交通大学 
+        </li>
+        <li class="hobby-item" style="justify-content: flex-start;">
+          <span class="hobby-icon">📚</span> 持续阅读：每年精读 50+ 本商业管理与科技类书籍
+        </li>
+      </ul>
+    </div>
+
+    <div class="details-section" style="margin-top: 24px;">
+      <h2 class="section-title">职业背景</h2>
+      <ul class="hobbies-list" style="flex-direction: column; gap: 10px;">
+        <li class="hobby-item" style="justify-content: flex-start;">
+          <span class="hobby-icon">💼</span> 商业银行
+        </li>
+        <li class="hobby-item" style="justify-content: flex-start;">
+          <span class="hobby-icon">🚀</span> Fintech Lending创业
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</body>
+</html>
