@@ -13,6 +13,9 @@ WORKSPACE=/home/admin/.openclaw/workspace
 # 每天晚上 20:00 执行每日报告（案例学习 + 网站更新 + 飞书推送）
 0 20 * * * cd $WORKSPACE && ./scripts/daily-report.sh >> $WORKSPACE/logs/daily-report.log 2>&1
 
+# 每个工作日早晨 8:00 生成 Fintech 企业分析报告（周一 - 周五）
+0 8 * * 1-5 cd $WORKSPACE && ./scripts/daily-fintech-company.sh >> $WORKSPACE/logs/fintech-daily.log 2>&1
+
 # 每天早晨 8:00 生成早报（如果需要）
 # 0 8 * * * cd $WORKSPACE && ./scripts/daily-briefing.sh >> $WORKSPACE/logs/morning-brief.log 2>&1
 
