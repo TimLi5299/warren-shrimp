@@ -83,7 +83,7 @@ echo "📝 生成分析报告..."
 # 根据企业生成定制化内容
 generate_company_analysis() {
     local company="$1"
-    local name_en="$2
+    local name_en="$2"
     
     case "$name_en" in
         "蚂蚁集团"|"Ant Group")
