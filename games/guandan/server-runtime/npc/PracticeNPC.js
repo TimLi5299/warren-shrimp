@@ -1,11 +1,18 @@
 /**
- * PracticeNPC.js — 陪练NPC（增强规则AI v2）
+ * PracticeNPC.js — 陪练NPC（增强规则AI v3）
  *
- * 在原贪心算法基础上引入 4 个改进（路径 A · Quick Wins）：
- *   ① 手牌预分解：决策前先把手牌拆成最优组合，从"少分组"角度选择出牌
- *   ② 记牌器接入：根据已出牌推断每个 rank 的实际剩余 / 实际最大值
- *   ③ 配合策略升级：队友领牌主动让；队友手牌少时用大牌护送；上家是队友的小牌不顶
- *   ④ 炸弹时机重做：基于"出完所需手数"决定是否动用炸弹，端局不留炸弹
+ * v2 Quick Wins（已有）：
+ *   ① 手牌预分解     决策前把手牌拆成最优组合
+ *   ② 记牌器接入     根据已出牌推断剩余/实际最大值
+ *   ③ 配合策略       队友领牌主动让；护送队友完成出牌
+ *   ④ 炸弹时机       基于"出完所需手数"决定是否动炸弹
+ *
+ * v3 新增：
+ *   ⑤ 出牌顺序优化   领牌时按"对手难跟难度"评分，优先出顺子/连对/钢板；小牌当炮灰先出
+ *   ⑥ 残局解算器     全场 ≤28 张时精确规划：优先出"无敌牌型"再清场
+ *   ⑦ 级牌/万能牌保护 万能牌永远不单出；级牌只在端局或多张组合里消耗
+ *   ⑧ 对手手牌推断   基于记牌器判断"对手出的牌是否无人能打"，避免用大牌去顶必输的牌
+ *   ⑨ 信号传递       领牌时编码强/弱信号（小单→示弱，复杂牌型→示强）；读取队友信号调整策略
  */
 
 import { findPlayableHands } from '../game/rules.js';
@@ -20,9 +27,16 @@ export const AILevel = {
   EXPERT: 'expert'
 };
 
+// ⑨ 信号类型
+const Signal = {
+  STRONG: 'strong',  // 我有控制权，队友跟随
+  WEAK:   'weak',    // 我牌弱，队友接管
+  NORMAL: 'normal'   // 中性
+};
+
 /* ============================================================
- * Quick Win ① 手牌预分解
- *   贪心：依次找最大的炸弹/同花顺 → 钢板 → 顺子/连对 → 三带二 → 三 → 对 → 单
+ * ① 手牌预分解
+ *   贪心：依次找炸弹 → 钢板 → 连对 → 顺子 → 三张 → 对子 → 单张
  *   返回 { groups, tricksNeeded, bombGroups }
  * ========================================================== */
 function decomposeHand(hand, currentLevel) {
@@ -55,7 +69,7 @@ function decomposeHand(hand, currentLevel) {
     bombGroups.push({ rank: bombRank, size: bombSize });
   }
 
-  // 2) 找天王炸（4 王）— 实际由两副牌的两小王 + 两大王组成
+  // 2) 找天王炸（4 王）
   const jokers = pool.filter(c => c.rank === 15 || c.rank === 16);
   if (jokers.length === 4) {
     pool = pool.filter(c => c.rank !== 15 && c.rank !== 16);
@@ -63,7 +77,7 @@ function decomposeHand(hand, currentLevel) {
     bombGroups.push({ rank: 99, size: 4 });
   }
 
-  // 3) 找钢板（连续 2 个三张）
+  // 3) 找钢板（连续 2 组三张）
   while (true) {
     const counts = rankCount(pool);
     let bestStart = -1, bestLen = 0;
@@ -113,7 +127,7 @@ function decomposeHand(hand, currentLevel) {
       if (len >= 5 && len > bestLen) { bestStart = r; bestLen = Math.min(len, 8); }
     }
     if (bestStart < 0) break;
-    const len = Math.min(bestLen, 5); // 一次取 5 张顺子
+    const len = Math.min(bestLen, 5);
     const taken = [];
     for (let r = bestStart; r < bestStart + len; r++) {
       const card = pool.find(c => c.rank === r);
@@ -157,8 +171,7 @@ function decomposeHand(hand, currentLevel) {
     groups.push({ kind: 'single', rank: c.rank, cards: [c] });
   }
 
-  // 三带二组合：把孤立三张和孤立对子合并为 triple_pair（出 5 张一手）
-  // 简化：仅当存在 1 个三张 + 1 个对子时合并为一手
+  // 三带二：把孤立三张和孤立对子合并
   const triples = groups.filter(g => g.kind === 'triple');
   const pairs = groups.filter(g => g.kind === 'pair');
   const merged = [];
@@ -180,31 +193,21 @@ function decomposeHand(hand, currentLevel) {
 }
 
 /* ============================================================
- * Quick Win ② 记牌器接入
- *   countPlayed: 已出该 rank 的张数（双副牌每个 rank 共 8 张）
- *   isMaxRank: rank 是否实际最大（所有更大的牌都打掉了）
+ * ② 记牌器接入
  * ========================================================== */
 function getPlayedCount(memory, rank) {
   if (!memory || !memory.playedCount) return 0;
   return memory.playedCount[rank] || 0;
 }
 
-/**
- * 根据记牌器，判断 rank 是否在剩下的牌里是"实际最大"
- * 对于 single/pair/triple，需要更大的同型牌都不存在
- */
 function isEffectivelyMax(rank, kind, memory, currentLevel) {
   if (!memory) return false;
-  // 大王（rank=16）永远封顶
   if (rank === 16) return true;
-  // 总池：2 副牌每个 rank 共 8 张（王每副只有 1 张，王共 4 张）
   const totalOf = (r) => (r === 15 || r === 16) ? 2 : 8;
   const minNeeded = kind === 'pair' ? 2 : (kind === 'triple' ? 3 : 1);
 
-  // 检查比 rank 高的所有 rank（包括级牌、大小王）是否还能凑出对应张数
-  // 在掼蛋里 rank 顺序：2..A(14) -> 小王(15) -> 大王(16)，级牌逻辑略复杂这里简化
   for (let r = rank + 1; r <= 16; r++) {
-    if (r === 14 + 1) continue; // 跳过 15 等（实际是小王）
+    if (r === 14 + 1) continue;
     const remaining = totalOf(r) - getPlayedCount(memory, r);
     if (remaining >= minNeeded) return false;
   }
@@ -212,43 +215,229 @@ function isEffectivelyMax(rank, kind, memory, currentLevel) {
 }
 
 /* ============================================================
- * Quick Win ③ 配合策略：判断是否应"主动让"
- *
- * 策略：队友是 lastPlaySeat 时，几乎总是让。
- * 唯一例外：自己也快赢（≤5 张可以一手出完）或对手快赢（必须顶）。
+ * ⑧ 对手手牌推断
+ * ========================================================== */
+
+/** 判断"我们的出牌"是否无人能打过（基于记牌推断） */
+function isMyPlayUnbeatable(play, memory, currentLevel) {
+  if (!memory || !play || play.length === 0) return false;
+  // 炸弹/同花顺：简化为"当前最强"（不考虑更大炸弹）
+  if (looksLikeBomb(play)) return true;
+
+  const ranks = play.map(c => c.rank);
+  const maxRank = Math.max(...ranks);
+  const len = play.length;
+  // 只对简单牌型做推断（单/对/三），复杂牌型略过
+  const needed = len === 1 ? 1 : len === 2 ? 2 : len === 3 ? 3 : 0;
+  if (needed === 0) return false;
+
+  const totalOf = (r) => (r === 15 || r === 16) ? 4 : 8;
+  for (let r = maxRank + 1; r <= 16; r++) {
+    const played = memory.playedCount[r] || 0;
+    const remaining = Math.max(0, totalOf(r) - played);
+    if (remaining >= needed) return false; // 还有人可能跟上
+  }
+  return true; // 没有更高 rank 的同型牌了
+}
+
+/** 判断"桌面上对手出的牌"是否无人能打过（应该 PASS 省大牌） */
+function isLastPlayUnbeatable(lastPlay, memory, currentLevel) {
+  if (!memory || !lastPlay) return false;
+  const kind = inferKind(lastPlay);
+  // 只处理 single/pair/triple
+  if (kind === 'other') return false;
+  return isEffectivelyMax(lastPlay.mainRank, kind, memory, currentLevel);
+}
+
+/* ============================================================
+ * ⑨ 信号传递
+ * ========================================================== */
+
+/** 根据自己的手牌强度，计算应该发出的信号 */
+function computeMySignal(hand, decomp, currentLevel) {
+  if (!hand || hand.length === 0) return Signal.NORMAL;
+  const bombCount = decomp.bombGroups.length;
+  const bigCards = hand.filter(c =>
+    c.rank >= 13 || c.rank === currentLevel ||
+    c.rank === 15 || c.rank === 16
+  ).length;
+  const ratio = bigCards / hand.length;
+  const hasComplexGroup = decomp.groups.some(g =>
+    g.kind === 'straight' || g.kind === 'double_straight' || g.kind === 'triple_straight'
+  );
+
+  if (bombCount >= 2 || ratio >= 0.4 || hasComplexGroup) return Signal.STRONG;
+  if (ratio <= 0.1 && hand.length >= 10 && bombCount === 0) return Signal.WEAK;
+  return Signal.NORMAL;
+}
+
+/** 读取队友最近出牌，解码其信号 */
+function readTeammateSignal(gameState) {
+  const { seat, roundHistory = [] } = gameState;
+  if (!roundHistory.length) return Signal.NORMAL;
+  const teammateSeat = (seat + 2) % 4;
+
+  for (let i = roundHistory.length - 1; i >= 0; i--) {
+    const record = roundHistory[i];
+    if (record.seat !== teammateSeat) continue;
+    const cards = record.cards || [];
+    if (cards.length === 0) continue; // PASS 不计
+
+    const maxRank = Math.max(...cards.map(c => c.rank));
+    const isBombPlay = looksLikeBomb(cards);
+
+    if (isBombPlay) return Signal.STRONG;                             // 炸弹 → 强
+    if (cards.length >= 4) return Signal.STRONG;                      // 复杂牌型 → 强
+    if (cards.length === 1 && maxRank <= 7) return Signal.WEAK;       // 小单张 → 弱
+    if (cards.length === 1 && maxRank >= 14) return Signal.STRONG;    // 大单张(A) → 强
+    return Signal.NORMAL;
+  }
+  return Signal.NORMAL;
+}
+
+/* ============================================================
+ * ⑦ 级牌/万能牌工具函数
+ * ========================================================== */
+function hasWildCard(play, currentLevel) {
+  return play.some(c => isWildCard(c, currentLevel));
+}
+
+function hasLevelCard(play, currentLevel) {
+  return play.some(c => c.rank === currentLevel && !isWildCard(c, currentLevel));
+}
+
+/**
+ * 过滤不必要使用级牌/万能牌的选项。
+ * 仅在有替代方案时过滤；如果只有含级牌的选项，则不过滤。
+ */
+function filterLevelCardAbuse(plays, currentLevel, context = 'lead') {
+  if (!plays || plays.length === 0) return plays;
+
+  const withoutWild = plays.filter(p => !hasWildCard(p, currentLevel));
+  // 万能牌：始终优先避免（除非只有含万能的选项）
+  const candidates = withoutWild.length > 0 ? withoutWild : plays;
+
+  if (context === 'lead') {
+    // 领牌时：对子/单张不出级牌，除非无他选
+    const withoutLevelSingle = candidates.filter(p =>
+      !(p.length <= 2 && hasLevelCard(p, currentLevel))
+    );
+    return withoutLevelSingle.length > 0 ? withoutLevelSingle : candidates;
+  }
+  return candidates;
+}
+
+/* ============================================================
+ * ③ 配合策略：判断是否应"主动让"
  * ========================================================== */
 function shouldYieldToTeammate(gameState, hand, currentLevel) {
   const { isTeammateWinning, playersHandCounts = [], seat, lastPlay } = gameState;
   if (!isTeammateWinning) return false;
-  if (!lastPlay) return false; // 自己领牌不可让
+  if (!lastPlay) return false;
 
   const leftCount  = playersHandCounts[(seat + 3) % 4] || 27;
   const rightCount = playersHandCounts[(seat + 1) % 4] || 27;
   const opponentNearWin = (leftCount > 0 && leftCount <= 4) || (rightCount > 0 && rightCount <= 4);
 
-  // 对手快赢（≤4 张）→ 必须顶，不能让
-  if (opponentNearWin) return false;
-  // 自己手牌 ≤5 且能一手出完 → 自己赢比让队友更直接
-  if (hand.length <= 5) return false;
-  // 其他场景：队友打牌就让，不要去顶
-  return true;
+  if (opponentNearWin) return false;    // 对手快赢 → 必须顶
+  if (hand.length <= 5) return false;   // 自己也快赢 → 直接出
+
+  // ⑨ 信号：队友示弱时，判断是否需要支援
+  const tmSignal = readTeammateSignal(gameState);
+  if (tmSignal === Signal.WEAK && hand.length <= 10) {
+    // 队友示弱，自己手牌还行 → 不完全让路，保留一定主动权
+    return false;
+  }
+
+  return true; // 其他场景：让出主动权
 }
 
 /* ============================================================
- * Quick Win ④ 炸弹时机：是否值得动用炸弹
+ * ④ 炸弹时机
  * ========================================================== */
 function shouldUseBomb(gameState, hand, decomp, opponentNearWin, isResponding) {
-  // 端局：手牌很少 + 还有炸弹，倾向直接打出去结束
   if (hand.length <= 6) return true;
-  // 对手快赢 → 必须打
   if (opponentNearWin) return true;
-  // 出完所需手数还多 (>4)，留炸弹做控制权
   if (decomp.tricksNeeded > 4) return false;
-  // 自己 endgame，剩 2-3 手能出完，炸弹可上
   if (decomp.tricksNeeded <= 3) return true;
-  // 中段：跟牌时不轻易上炸（领牌时本来就不会触发这个分支）
   if (isResponding) return Math.random() < 0.15;
   return false;
+}
+
+/* ============================================================
+ * ⑥ 残局解算器
+ *   全场剩余 ≤28 张时启用：优先出"无敌牌型"，其次出张数最多的
+ * ========================================================== */
+function endgameSolve(hand, hints, gameState, currentLevel, memory) {
+  const { playersHandCounts = [], seat } = gameState;
+  const otherCount = playersHandCounts.reduce((s, c, i) => i === seat ? s : s + (c || 0), 0);
+  const totalCards = otherCount + hand.length;
+  if (totalCards > 28) return null; // 非残局
+
+  if (!hints || hints.length === 0) return null;
+  const normalHints = hints.filter(p => !looksLikeBomb(p));
+  if (normalHints.length === 0) return null;
+
+  // 优先：记牌推断的"无敌牌型"
+  if (memory) {
+    const unbeatable = normalHints.filter(p => isMyPlayUnbeatable(p, memory, currentLevel));
+    if (unbeatable.length > 0) {
+      // 选张数最多的无敌牌（一次清场更多）
+      return unbeatable.sort((a, b) => b.length - a.length)[0];
+    }
+  }
+
+  // 次优：张数最多，rank 最高（快速清场）
+  return normalHints.sort((a, b) => {
+    if (b.length !== a.length) return b.length - a.length;
+    const rA = Math.max(...a.map(c => c.rank));
+    const rB = Math.max(...b.map(c => c.rank));
+    return rB - rA;
+  })[0];
+}
+
+/* ============================================================
+ * ⑤ 领牌评分
+ *   综合考虑牌型难度 + 记牌推断 + 分组损失 + 级牌浪费 + rank
+ * ========================================================== */
+function scoreLeadPlay(play, hand, gameState, memory, decomp, currentLevel) {
+  if (!play || play.length === 0) return -Infinity;
+  let score = 0;
+  const len = play.length;
+
+  // 1. 牌型复杂度：对手越难跟，得分越高
+  if (len >= 6) score += 45;        // 长钢板/长连对
+  else if (len >= 5) score += 35;   // 顺子/连对
+  else if (len === 4) score += 22;  // 三带一等
+  else if (len === 3) score += 15;  // 三张
+  else if (len === 2) score += 8;   // 对子
+  // 单张 = 0
+
+  // 2. 记牌推断：无敌牌优先打出，早出早占便宜
+  if (memory && isMyPlayUnbeatable(play, memory, currentLevel)) {
+    score += 55;
+  }
+
+  // 3. 不破坏分组：破坏越少越好
+  const breakLoss = breakageLoss(hand, play, currentLevel, decomp);
+  score -= breakLoss * 18;
+
+  // 4. 万能牌扣分（永远不轻易出）
+  const wildCount = play.filter(c => isWildCard(c, currentLevel)).length;
+  score -= wildCount * 90;
+
+  // 5. 普通级牌扣分（中等保护）
+  const levelCount = play.filter(c => c.rank === currentLevel && !isWildCard(c, currentLevel)).length;
+  score -= levelCount * 20;
+
+  // 6. 平均 rank 越低越好（留大牌后手）
+  const avgRank = play.reduce((s, c) => s + c.rank, 0) / len;
+  score -= avgRank * 1.2;
+
+  // 7. 出的张数越多越好（一次减少更多手数）
+  score += len * 4;
+
+  return score;
 }
 
 /* ============================================================
@@ -261,7 +450,6 @@ export function getAIDecision(hand, gameState, level = AILevel.NORMAL) {
 
   const mustPlay = !lastPlay;
 
-  // 取记牌器（仅 normal/expert 启用）
   let memory = null;
   if (roomId !== undefined && (level === AILevel.NORMAL || level === AILevel.EXPERT)) {
     try { memory = getMemory(roomId, seat, level, currentLevel); } catch (e) { memory = null; }
@@ -288,41 +476,42 @@ function decideNoob(hints, mustPlay = false) {
 }
 
 /* ============================================================
- * 核心：策略型决策（NORMAL 与 EXPERT 共用，差别只在是否启用记牌+合作高级特性）
+ * 核心：策略型决策（NORMAL 与 EXPERT 共用）
  * ========================================================== */
 function decideStrategic(hints, hand, gameState, mustPlay, full) {
-  const { lastPlay, currentLevel, seat, playersHandCounts = [], _memory: memory, _decomp: myDecomp } = gameState;
+  const {
+    lastPlay, currentLevel, seat,
+    playersHandCounts = [],
+    _memory: memory,
+    _decomp: myDecomp
+  } = gameState;
 
   const teammateSeat = (seat + 2) % 4;
-  const leftSeat = (seat + 3) % 4;
+  const leftSeat  = (seat + 3) % 4;
   const rightSeat = (seat + 1) % 4;
   const teammateCount = playersHandCounts[teammateSeat] || 27;
   const leftCount  = playersHandCounts[leftSeat]  || 27;
   const rightCount = playersHandCounts[rightSeat] || 27;
   const opponentNearWin = (leftCount > 0 && leftCount <= 5) || (rightCount > 0 && rightCount <= 5);
 
-  // ============= ③ 配合：让出主动权 =============
+  // ③ 配合：让出主动权
   if (full && shouldYieldToTeammate(gameState, hand, currentLevel) && !mustPlay) {
     return null;
   }
-  // 简单版：normal 也有基础让 (50%)
   if (!full && gameState.isTeammateWinning && !mustPlay && Math.random() < 0.5) return null;
 
-  // 候选按"成本"排序（成本低 = 优先打）
   const sorted = [...hints].sort((a, b) =>
     evalCardsCost(a, currentLevel) - evalCardsCost(b, currentLevel)
   );
   const normalPlays = sorted.filter(p => !looksLikeBomb(p));
   const bombs = sorted.filter(p => looksLikeBomb(p));
 
-  // ============= 领牌（lastPlay === null）=============
+  // ============= 领牌 =============
   if (!lastPlay) {
-    return chooseLeading(normalPlays, bombs, hand, myDecomp, gameState, full, opponentNearWin);
+    return chooseLeading(normalPlays, bombs, hand, myDecomp, gameState, full, opponentNearWin, memory);
   }
 
   // ============= 跟牌 =============
-  // 双重保险：即使 yield 通过了也再过一遍——队友领出绝不用炸弹
-  // （shouldYieldToTeammate 已在上面 return null，但防御性编程）
   const teammateLeading = full && gameState.isTeammateWinning;
 
   // 生死关头：对手快赢
@@ -330,95 +519,156 @@ function decideStrategic(hints, hand, gameState, mustPlay, full) {
     if (bombs.length > 0 && shouldUseBomb(gameState, hand, myDecomp, true, true)) {
       return bombs[0];
     }
-    if (normalPlays.length > 0) return normalPlays[normalPlays.length - 1]; // 出最大普通牌
+    if (normalPlays.length > 0) return normalPlays[normalPlays.length - 1];
   }
 
   if (normalPlays.length > 0) {
-    const candidate = normalPlays[0];
+    let candidate = normalPlays[0];
 
-    // ② 记牌：如果 lastPlay 已经是"实际最大"，没必要顶（除非生死关头）
+    // ⑧ 对手推断（增强版）：桌面牌无敌 → 更主动地 PASS
+    if (full && memory && lastPlay && !opponentNearWin && !teammateLeading) {
+      if (isLastPlayUnbeatable(lastPlay, memory, currentLevel)) {
+        // 桌面牌没人能打过，跟上只是浪费
+        const cost = evalCardsCost(candidate, currentLevel);
+        const avgCost = cost / candidate.length;
+        if (cost >= 50 || avgCost >= 15) return null; // 成本稍高就省下来
+      }
+    }
+
+    // ② 记牌（旧逻辑保留）：lastPlay 是实际最大
     if (full && memory && lastPlay && !opponentNearWin) {
       const lastKind = inferKind(lastPlay);
       if (isEffectivelyMax(lastPlay.mainRank, lastKind, memory, currentLevel)) {
-        // lastPlay 已是绝对压制，没人能更大；自己跟也只是浪费大牌
         const cost = evalCardsCost(candidate, currentLevel);
-        if (cost >= 100) return null; // 候选还要用万能牌，太亏
+        if (cost >= 100) return null;
+      }
+    }
+
+    // ⑦ 万能牌保护：不用万能牌跟对手的低 rank 牌
+    if (full && !opponentNearWin && hand.length > 5) {
+      if (hasWildCard(candidate, currentLevel) && lastPlay && lastPlay.mainRank < 11) {
+        const nonWild = normalPlays.filter(p => !hasWildCard(p, currentLevel));
+        if (nonWild.length > 0) return nonWild[0];
+        return null; // 没有不含万能牌的选项 → PASS
+      }
+      // 级牌保护：不用级牌跟很小的牌（rank < 8）
+      if (hasLevelCard(candidate, currentLevel) && lastPlay && lastPlay.mainRank < 8) {
+        const nonLevel = normalPlays.filter(p => !hasLevelCard(p, currentLevel));
+        if (nonLevel.length > 0) {
+          candidate = nonLevel[0];
+        } else {
+          return null;
+        }
+      }
+    }
+
+    // ① 拆牌质量：尝试找破坏性更低的替代
+    if (full && hand.length > 8) {
+      const breakLoss = breakageLoss(hand, candidate, currentLevel, myDecomp);
+      for (const alt of normalPlays.slice(0, 5)) {
+        const altLoss = breakageLoss(hand, alt, currentLevel, myDecomp);
+        if (altLoss < breakLoss && evalCardsCost(alt, currentLevel) <= evalCardsCost(candidate, currentLevel) * 1.3) {
+          candidate = alt;
+          break;
+        }
       }
     }
 
     const value = evalCardsCost(candidate, currentLevel);
     const avgVal = value / candidate.length;
-
-    // ① 拆牌质量评估：选不破坏分组的候选
-    if (full && hand.length > 8) {
-      const breakLoss = breakageLoss(hand, candidate, currentLevel, myDecomp);
-      // 找一个 breakage 更低的替代
-      for (const alt of normalPlays.slice(0, 5)) {
-        const altLoss = breakageLoss(hand, alt, currentLevel, myDecomp);
-        if (altLoss < breakLoss && evalCardsCost(alt, currentLevel) <= value * 1.3) {
-          return alt;
-        }
-      }
-    }
-
-    // 保护：浪费百搭/级牌去管小牌时，且手牌还多 → 跳过
     if (value >= 100 && !opponentNearWin && hand.length > 5) return null;
-    if (lastPlay.mainRank < 10 && avgVal >= 20 && !opponentNearWin && hand.length > 10) return null;
+    if (lastPlay && lastPlay.mainRank < 10 && avgVal >= 20 && !opponentNearWin && hand.length > 10) return null;
 
     return candidate;
   }
 
-  // ④ 炸弹时机：队友是当前最大牌时永远不动炸弹
+  // ④ 炸弹时机：队友领牌时永远不动炸弹
   if (bombs.length > 0 && !teammateLeading && shouldUseBomb(gameState, hand, myDecomp, opponentNearWin, true)) {
     return bombs[0];
   }
   return null;
 }
 
-/* ============= 领牌策略 ============= */
-function chooseLeading(normalPlays, bombs, hand, decomp, gameState, full, opponentNearWin) {
-  const { currentLevel, seat, playersHandCounts = [], isTeammateWinning } = gameState;
+/* ============================================================
+ * ⑤⑥⑦⑨ 领牌策略（全面重写）
+ * ========================================================== */
+function chooseLeading(normalPlays, bombs, hand, decomp, gameState, full, opponentNearWin, memory) {
+  const { currentLevel, seat, playersHandCounts = [] } = gameState;
   const teammateSeat = (seat + 2) % 4;
   const teammateCount = playersHandCounts[teammateSeat] || 27;
   const rightCount = playersHandCounts[(seat + 1) % 4] || 27;
+  const leftCount  = playersHandCounts[(seat + 3) % 4] || 27;
 
-  // ④ 炸弹结束：自己只剩 1 手且这手是炸弹
+  // ④ 炸弹结束：手牌 ≤6 且剩1手就是炸弹
   if (full && hand.length <= 6 && decomp.tricksNeeded <= 1 && bombs.length > 0) {
     return bombs[0];
   }
 
-  // ③ 队友只剩 ≤5 张：领出"最大牌"清场，让队友有自由出牌空间
-  if (full && teammateCount <= 5 && normalPlays.length > 0) {
-    const big = normalPlays[normalPlays.length - 1];
-    return big;
+  // 队友只剩 ≤5 张：清场护送，出最难跟的牌压住对手
+  if (full && teammateCount > 0 && teammateCount <= 5 && normalPlays.length > 0) {
+    const difficult = [...normalPlays].sort((a, b) => {
+      if (b.length !== a.length) return b.length - a.length;
+      return Math.max(...b.map(c => c.rank)) - Math.max(...a.map(c => c.rank));
+    });
+    return difficult[0];
   }
 
-  // 顶下家：下家 ≤10 张 → 出中等以上的牌压一压
-  if (full && rightCount > 0 && rightCount <= 10) {
-    const better = normalPlays.filter(p => evalCardsCost(p, currentLevel) > 10);
-    if (better.length > 0) return better[0];
-  }
-
-  // ① 优先出"分组里的小牌"——遵循拆牌结果
-  if (full && decomp.groups.length > 0) {
-    // 找一组最小 rank 的非炸弹组
-    const sortedGroups = [...decomp.groups]
-      .filter(g => g.kind !== 'bomb' && g.kind !== 'rocket')
-      .sort((a, b) => a.rank - b.rank);
-    for (const grp of sortedGroups) {
-      // 在 hints 中找匹配该组的候选
-      const ids = new Set(grp.cards.map(c => c.id));
-      const matched = normalPlays.find(p =>
-        p.length === grp.cards.length && p.every(c => ids.has(c.id))
-      );
-      if (matched) return matched;
+  // 对手快赢：出"无敌牌"或"最大张数"
+  if (opponentNearWin && normalPlays.length > 0) {
+    if (full && memory) {
+      const unbeatable = normalPlays.filter(p => isMyPlayUnbeatable(p, memory, currentLevel));
+      if (unbeatable.length > 0) return unbeatable.sort((a, b) => b.length - a.length)[0];
     }
+    return normalPlays[normalPlays.length - 1]; // 最大成本的牌
   }
 
+  if (!full) {
+    // NORMAL 级别：简单按成本出最低的
+    return normalPlays[0] || bombs[0];
+  }
+
+  // ⑦ 级牌/万能牌保护：过滤不必要使用级牌的选项
+  const filteredPlays = filterLevelCardAbuse(normalPlays, currentLevel, 'lead');
+
+  // ⑥ 残局解算器优先
+  const endgamePlay = endgameSolve(hand, filteredPlays, gameState, currentLevel, memory);
+  if (endgamePlay) return endgamePlay;
+
+  // ⑤ 出牌评分 + ⑨ 信号编码
+  if (filteredPlays.length > 0) {
+    const signal = computeMySignal(hand, decomp, currentLevel);
+
+    // ⑨ 弱势信号：出最小单张，告诉队友"我很弱，请接管"
+    if (signal === Signal.WEAK) {
+      const singles = filteredPlays.filter(p => p.length === 1);
+      if (singles.length > 0) {
+        return singles.sort((a, b) => a[0].rank - b[0].rank)[0];
+      }
+    }
+
+    // ⑤ 评分排序，选最优
+    const scored = filteredPlays.map(p => ({
+      play: p,
+      score: scoreLeadPlay(p, hand, gameState, memory, decomp, currentLevel)
+    })).sort((a, b) => b.score - a.score);
+
+    // ⑨ 强势信号：如果评分榜前3有复杂牌型（len≥4），优先选它
+    if (signal === Signal.STRONG) {
+      const top3 = scored.slice(0, 3);
+      const complex = top3.find(s => s.play.length >= 4);
+      if (complex) return complex.play;
+    }
+
+    return scored[0].play;
+  }
+
+  // 兜底
   return normalPlays[0] || bombs[0];
 }
 
-/* ============= 工具函数 ============= */
+/* ============================================================
+ * 工具函数
+ * ========================================================== */
 function evalCardsCost(cards, currentLevel) {
   let total = 0;
   for (const card of cards) {
@@ -434,14 +684,20 @@ function evalCardsCost(cards, currentLevel) {
 function looksLikeBomb(cards) {
   if (cards.length < 4) return false;
   const ranks = cards.map(c => c.rank);
+  // 同 rank 炸弹
   if (ranks.every(r => r === ranks[0])) return true;
-  // 同花顺
-  if (cards.length === 5) {
+  // 天王炸（4 王）
+  if (cards.length === 4 && cards.every(c => c.rank === 15 || c.rank === 16)) return true;
+  // 同花顺（5 张相同花色连续）
+  if (cards.length >= 5) {
     const suits = cards.map(c => c.suit);
     if (suits.every(s => s === suits[0])) {
       const sr = [...ranks].sort((a, b) => a - b);
-      for (let i = 1; i < sr.length; i++) if (sr[i] !== sr[i - 1] + 1) return false;
-      return true;
+      let isStraight = true;
+      for (let i = 1; i < sr.length; i++) {
+        if (sr[i] !== sr[i - 1] + 1) { isStraight = false; break; }
+      }
+      if (isStraight) return true;
     }
   }
   return false;
@@ -451,7 +707,7 @@ function inferKind(lastPlay) {
   if (!lastPlay || !lastPlay.type) return 'single';
   switch (lastPlay.type) {
     case HandType.SINGLE: return 'single';
-    case HandType.PAIR: return 'pair';
+    case HandType.PAIR:   return 'pair';
     case HandType.TRIPLE: return 'triple';
     default: return 'other';
   }
@@ -459,8 +715,6 @@ function inferKind(lastPlay) {
 
 /**
  * 评估"出 candidate 后，剩余手牌的拆牌质量损失"
- * 损失 = 出牌后剩余分组数 - (原分组数 - 1)
- * 完美打出某组：损失 0；如果出了破坏分组的牌：损失 > 0
  */
 function breakageLoss(hand, candidate, currentLevel, baseDecomp) {
   if (!candidate || candidate.length === 0) return 0;
