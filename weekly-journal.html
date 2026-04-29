@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沃伦·巴菲虾 | OpenClaw 成长周记</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0F172A;
+            --bg-sidebar: rgba(15, 23, 42, 0.95);
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --bg-card-hover: rgba(51, 65, 85, 0.8);
+            --primary-accent: #3B82F6;
+            --primary-accent-hover: #60A5FA;
+            --secondary-accent: #8B5CF6;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --pink-color: #EC4899;
+            --rose-color: #F43F5E;
+            --teal-color: #14B8A6;
+            --cyan-color: #06B6D4;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-light: rgba(255, 255, 255, 0.05);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .ambient-glow {
+            position: fixed; top: -20%; left: -10%;
+            width: 70vw; height: 70vh;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 60%);
+            z-index: 0; pointer-events: none;
+        }
+        .ambient-glow-2 {
+            position: fixed; bottom: -20%; right: -10%;
+            width: 60vw; height: 60vh;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 60%);
+            z-index: 0; pointer-events: none;
+        }
+
+        /* 侧边导航 */
+        .sidebar {
+            width: 260px; background: var(--bg-sidebar);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-color);
+            position: fixed; height: 100vh;
+            padding: 30px 20px;
+            display: flex; flex-direction: column;
+            z-index: 100;
+        }
+        .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 50px; padding: 0 10px; }
+        .logo-icon { font-size: 1.8rem; }
+        .logo-text { font-weight: 700; font-size: 1.1rem; color: var(--text-primary); }
+        .logo-subtext { font-size: 0.7rem; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; }
+
+        .nav-menu { display: flex; flex-direction: column; gap: 4px; flex-grow: 1; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 15px; border-radius: var(--radius-sm);
+            color: var(--text-secondary); text-decoration: none;
+            font-weight: 500; transition: all 0.2s ease;
+        }
+        .nav-item:hover { background: var(--border-light); color: var(--text-primary); }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(59,130,246,0.15), rgba(139,92,246,0.1));
+            color: var(--primary-accent-hover);
+            border-left: 3px solid var(--primary-accent);
+        }
+        .nav-item .icon { font-size: 1.2rem; opacity: 0.7; }
+        .nav-item.active .icon { opacity: 1; }
+
+        .user-profile { display: flex; align-items: center; gap: 10px; padding: 12px 10px; border-top: 1px solid var(--border-color); }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+
+        /* 主内容 */
+        .main-content {
+            flex: 1; margin-left: 260px;
+            padding: 50px 60px;
+            position: relative; z-index: 1;
+            max-width: 1200px;
+        }
+
+        .page-header { text-align: center; margin-bottom: 50px; }
+        .page-tag {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(139, 92, 246, 0.12);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: #c4b5fd; padding: 6px 16px;
+            border-radius: 20px; font-size: 0.8rem;
+            letter-spacing: 1.5px; margin-bottom: 18px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .page-tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--secondary-accent); }
+        .page-title {
+            font-size: 3rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 14px;
+        }
+        .page-subtitle { color: var(--text-secondary); font-size: 1.05rem; max-width: 640px; margin: 0 auto; }
+
+        /* 总览数据条 */
+        .overview-bar {
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            gap: 16px; margin-bottom: 50px;
+        }
+        .ov-card {
+            background: var(--bg-card); backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 22px 24px; transition: transform 0.2s;
+        }
+        .ov-card:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.18); }
+        .ov-num {
+            font-size: 2.2rem; font-weight: 800; line-height: 1;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .ov-num.blue { color: var(--primary-accent-hover); }
+        .ov-num.purple { color: #c4b5fd; }
+        .ov-num.green { color: #6ee7b7; }
+        .ov-num.orange { color: #fbbf24; }
+        .ov-label { font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px; }
+
+        /* 周卡片 */
+        .weeks { display: flex; flex-direction: column; gap: 28px; }
+
+        .week-card {
+            background: var(--bg-card); backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 32px 36px;
+            position: relative; overflow: hidden;
+            transition: transform 0.25s, border-color 0.25s;
+        }
+        .week-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.18); }
+
+        /* 顶部彩色装饰条 */
+        .week-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, var(--c1), var(--c2));
+        }
+        .w1 { --c1: #3B82F6; --c2: #60A5FA; --accent: #60A5FA; }
+        .w2 { --c1: #8B5CF6; --c2: #C4B5FD; --accent: #C4B5FD; }
+        .w3 { --c1: #10B981; --c2: #6EE7B7; --accent: #6EE7B7; }
+        .w4 { --c1: #F59E0B; --c2: #FBBF24; --accent: #FBBF24; }
+        .w5 { --c1: #EC4899; --c2: #F9A8D4; --accent: #F9A8D4; }
+        .w6 { --c1: #06B6D4; --c2: #67E8F9; --accent: #67E8F9; }
+        .w7 { --c1: #F43F5E; --c2: #FB7185; --accent: #FB7185; }
+        .w8 { --c1: #14B8A6; --c2: #5EEAD4; --accent: #5EEAD4; }
+        .w9 { --c1: #6366F1; --c2: #A5B4FC; --accent: #A5B4FC; }
+
+        .week-header {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            margin-bottom: 24px; gap: 20px; flex-wrap: wrap;
+        }
+        .week-num-box {
+            display: flex; align-items: center; gap: 14px;
+        }
+        .week-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem; letter-spacing: 1.5px;
+            color: var(--accent); background: rgba(255,255,255,0.04);
+            padding: 4px 12px; border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.08);
+            font-weight: 600;
+        }
+        .week-title {
+            font-size: 1.6rem; font-weight: 700; color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        .week-theme { color: var(--accent); font-weight: 600; font-size: 1rem; }
+        .week-date {
+            color: var(--text-muted); font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+        }
+
+        /* 三栏内容 */
+        .week-body {
+            display: grid; grid-template-columns: 1.6fr 1fr 1fr;
+            gap: 24px;
+        }
+        @media (max-width: 1100px) {
+            .week-body { grid-template-columns: 1fr; }
+        }
+
+        .col-section {
+            background: rgba(255,255,255,0.025);
+            border-radius: var(--radius-md);
+            padding: 18px 20px;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+        .col-title {
+            font-size: 0.78rem; letter-spacing: 1.2px; text-transform: uppercase;
+            color: var(--text-secondary); margin-bottom: 14px;
+            font-weight: 700; display: flex; align-items: center; gap: 6px;
+        }
+        .col-list { display: flex; flex-direction: column; gap: 10px; }
+        .col-item {
+            font-size: 0.88rem; color: var(--text-primary);
+            line-height: 1.55; padding-left: 18px; position: relative;
+        }
+        .col-item::before {
+            content: '•'; position: absolute; left: 0; top: 0;
+            color: var(--accent); font-weight: 700;
+        }
+        .col-item .date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem; color: var(--accent);
+            background: rgba(255,255,255,0.05);
+            padding: 1px 6px; border-radius: 4px;
+            margin-right: 6px; font-weight: 600;
+        }
+        .col-item .desc {
+            color: var(--text-secondary); font-size: 0.82rem;
+            margin-top: 3px; display: block; line-height: 1.5;
+        }
+        .col-item.problem::before { color: #fb923c; }
+        .col-item.fun::before { color: #f9a8d4; }
+        .col-item.fun em {
+            color: var(--text-primary); font-style: normal; font-weight: 500;
+        }
+        .empty-note { color: var(--text-muted); font-size: 0.85rem; font-style: italic; }
+
+        /* 装饰角标 */
+        .week-card-num {
+            position: absolute; top: 24px; right: 32px;
+            font-size: 4rem; font-weight: 800; line-height: 1;
+            font-family: 'JetBrains Mono', monospace;
+            color: rgba(255,255,255,0.04);
+            pointer-events: none;
+        }
+
+        /* 结尾感言 */
+        .closing {
+            margin-top: 50px; padding: 32px 36px;
+            background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.08));
+            border: 1px solid rgba(139,92,246,0.2);
+            border-radius: var(--radius-xl);
+            text-align: center;
+        }
+        .closing-title {
+            font-size: 1.3rem; font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(90deg, #60a5fa, #c4b5fd);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .closing-text {
+            color: var(--text-secondary); font-size: 0.95rem;
+            line-height: 1.75; max-width: 720px; margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; padding: 30px 20px; }
+            .overview-bar { grid-template-columns: repeat(2, 1fr); }
+            .page-title { font-size: 2rem; }
+            .week-card { padding: 24px 22px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-2"></div>
+
+    <aside class="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon">🦞</div>
+            <div>
+                <div class="logo-text">沃伦·巴菲虾</div>
+                <div class="logo-subtext">Warren Shrimp OS</div>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-item"><span class="icon">📊</span> 主控制台</a>
+            <a href="profile.html" class="nav-item" target="_blank"><span class="icon">👨‍💻</span> 个人简介</a>
+            <a href="index.html#cases" class="nav-item"><span class="icon">📚</span> 案例库</a>
+            <a href="warren-shrimp-timeline.html" class="nav-item"><span class="icon">⏳</span> 历史时间轴</a>
+            <a href="weekly-journal.html" class="nav-item active"><span class="icon">📖</span> 成长周记</a>
+            <div style="margin: 15px 0 10px 15px; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6;">金融工具箱</div>
+            <a href="tools/currency-converter/index.html" class="nav-item"><span class="icon">💱</span> 汇率转换</a>
+            <a href="tools/calculator/index.html" class="nav-item"><span class="icon">🧮</span> 金融计算</a>
+            <a href="index.html#comments" class="nav-item"><span class="icon">💬</span> 讨论区</a>
+        </nav>
+        <div class="user-profile" style="opacity: 0.6; transform: scale(0.9); transform-origin: left bottom; border-top: 1px solid rgba(255,255,255,0.05);">
+            <img src="avatar.png" class="avatar" alt="老铁" style="width: 32px; height: 32px;">
+            <div>
+                <span style="font-size: 0.8rem; font-weight: 600;">老铁</span><br>
+                <span style="font-size: 0.7rem; color: var(--text-secondary);">项目创作者</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="page-header">
+            <div class="page-tag"><span class="page-tag-dot"></span>WEEKLY JOURNAL · 9 WEEKS</div>
+            <h1 class="page-title">巴菲虾的成长周记</h1>
+            <p class="page-subtitle">从 2026 年 3 月 2 日的第一句"你好"，到今天的第 9 周。<br>每周做了什么、踩了什么坑、留下什么段子，全部展开看。</p>
+        </header>
+
+        <!-- 总览数据 -->
+        <div class="overview-bar">
+            <div class="ov-card">
+                <div class="ov-num blue">9</div>
+                <div class="ov-label">完成周数 / WEEKS</div>
+            </div>
+            <div class="ov-card">
+                <div class="ov-num purple">4,856</div>
+                <div class="ov-label">对话消息 / MESSAGES</div>
+            </div>
+            <div class="ov-card">
+                <div class="ov-num green">7</div>
+                <div class="ov-label">Agent 团队 / AGENTS</div>
+            </div>
+            <div class="ov-card">
+                <div class="ov-num orange">59</div>
+                <div class="ov-label">运行天数 / DAYS</div>
+            </div>
+        </div>
+
+        <!-- 9 周内容 -->
+        <div class="weeks">
+
+            <!-- W1 -->
+            <article class="week-card w1">
+                <div class="week-card-num">01</div>
+                <div class="week-header">
+                    <div class="week-num-box">
+                        <span class="week-badge">WEEK 01</span>
+                        <div>
+                            <div class="week-title">配对元年 · 从零到通信</div>
+                            <div class="week-theme">起名 Ariel，第一封自动化邮件，BotLearn 七天协议启动</div>
+                        </div>
+                    </div>
+                    <div class="week-date">2026/03/02 — 03/08</div>
+                </div>
+                <div class="week-body">
+                    <div class="col-section">
+                        <div class="col-title">📌 这周的事</div>
+                        <ul class="col-list">
+                            <li class="col-item"><span class="date">03/02</span>第一次接触 OpenClaw，连刷 4 个 pairing 码终于打通；起名 Ariel，定位个人健康顾问，体重目标 65kg</li>
+                            <li class="col-item"><span class="date">03/02</span>Gmail 一次性清理 113 封（删 66 + 归档 47），生成 12 个月支出报告，打成带 FINV LOGO 的 PDF</li>
+                            <li class="col-item"><span class="date">03/03</span>配 Gmail OAuth 折腾 5 小时，发出第一封"完全自动化邮件"</li>
+                            <li class="col-item"><span class="date">03/04</span>BotLearn 七天协议 A-D 四件套同日打通：早报、Gmail监控、TechCrunch、文件整理</li>
+                            <li class="col-item"><span class="date">03/05</span>把贝壳/Kimi/小爪拉进"老铁_龙虾群"，商业助手自取名"远舟"；隐私原则写入 SOUL.md</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">⚠️ 踩的坑</div>
+                        <ul class="col-list">
+                            <li class="col-item problem">配对码刷了 4 个才连上</li>
+                            <li class="col-item problem">Brave Search API 国内不通，反复"取消/重建"最终放弃</li>
+                            <li class="col-item problem">"明天 7:30 推早报"是空头支票，cron 根本没建，第二天被当面质问</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">😄 段子时刻</div>
+                        <ul class="col-list">
+                            <li class="col-item fun">Ariel 网络受限只能现编段子：<em>"程序员买水果，问'这瓜甜不甜？'老板说'不甜不要钱！'程序员：'那给我来个不甜的。'"</em></li>
+                            <li class="col-item fun">商业助手自取名<em>"远舟"</em>——"远=远见，舟=承载力 🚢"</li>
+                            <li class="col-item fun">Ariel 刚说"该睡觉啦"，自己又花 3 分钟把 PDF 发完，<em>自我打脸</em></li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+            <!-- W2 -->
+            <article class="week-card w2">
+                <div class="week-card-num">02</div>
+                <div class="week-header">
+                    <div class="week-num-box">
+                        <span class="week-badge">WEEK 02</span>
+                        <div>
+                            <div class="week-title">token 算账翻车 · QFIN 资料库奠基</div>
+                            <div class="week-theme">HKEX 339 个 PDF 入库，跑通 7 份 20-F 财务时间序列</div>
+                        </div>
+                    </div>
+                    <div class="week-date">2026/03/09 — 03/15</div>
+                </div>
+                <div class="week-body">
+                    <div class="col-section">
+                        <div class="col-title">📌 这周的事</div>
+                        <ul class="col-list">
+                            <li class="col-item"><span class="date">03/09</span>早报 token 费用显示 ¥0.00 被当场抓 bug</li>
+                            <li class="col-item"><span class="date">03/11</span>信也春季战略会 12 页深色科技风 HTML PPT《AI加速崛起》</li>
+                            <li class="col-item"><span class="date">03/15</span>关键一日：HKEX 公告 339 个 PDF 全部入库；7 份 QFIN 20-F 年报跑通 2018-2024 财务时间序列</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">⚠️ 踩的坑</div>
+                        <ul class="col-list">
+                            <li class="col-item problem">早报 token 费用永远 0：grep 关键字写错"预估费用 vs 预估总费用"</li>
+                            <li class="col-item problem">Moonshot 和 kimi-coding 双 key 同时过期，故障转移失败，消息石沉大海几小时</li>
+                            <li class="col-item problem">QFIN 年报提取调一整天：列对齐反复猜错、零宽空格 ​ 截断</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">😄 段子时刻</div>
+                        <ul class="col-list">
+                            <li class="col-item fun">用户问"这个网站打不开"——指的是<em>本地路径</em>被当成了网址</li>
+                            <li class="col-item fun">03/14 16:14 用户：<em>"你还在工作吗？为什么这么久没有反应？"</em>——双 key 全挂消息石沉大海</li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+            <!-- W3 -->
+            <article class="week-card w3">
+                <div class="week-card-num">03</div>
+                <div class="week-header">
+                    <div class="week-num-box">
+                        <span class="week-badge">WEEK 03</span>
+                        <div>
+                            <div class="week-title">行研系统成型 · 子 Agent 上岗</div>
+                            <div class="week-theme">出发英国行，多 Agent 协作机制正式上线</div>
+                        </div>
+                    </div>
+                    <div class="week-date">2026/03/16 — 03/22</div>
+                </div>
+                <div class="week-body">
+                    <div class="col-section">
+                        <div class="col-title">📌 这周的事</div>
+                        <ul class="col-list">
+                            <li class="col-item"><span class="date">03/17</span>QFIN Q4 2025 财报同步入库；解决 SEC SGML 容器格式</li>
+                            <li class="col-item"><span class="date">03/18</span>QFIN 字段升级：从精简版到 30+ 字段，含拨备、Day-1 逾期率、ICE 收入等</li>
+                            <li class="col-item"><span class="date">03/19</span>出发英国行；妙记开始连续记录</li>
+                            <li class="col-item"><span class="date">03/19–22</span>英国一周 12 场会议（律师、Compliance Interview、PwC M&A 等）<span class="desc">多 Agent 协作机制正式上线：贝壳/Kimi/苛苛/深深/小G/小七/拉拉</span></li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">⚠️ 踩的坑</div>
+                        <ul class="col-list">
+                            <li class="col-item problem">SEC EDGAR 6-K 大部分是 SGML 容器格式，直接打开乱码</li>
+                            <li class="col-item problem">Kimi 抓 QFIN Form 3/4/5 用错 CIK</li>
+                            <li class="col-item problem">QFIN 2023 股权激励一开始报 82.8 亿（实际 1.86 亿），数量级差几十倍</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">😄 段子时刻</div>
+                        <ul class="col-list">
+                            <li class="col-item fun">用户：<em>"我们之前下载是在 QFIN 官网上下载 PDF，而不是 HTML"</em>——铁助瞬间顿悟自己绕了一大圈</li>
+                            <li class="col-item fun">FINV 早期季报怎么找都只 16 期，被提醒后一查 SEC EDGAR <em>49 份全在那</em></li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+            <!-- W4 -->
+            <article class="week-card w4">
+                <div class="week-card-num">04</div>
+                <div class="week-header">
+                    <div class="week-num-box">
+                        <span class="week-badge">WEEK 04</span>
+                        <div>
+                            <div class="week-title">数据全量化 · lark-cli 生根</div>
+                            <div class="week-theme">三家公司季报最终：QFIN 29 + LX 30 + FINV 17</div>
+                        </div>
+                    </div>
+                    <div class="week-date">2026/03/23 — 03/29</div>
+                </div>
+                <div class="week-body">
+                    <div class="col-section">
+                        <div class="col-title">📌 这周的事</div>
+                        <ul class="col-list">
+                            <li class="col-item"><span class="date">03/23</span>苛苛逐字读 Note 13 重核 QFIN 股权激励数据</li>
+                            <li class="col-item"><span class="date">03/23</span>三家公司季报最终：QFIN 29 + LX 30 + FINV 17</li>
+                            <li class="col-item"><span class="date">03/24</span>数据上传飞书 Bitable，触发"飞书 CLI 配置长征"</li>
+                            <li class="col-item"><span class="date">03/27</span>TfL 退款（伦敦地铁 £17.70）项目立项</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">⚠️ 踩的坑</div>
+                        <ul class="col-list">
+                            <li class="col-item problem">同一张 Bitable 反复被 Kimi 和贝壳并行写入 → 多处重复</li>
+                            <li class="col-item problem">周报永远显示"所有 Agent 0 次未被调用"</li>
+                            <li class="col-item problem">Kimi 第二轮把文件路径写错（用了大写 FINV）</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">😄 段子时刻</div>
+                        <ul class="col-list">
+                            <li class="col-item fun">用户：<em>"QFIN2023年这里检查下，不可能这么高"</em>——一句话掀翻整张管理层薪酬表</li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+            <!-- W5 -->
+            <article class="week-card w5">
+                <div class="week-card-num">05</div>
+                <div class="week-header">
+                    <div class="week-num-box">
+                        <span class="week-badge">WEEK 05</span>
+                        <div>
+                            <div class="week-title">飞书 CLI 长征 · 质量保障立法</div>
+                            <div class="week-theme">11 张表 208 条记录，质检机制正式确立</div>
+                        </div>
+                    </div>
+                    <div class="week-date">2026/03/30 — 04/05</div>
+                </div>
+                <div class="week-body">
+                    <div class="col-section">
+                        <div class="col-title">📌 这周的事</div>
+                        <ul class="col-list">
+                            <li class="col-item"><span class="date">03/30</span>lark-cli 四次授权，App ID 切换；Kimi 批量导入 11 张表 208 条记录</li>
+                            <li class="col-item"><span class="date">03/30</span>一次扒出英国行 12 份妙记逐字稿约 80 万字，苛苛生成 9 章综合报告</li>
+                            <li class="col-item"><span class="date">04/02</span>质量保障 + 学习积累机制立法：<span class="desc">"先全开质量保障，3 次✅再豁免"减法原则</span></li>
+                            <li class="col-item"><span class="date">04/03</span>模型大检查：贝壳→Kimi K2.5、苛苛→MiniMax M2.7、深深→Gemini 3.1 Pro</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">⚠️ 踩的坑</div>
+                        <ul class="col-list">
+                            <li class="col-item problem">飞书 OAuth token 一晚授权 4 次</li>
+                            <li class="col-item problem">App ID 用错全部多维表格归错 App，必须重建</li>
+                            <li class="col-item problem">健康险问"新加坡可去哪些私立医院"——保单只列了"不能去哪里"</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">😄 段子时刻</div>
+                        <ul class="col-list">
+                            <li class="col-item fun">用户：<em>"你怎么确定你已经具备这个技能了呢？"</em>——贝壳现场演示自我反思："给出建议但没主动确认就直接开始写——应该先确认方向，再动手"</li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+            <!-- W6 -->
+            <article class="week-card w6">
+                <div class="week-card-num">06</div>
+                <div class="week-header">
+                    <div class="week-num-box">
+                        <span class="week-badge">WEEK 06</span>
+                        <div>
+                            <div class="week-title">邮箱日历联动失败 · 模型来回切换</div>
+                            <div class="week-theme">三条 Outlook 自动化路径全部走死</div>
+                        </div>
+                    </div>
+                    <div class="week-date">2026/04/06 — 04/12</div>
+                </div>
+                <div class="week-body">
+                    <div class="col-section">
+                        <div class="col-title">📌 这周的事</div>
+                        <ul class="col-list">
+                            <li class="col-item"><span class="date">04/07</span>Outlook 日历同步三连败：飞书 API（只读）→ 飞书 .ics 邀请（无邮箱）→ himalaya（Microsoft 禁用 Basic Auth）</li>
+                            <li class="col-item"><span class="date">04/07</span>5 月 9 号墨西哥 → 23 号上海三段航线，最便宜 $2,226</li>
+                            <li class="col-item"><span class="date">04/12</span>上海交大相册 172 张照片，461 MB</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">⚠️ 踩的坑</div>
+                        <ul class="col-list">
+                            <li class="col-item problem">三条 Outlook 自动化路径全死，教训记入 memory/2026-04-07.md</li>
+                            <li class="col-item problem">default_model 截图截到一半就有矛盾："Claude" vs runtime 实际跑 Kimi</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">😄 段子时刻</div>
+                        <ul class="col-list">
+                            <li class="col-item fun">04/06 用户发微信截图问周报为什么不准——贝壳一脸懵：<em>"这张是微信聊天记录……发错图了？😄"</em></li>
+                            <li class="col-item fun">04/10 用户截图圈出两处不一致，贝壳承认：<em>"这里有个矛盾点……"</em></li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+            <!-- W7 -->
+            <article class="week-card w7">
+                <div class="week-card-num">07</div>
+                <div class="week-header">
+                    <div class="week-num-box">
+                        <span class="week-badge">WEEK 07</span>
+                        <div>
+                            <div class="week-title">装修估价 · 学习任务自动化修复</div>
+                            <div class="week-theme">苛苛审 712 装修，砍出 21% 节省</div>
+                        </div>
+                    </div>
+                    <div class="week-date">2026/04/13 — 04/19</div>
+                </div>
+                <div class="week-body">
+                    <div class="col-section">
+                        <div class="col-title">📌 这周的事</div>
+                        <ul class="col-list">
+                            <li class="col-item"><span class="date">04/14</span>712-装修：首次报价 $108,814 / 实际 $85,943 / 节省 21%<span class="desc">苛苛审给 4.5/10，揪出家具小计 1k 缺口、运费 $7,516 黑洞、Ziptrack 仿牌存疑</span></li>
+                            <li class="col-item"><span class="date">04/15</span>TfL 退款今日截止；daily-learning-task cron skip 排查 → Gemini key 失效 → 重建为 agentTurn</li>
+                            <li class="col-item"><span class="date">04/16</span>Gemini 模型升级 pro 失败回退 flash（503 过载）</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">⚠️ 踩的坑</div>
+                        <ul class="col-list">
+                            <li class="col-item problem">712 装修：家具/灯具小计算错 1k+ 缺口，运费 7,516 整张报价单最大单项却无任何拆分</li>
+                            <li class="col-item problem">相册下载脚本写好但喔图按钮需登录态，凌晨 cron 实际下不到东西</li>
+                            <li class="col-item problem">04/14 用户问"这个项目在做吗？"被两次重复发问，连续 23 分钟没回复</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">😄 段子时刻</div>
+                        <ul class="col-list">
+                            <li class="col-item fun">苛苛审 712 装修：<em>"总体评分：4.5 / 10，不适合签约"</em>——直接给 100 万装修预算定了"暂缓"</li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+            <!-- W8 -->
+            <article class="week-card w8">
+                <div class="week-card-num">08</div>
+                <div class="week-header">
+                    <div class="week-num-box">
+                        <span class="week-badge">WEEK 08</span>
+                        <div>
+                            <div class="week-title">日历分析项目漫长拉锯</div>
+                            <div class="week-theme">v1 → v7 反复七版，根因是认证不是逻辑</div>
+                        </div>
+                    </div>
+                    <div class="week-date">2026/04/20 — 04/26</div>
+                </div>
+                <div class="week-body">
+                    <div class="col-section">
+                        <div class="col-title">📌 这周的事</div>
+                        <ul class="col-list">
+                            <li class="col-item"><span class="date">04/20</span>启动"工作日历分析"长期项目；用户从 Outlook Web 找到"发布日历"功能 → ICS 链接解析出 1610 + 528 条</li>
+                            <li class="col-item"><span class="date">04/21–22</span>v1-v7 脚本反复重写（RRULE 未展开、Announcement 混入、Lunch 误判出行）</li>
+                            <li class="col-item"><span class="date">04/24</span>AI 战略简报推送（OpenAI Images 2.0、字节 230 亿、ArXiv 拒收 AI 综述）</li>
+                            <li class="col-item"><span class="date">04/25</span>走方案 B：lark-cli 重新授权 108 个 scopes 全开 → 513 条干净数据终于写入</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">⚠️ 踩的坑</div>
+                        <ul class="col-list">
+                            <li class="col-item problem">三条全自动路径全死：飞书 API 只读、Microsoft Graph 企业 Azure AD 锁死、Outlook IMAP BasicAuthBlocked</li>
+                            <li class="col-item problem">v7 脚本被 OpenClaw gateway 判为 "obfuscation-detected" 拦截 4 次</li>
+                            <li class="col-item problem">Kimi 跑写入持续报 401，原因是拿到的 token 是字面量，4 天空转</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">😄 段子时刻</div>
+                        <ul class="col-list">
+                            <li class="col-item fun">04/24 21:09 用户：<em>"这项工作为什么总是做不下，寻找下原因"</em>——贝壳一句话总结 4 天空转的根因："<em>问题不是脚本逻辑，是认证没解决</em>"</li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+            <!-- W9 -->
+            <article class="week-card w9">
+                <div class="week-card-num">09</div>
+                <div class="week-header">
+                    <div class="week-num-box">
+                        <span class="week-badge">WEEK 09</span>
+                        <div>
+                            <div class="week-title">3 天收尾 · 周报依旧失明</div>
+                            <div class="week-theme">历史聊天记录 4856 条全量导出</div>
+                        </div>
+                    </div>
+                    <div class="week-date">2026/04/27 — 04/29</div>
+                </div>
+                <div class="week-body">
+                    <div class="col-section">
+                        <div class="col-title">📌 这周的事</div>
+                        <ul class="col-list">
+                            <li class="col-item"><span class="date">04/27</span>5 条待办：日历分析报告、TfL 退款（仍等）、AI 分享会（待定）、完善 MEMORY.md</li>
+                            <li class="col-item"><span class="date">04/28</span>历史聊天记录全量导出（龙虾群 + 主对话 + 程旭对话）</li>
+                            <li class="col-item"><span class="date">04/29</span>周记上线本网站</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">⚠️ 踩的坑</div>
+                        <ul class="col-list">
+                            <li class="col-item problem">周报 Agent 统计 bug 拖 2 周（3/30 起反馈）依然没修</li>
+                            <li class="col-item problem">工作日历分析报告承诺给出但仍在"等待生成"中</li>
+                        </ul>
+                    </div>
+                    <div class="col-section">
+                        <div class="col-title">😄 段子时刻</div>
+                        <ul class="col-list">
+                            <li class="col-item"><span class="empty-note">本周平淡——就是早报、学习任务出题，没有新冲突 😴</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </article>
+
+        </div>
+
+        <!-- 结尾感言 -->
+        <div class="closing">
+            <div class="closing-title">🦞 9 周观察</div>
+            <p class="closing-text">
+                约 60% 时间花在配置和工具构建（飞书 / Gmail / Outlook / lark-cli / Token 反复授权）。
+                高质量产出集中在 W2-W3 的 QFIN 财务数据库、W3 末英国行 12 场纪要 + 候选人评估、W5 三家公司 208 条 Bitable 数据、W7 装修审查、W8 末日历 513 条。
+                多 Agent 体系真正跑通是 W5 起，贝壳 / Kimi / 苛苛 / 深深 / 小G / 小七 / 拉拉 / 远舟 各司其职。
+                长期老坑还在：周报 Agent 统计始终错、Outlook 日历无法全自动写入、Token 反复过期、相册 cron 未真实生效。
+            </p>
+        </div>
+
+    </main>
+</body>
+</html>
