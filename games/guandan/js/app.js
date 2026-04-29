@@ -5,29 +5,47 @@
  */
 
 (function () {
-  const socket = window.gameSocket;
+  let socket; // 延迟绑定，因为 loopback 是 ES module 异步加载
   const ui = window.gameUI;
+  const isStaticHost = !!window.__GUANDAN_STATIC_HOST__;
+
+  // 等 gameSocket 就绪（loopback 是 ES module，异步注册到 window）
+  async function waitForSocket() {
+    if (window.gameSocket) return window.gameSocket;
+    return new Promise((resolve) => {
+      const tryGet = () => {
+        if (window.gameSocket) resolve(window.gameSocket);
+        else setTimeout(tryGet, 50);
+      };
+      window.addEventListener('gameSocketReady', () => resolve(window.gameSocket), { once: true });
+      tryGet();
+    });
+  }
 
   // ====== 初始化 ======
   async function init() {
-    // 在 GitHub Pages 等静态托管下，WebSocket 服务器不可用，提示用户
-    const isStaticHost = location.hostname.endsWith('github.io') ||
-                         location.hostname.endsWith('githubpages.io') ||
-                         location.protocol === 'file:';
+    socket = await waitForSocket();
+    bindSocketEvents();
+    bindUIEvents();
+
     if (isStaticHost) {
-      bindUIEvents();
-      ui.setLobbyStatus('🦞 演示模式 · 当前为静态前端展示，联网对战需独立服务器（源码见 GitHub）');
-      return;
-    }
-    try {
-      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${proto}//${window.location.host}`;
-      await socket.connect(wsUrl);
-      bindSocketEvents();
-      bindUIEvents();
-      ui.setLobbyStatus('已连接到服务器 ✅');
-    } catch (e) {
-      ui.setLobbyStatus('连接服务器失败 ❌ 请刷新重试');
+      // 静态模式：本地 loopback 服务器
+      try {
+        await socket.connect('loopback');
+        ui.setLobbyStatus('🦞 演示模式 · 与 3 个 AI 机器人对战（输入昵称 → 创建房间）');
+      } catch (e) {
+        ui.setLobbyStatus('本地引擎初始化失败');
+      }
+    } else {
+      // 真服务器
+      try {
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${proto}//${window.location.host}`;
+        await socket.connect(wsUrl);
+        ui.setLobbyStatus('已连接到服务器 ✅');
+      } catch (e) {
+        ui.setLobbyStatus('连接服务器失败 ❌ 请刷新重试');
+      }
     }
   }
 
@@ -48,6 +66,15 @@
     socket.on('ROOM_CREATED', (msg) => {
       ui.showRoom(msg.roomId);
       ui.showStartButton(true);
+      // 静态模式：自动添加 3 个 NPC + 自己 ready，免去用户手动操作
+      if (isStaticHost) {
+        setTimeout(() => {
+          socket.addNPC('normal', 1);
+          socket.addNPC('normal', 2);
+          socket.addNPC('normal', 3);
+          socket.ready(); // 自动标记自己已准备
+        }, 200);
+      }
     });
 
     socket.on('JOINED_ROOM', (msg) => {

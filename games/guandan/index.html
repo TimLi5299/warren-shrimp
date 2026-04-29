@@ -218,16 +218,37 @@
     <div class="tutorial-highlight-mask" id="tutorial-mask"></div>
   </div>
 
-  <script src="js/network/websocket.js"></script>
+  <!-- 静态托管下用 ES Module loopback；其他环境用普通 WebSocket -->
+  <script>
+    window.__GUANDAN_STATIC_HOST__ =
+      window.__GUANDAN_STATIC_HOST_OVERRIDE__ === true ||
+      location.hostname.endsWith('github.io') ||
+      location.hostname.endsWith('githubpages.io') ||
+      location.search.includes('demo=1') ||
+      location.protocol === 'file:';
+    if (!window.__GUANDAN_STATIC_HOST__) {
+      // 真服务器模式
+      const s = document.createElement('script');
+      s.src = 'js/network/websocket.js';
+      document.currentScript.after(s);
+    }
+  </script>
+  <!-- 静态模式专用 loopback（ES module）-->
+  <script type="module">
+    if (window.__GUANDAN_STATIC_HOST__) {
+      await import('./js/network/loopback.js');
+      window.dispatchEvent(new Event('gameSocketReady'));
+    }
+  </script>
+
   <script src="js/ui/cardRenderer.js"></script>
   <script src="js/ui/gameUI.js"></script>
   <script src="js/app.js"></script>
   <script>
-    if ('serviceWorker' in navigator) {
+    // service worker 仅在真服务器环境注册（静态托管下缓存可能干扰开发）
+    if ('serviceWorker' in navigator && !window.__GUANDAN_STATIC_HOST__) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('SW registered'))
-          .catch(err => console.log('SW failed', err));
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
       });
     }
   </script>
