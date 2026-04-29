@@ -364,7 +364,7 @@
     const mid = Math.floor(COLS / 2);
     snake = [
       { x: mid,     y : Math.floor(ROWS / 2) },
-      { x: mid - 1, y:Math.floor(ROWS / 2) },
+      { x: mid - 1, y:Math.floor(ROWS / 2) },
       { x: mid - 2, y: Math.floor(ROWS / 2) },
     ];
     dir       = { x: 1, y: 0 };
@@ -418,7 +418,7 @@
     ctx.strokeStyle = 'rgba(0,255,200,0.04)';
     ctx.lineWidth = 0.5;
     for (let i = 0; i <= COLS; i++) {
-      ctx.beginPath(); ctx.moveTo(i * CEML, 0); ctx.lineTo(i * CELL, H); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(i * CELL, 0); ctx.lineTo(i * CELL, H); ctx.stroke();
     }
     for (let j = 0; j <= ROWS; j++) {
       ctx.beginPath(); ctx.moveTo(0, j * CELL); ctx.lineTo(W, j * CELL); ctx.stroke();
