@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>掼蛋 — 在线对战</title>
+  <meta name="description" content="掼蛋在线对战游戏，4人实时联网对战">
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- ====== 返回主站 ====== -->
+  <a href="../../products.html" style="position:fixed;top:14px;left:14px;z-index:9999;
+    padding:6px 14px;background:rgba(15,23,42,0.85);color:#cbd5e1;
+    border:1px solid rgba(255,255,255,0.15);border-radius:20px;
+    text-decoration:none;font-size:13px;font-family:-apple-system,sans-serif;
+    backdrop-filter:blur(10px);">← 沃伦·巴菲虾</a>
+
+  <!-- ====== 首页/大厅 ====== -->
+  <div id="lobby-screen" class="screen active">
+    <div class="lobby-scroll-wrap">
+      <div class="lobby-container">
+        <div class="logo-area">
+          <div class="logo-icon">🀄</div>
+          <h1 class="logo-title">掼 蛋</h1>
+          <p class="logo-subtitle">四人在线对战</p>
+        </div>
+
+        <div class="login-section">
+          <input type="text" id="nickname-input" placeholder="输入你的昵称" maxlength="8" class="input-field">
+        </div>
+
+        <div class="lobby-actions">
+          <button id="create-room-btn" class="btn btn-primary">
+            <span class="btn-icon">🏠</span>
+            创建房间
+          </button>
+          <div class="join-room-group">
+            <input type="text" id="room-id-input" placeholder="输入房间号" maxlength="8" class="input-field input-room">
+            <button id="join-room-btn" class="btn btn-secondary">
+              <span class="btn-icon">🚪</span>
+              加入
+            </button>
+          </div>
+        </div>
+
+        <div id="lobby-status" class="status-text"></div>
+      </div>
+
+      <div class="tutorial-section">
+        <h3 class="tutorial-heading">📚 新手教学</h3>
+        <div class="tutorial-lessons" id="tutorial-lessons">
+          <button class="btn btn-tutorial" data-lesson="01">第1课：认识牌</button>
+          <button class="btn btn-tutorial" data-lesson="02">第2课：牌型详解</button>
+          <button class="btn btn-tutorial" data-lesson="03">第3课：炸弹</button>
+          <button class="btn btn-tutorial" data-lesson="04">第4课：进贡与升级</button>
+          <button class="btn btn-tutorial" data-lesson="05">第5课：完整对局</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 房间等待页 ====== -->
+  <div id="room-screen" class="screen">
+    <div class="room-container">
+      <div class="room-header">
+        <h2>房间号: <span id="room-id-display" class="room-id-highlight"></span></h2>
+        <button id="copy-room-id-btn" class="btn btn-small">📋 复制</button>
+      </div>
+
+      <div class="seats-grid">
+        <div class="seat-card" id="seat-0">
+          <div class="seat-avatar">👤</div>
+          <div class="seat-name">等待加入...</div>
+          <div class="seat-status"></div>
+        </div>
+        <div class="seat-card" id="seat-1">
+          <div class="seat-avatar">👤</div>
+          <div class="seat-name">等待加入...</div>
+          <div class="seat-status"></div>
+        </div>
+        <div class="seat-card" id="seat-2">
+          <div class="seat-avatar">👤</div>
+          <div class="seat-name">等待加入...</div>
+          <div class="seat-status"></div>
+        </div>
+        <div class="seat-card" id="seat-3">
+          <div class="seat-avatar">👤</div>
+          <div class="seat-name">等待加入...</div>
+          <div class="seat-status"></div>
+        </div>
+      </div>
+
+      <div class="team-labels">
+        <span class="team-label team1">🔴 队伍A: 座位1 & 座位3</span>
+        <span class="team-label team2">🔵 队伍B: 座位2 & 座位4</span>
+      </div>
+
+      <div class="room-actions">
+        <button id="ready-btn" class="btn btn-primary">✋ 准备</button>
+        <button id="start-game-btn" class="btn btn-accent" style="display:none;">🚀 开始游戏</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 游戏主界面 ====== -->
+  <div id="game-screen" class="screen">
+    <!-- 顶部信息栏 -->
+    <div class="game-info-bar">
+      <div class="level-display">
+        <span class="team-level" id="team1-level">🔴 2</span>
+        <span class="vs-text">VS</span>
+        <span class="team-level" id="team2-level">🔵 2</span>
+      </div>
+      <div class="current-level-badge" id="current-level-badge">级牌: 2</div>
+      <div class="round-badge" id="round-badge">第1局</div>
+    </div>
+
+    <!-- 对家（上方） -->
+    <div class="player-area player-top" id="player-top">
+      <div class="player-info">
+        <div class="player-avatar">👤</div>
+        <span class="player-name" id="player-top-name">对家</span>
+        <span class="card-count" id="player-top-count">27</span>
+      </div>
+      <div class="played-cards-area" id="played-top"></div>
+    </div>
+
+    <!-- 左侧玩家 -->
+    <div class="player-area player-left" id="player-left">
+      <div class="player-info">
+        <div class="player-avatar">👤</div>
+        <span class="player-name" id="player-left-name">左手</span>
+        <span class="card-count" id="player-left-count">27</span>
+      </div>
+      <div class="played-cards-area" id="played-left"></div>
+    </div>
+
+    <!-- 右侧玩家 -->
+    <div class="player-area player-right" id="player-right">
+      <div class="player-info">
+        <div class="player-avatar">👤</div>
+        <span class="player-name" id="player-right-name">右手</span>
+        <span class="card-count" id="player-right-count">27</span>
+      </div>
+      <div class="played-cards-area" id="played-right"></div>
+    </div>
+
+    <!-- 中央出牌区 -->
+    <div class="center-play-area" id="center-play-area">
+      <div class="play-info" id="play-info"></div>
+    </div>
+
+    <!-- 底部（自己） -->
+    <div class="player-area player-bottom">
+      <div class="action-buttons" id="action-buttons">
+        <button id="hint-btn" class="btn btn-small btn-hint">💡 提示</button>
+        <button id="pass-btn" class="btn btn-small btn-pass">⏭ 不出</button>
+        <button id="play-btn" class="btn btn-small btn-play">🃏 出牌</button>
+      </div>
+      <div id="npc-explain-bubble" class="npc-explain-bubble" style="display:none;"></div>
+      <div id="bomb-effect" class="bomb-effect"></div>
+      <div class="hand-area" id="hand-area">
+        <!-- 手牌将动态渲染 -->
+      </div>
+    </div>
+
+    <!-- 状态消息 -->
+    <div class="game-message" id="game-message"></div>
+  </div>
+
+  <!-- ====== 结算弹窗 ====== -->
+  <div id="result-overlay" class="overlay" style="display:none;">
+    <div class="result-card">
+      <h2 id="result-title">本局结束</h2>
+      <div id="result-desc" class="result-desc"></div>
+      <div id="result-ranks" class="result-rank-list"></div>
+      <div id="result-levels" class="result-level-row"></div>
+      <div id="result-bombs" class="result-bombs"></div>
+      <button id="next-round-btn" class="btn btn-primary" style="margin-top:18px;">继续下一局</button>
+    </div>
+  </div>
+
+  <!-- ====== 进贡弹窗 ====== -->
+  <div id="tribute-overlay" class="overlay" style="display:none;">
+    <div class="result-card">
+      <h2 id="tribute-title">进贡阶段</h2>
+      <p id="tribute-desc"></p>
+      <div id="tribute-received" class="tribute-received" style="display:none;">
+        <span>收到进贡：</span>
+        <div id="tribute-received-cards" class="tribute-received-cards"></div>
+      </div>
+      <div id="tribute-hand" class="tribute-hand"></div>
+      <p class="tribute-hint" id="tribute-hint-text"></p>
+    </div>
+  </div>
+
+  <!-- ====== 游戏结束弹窗 ====== -->
+  <div id="gameover-overlay" class="overlay" style="display:none;">
+    <div class="result-card gameover-card">
+      <div class="gameover-icon">🏆</div>
+      <h2 id="gameover-title">游戏结束</h2>
+      <div id="gameover-details" class="result-details"></div>
+      <button id="back-to-lobby-btn" class="btn btn-primary">返回大厅</button>
+    </div>
+  </div>
+
+  <!-- ====== 教学覆盖层 ====== -->
+  <div id="tutorial-overlay" class="tutorial-overlay" style="display:none;">
+    <div class="tutorial-bubble" id="tutorial-bubble">
+      <div class="tutorial-progress" id="tutorial-progress">第1课 · 步骤 1/3</div>
+      <div class="tutorial-prompt" id="tutorial-prompt"></div>
+      <button class="btn btn-small btn-tutorial-next" id="tutorial-next-btn" style="display:none;">继续 →</button>
+    </div>
+    <div class="tutorial-highlight-mask" id="tutorial-mask"></div>
+  </div>
+
+  <script src="js/network/websocket.js"></script>
+  <script src="js/ui/cardRenderer.js"></script>
+  <script src="js/ui/gameUI.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW registered'))
+          .catch(err => console.log('SW failed', err));
+      });
+    }
+  </script>
+</body>
+</html>
