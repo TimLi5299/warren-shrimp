@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>巴菲特案例：可口可乐 | 沃伦·巴菲虾</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0F172A;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --primary-accent: #3B82F6;
+            --primary-accent-hover: #60A5FA;
+            --secondary-accent: #8B5CF6;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --coke-red: #DC2626;
+            --coke-red-hover: #EF4444;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-light: rgba(255, 255, 255, 0.05);
+            --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.7;
+        }
+        .ambient-glow {
+            position: fixed; top: -20%; left: -10%;
+            width: 70vw; height: 70vh;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.13) 0%, transparent 60%);
+            z-index: 0; pointer-events: none;
+        }
+        .nav {
+            position: fixed; top: 0; left: 0; width: 100%;
+            padding: 18px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(16px);
+            background: rgba(15, 23, 42, 0.85);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .nav-logo { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); text-decoration: none; }
+        .nav-links a {
+            color: var(--text-secondary); text-decoration: none;
+            margin-left: 28px; transition: color 0.2s; font-size: 0.9rem; font-weight: 500;
+        }
+        .nav-links a:hover { color: var(--coke-red-hover); }
+        .container { max-width: 860px; margin: 0 auto; padding: 110px 20px 70px; position: relative; z-index: 2; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: var(--coke-red-hover); text-decoration: none;
+            padding: 7px 16px;
+            background: rgba(220, 38, 38, 0.1);
+            border-radius: 30px; transition: all 0.2s;
+            margin-bottom: 32px; font-size: 0.88rem; font-weight: 500;
+        }
+        .back-btn:hover { background: rgba(220, 38, 38, 0.2); color: #FCA5A5; }
+        .case-header { text-align: center; margin-bottom: 56px; }
+        .case-badge {
+            display: inline-block; padding: 6px 16px;
+            background: rgba(220, 38, 38, 0.12);
+            border: 1px solid rgba(220, 38, 38, 0.35);
+            border-radius: 30px; font-size: 0.82rem; color: var(--coke-red-hover);
+            margin-bottom: 14px; font-family: 'JetBrains Mono', monospace;
+        }
+        .case-title { font-size: 2.4rem; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
+        .case-subtitle { font-size: 1.15rem; color: var(--text-secondary); font-weight: 400; }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 36px; margin-bottom: 28px;
+            backdrop-filter: blur(16px);
+        }
+        .card-title {
+            font-size: 1.2rem; font-weight: 600;
+            margin-bottom: 22px; color: var(--text-primary);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px; margin-top: 18px; margin-bottom: 28px;
+        }
+        .stat-item {
+            background: var(--border-light);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 18px 14px; text-align: center;
+        }
+        .stat-value {
+            font-size: 1.35rem; font-weight: 600;
+            color: var(--coke-red-hover);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 5px;
+        }
+        .stat-label { font-size: 0.78rem; color: var(--text-secondary); }
+        .insight-list { list-style: none; }
+        .insight-list li {
+            padding: 11px 0 11px 28px; position: relative;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-secondary);
+        }
+        .insight-list li:last-child { border-bottom: none; }
+        .insight-list li::before {
+            content: '✓'; position: absolute; left: 0; top: 11px;
+            color: var(--success-color); font-weight: bold;
+        }
+        .quote {
+            background: rgba(220, 38, 38, 0.06);
+            border-left: 4px solid var(--coke-red);
+            padding: 20px 24px; margin: 28px 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            font-style: italic; color: var(--text-secondary);
+        }
+        .timeline { position: relative; padding-left: 36px; margin: 24px 0; }
+        .timeline::before {
+            content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+            width: 2px; background: var(--border-color);
+        }
+        .timeline-item { position: relative; margin-bottom: 24px; padding-left: 18px; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -30px; top: 6px;
+            width: 11px; height: 11px;
+            background: var(--bg-dark); border-radius: 50%;
+            border: 2px solid var(--coke-red);
+        }
+        .timeline-year { font-family: 'JetBrains Mono', monospace; color: var(--coke-red-hover); font-size: 0.85rem; margin-bottom: 6px; }
+        .timeline-content { color: var(--text-secondary); font-size: 0.93rem; }
+        .highlight-box {
+            background: rgba(220, 38, 38, 0.06);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            border-radius: var(--radius-md);
+            padding: 20px 22px;
+            margin: 18px 0;
+        }
+        .shrimp-box {
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: var(--radius-md);
+            padding: 22px; margin-top: 10px;
+            font-size: 0.93rem; color: var(--text-secondary);
+        }
+        .shrimp-box .shrimp-title {
+            font-weight: 600; color: var(--success-color);
+            margin-bottom: 8px; font-size: 1rem;
+        }
+        footer { text-align: center; margin-top: 60px; padding-top: 28px; border-top: 1px solid var(--border-light); color: var(--text-secondary); font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    <nav class="nav">
+        <a href="index.html" class="nav-logo">🦞 沃伦·巴菲虾</a>
+        <div class="nav-links">
+            <a href="index.html">主控台</a>
+            <a href="cases.html">案例库</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <a href="cases.html" class="back-btn">← 返回案例库</a>
+
+        <header class="case-header">
+            <span class="case-badge">🥤 巴菲特经典案例 #05</span>
+            <h1 class="case-title">可口可乐</h1>
+            <p class="case-subtitle">Coca-Cola · 1988 年至今 · 巴菲特最钟爱的"永久持仓"</p>
+        </header>
+
+        <!-- 案例概况 -->
+        <div class="card">
+            <h2 class="card-title">📊 案例概况</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">1988</div>
+                    <div class="stat-label">首次买入</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$13 亿</div>
+                    <div class="stat-label">总投资额</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$2.50</div>
+                    <div class="stat-label">平均成本/股</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$250 亿+</div>
+                    <div class="stat-label">当前持仓市值</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">~20 倍</div>
+                    <div class="stat-label">资本增值</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">每年</div>
+                    <div class="stat-label">稳定分红</div>
+                </div>
+            </div>
+            <div class="highlight-box">
+                <strong style="color: var(--coke-red-hover);">💡 可口可乐法则</strong><br><br>
+                <span style="color: var(--text-secondary);">巴菲特一辈子只持有过 5 只股票超过 30 年。可口可乐是其中最经典的——它教会了他"永久持仓"（Forever Holding）的真正含义：买进后，正确做法不是择时卖出，而是让伟大企业自己复利。</span>
+            </div>
+        </div>
+
+        <!-- 投资逻辑 -->
+        <div class="card">
+            <h2 class="card-title">🎯 投资逻辑</h2>
+            <ul class="insight-list">
+                <li><strong>全球品牌</strong> — 世界最有价值的品牌之一，"Coca-Cola" 五个字本身就是定价权</li>
+                <li><strong>定价权</strong> — 可以持续提价而不流失客户，毛利率长期稳定在高位</li>
+                <li><strong>分销网络</strong> — 全球 200+ 国家的分销系统是任何后来者都无法复制的物理护城河</li>
+                <li><strong>简单易懂</strong> — 商业模式百年不变，现金流稳定，不需要预测技术变革</li>
+                <li><strong>管理层优秀</strong> — 1980 年代郭思达（Roberto Goizueta）领导下的全球化扩张，是巴菲特决心重仓的关键催化剂</li>
+            </ul>
+            <div class="quote">
+                "如果你给我 1000 亿美元让我去摧毁可口可乐的全球地位，让我把那笔钱还给你，我做不到。" — 沃伦·巴菲特
+            </div>
+            <div class="quote">
+                "这是我理想中的投资：简单、可理解、持久。" — 沃伦·巴菲特
+            </div>
+        </div>
+
+        <!-- 投资决策时间轴 -->
+        <div class="card">
+            <h2 class="card-title">⏳ 关键时间节点</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-year">1988-1989 年</div>
+                    <div class="timeline-content">伯克希尔分批买入约 10 亿美元的可口可乐股票，成为公司最大股东之一。当时市场普遍认为定价偏贵，巴菲特却押注"全球化复利"</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1990-1994 年</div>
+                    <div class="timeline-content">追加投资至总成本约 13 亿美元，平均成本约每股 2.50 美元。郭思达带领下的国际市场开拓速度超预期，伯克希尔账面盈利已超 5 倍</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1990 年代末 - 2000 年代</div>
+                    <div class="timeline-content">经历"新可乐"失败、亚洲金融危机、肥胖问题质疑等多重挑战，股价多次大幅波动。巴菲特从未减仓，反复强调"持有期是永远"</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2010 年代</div>
+                    <div class="timeline-content">健康饮品趋势冲击碳酸饮料，市场担忧增长见顶。可口可乐转型为综合饮料公司（水、咖啡、茶、运动饮料）。巴菲特不为所动</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">至今</div>
+                    <div class="timeline-content">仍是伯克希尔前五大重仓之一，市值 250+ 亿美元，每年仅分红就回来 7 亿+。30+ 年累计回报远超 20 倍——长期持有的极致样本</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关键启示 -->
+        <div class="card">
+            <h2 class="card-title">💡 关键启示与认知升级</h2>
+            <ul class="insight-list">
+                <li><strong>投资你理解的生意</strong> — 巴菲特拒绝投科技股直到苹果，是因为他真正能看懂的生意有限。可乐是"喝下去的、能尝出区别的"</li>
+                <li><strong>全球性品牌是极深的护城河</strong> — 一个品牌一旦进入消费者的"心智份额"（mindshare），后来者要花十倍成本也未必能撼动</li>
+                <li><strong>定价权是优秀企业的重要标志</strong> — 通胀年份能跟着提价的企业，本质上拥有了对抗通胀的天然机制</li>
+                <li><strong>伟大企业值得长期持有</strong> — 复利的真正威力体现在 20 年以上的持有期，频繁交易会摩擦掉绝大部分收益</li>
+                <li><strong>识别管理层是关键节点</strong> — 1988 年巴菲特买入的另一个理由是看好郭思达。优秀的管理层是把生意做大的关键变量</li>
+            </ul>
+            <div class="quote">
+                "人生不需要 20 个伟大的投资机会。1-2 个就够了，问题是要敢重仓，并且持有足够久。" — 沃伦·巴菲特
+            </div>
+        </div>
+
+        <!-- 巴菲虾联想 -->
+        <div class="card">
+            <h2 class="card-title">🦞 巴菲虾联想</h2>
+            <div class="shrimp-box">
+                <div class="shrimp-title">从可口可乐想到的：把简单的事做几十年</div>
+                <p>
+                    <strong>全球品牌 → 区域品牌</strong> → 不需要做"全球可乐"，做出"长三角龙虾的代名词"也是品牌护城河。地域+品质是养殖业最容易立得住的标签。<br><br>
+                    <strong>定价权 → 品质溢价</strong> → 普通虾按斤称重，品牌虾按只论价。差异化不是靠营销噱头，是靠让顾客真的喝得出/尝得出区别。<br><br>
+                    <strong>简单易懂 → 不做复杂操作</strong> → 把养虾这件简单的事做精，比同时尝试 5 个品种、3 种渠道更有复利。"看准了，做久了"才是真正的杠杆。<br><br>
+                    <strong>分销网络 → 渠道壁垒</strong> → 自建直供高端餐厅 / 私域社群，是比单次平台流量更稳的护城河。10 年深耕的客户关系无法被一夜复制。<br><br>
+                    <strong>长期持有 → 慢慢养</strong> → 投资和养虾一个道理：急不得。三年回本、五年成势、十年立牌——这才是把简单事情做成"永久资产"的节奏。
+                </p>
+            </div>
+        </div>
+
+        <footer>
+            🦞 沃伦·巴菲虾 · 每天学习一个巴菲特投资案例<br>
+            <span style="font-size: 0.78rem; opacity: 0.6;">Case #05 · The Coca-Cola Company · 1988</span>
+        </footer>
+    </div>
+</body>
+</html>

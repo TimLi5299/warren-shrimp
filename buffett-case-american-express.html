@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>巴菲特案例：美国运通 | 沃伦·巴菲虾</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0F172A;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --primary-accent: #3B82F6;
+            --primary-accent-hover: #60A5FA;
+            --secondary-accent: #8B5CF6;
+            --success-color: #10B981;
+            --warning-color: #F59E0B;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-light: rgba(255, 255, 255, 0.05);
+            --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.7;
+        }
+        .ambient-glow {
+            position: fixed; top: -20%; left: -10%;
+            width: 70vw; height: 70vh;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.14) 0%, transparent 60%);
+            z-index: 0; pointer-events: none;
+        }
+        .nav {
+            position: fixed; top: 0; left: 0; width: 100%;
+            padding: 18px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(16px);
+            background: rgba(15, 23, 42, 0.85);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .nav-logo { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); text-decoration: none; }
+        .nav-links a {
+            color: var(--text-secondary); text-decoration: none;
+            margin-left: 28px; transition: color 0.2s; font-size: 0.9rem; font-weight: 500;
+        }
+        .nav-links a:hover { color: var(--primary-accent); }
+        .container { max-width: 860px; margin: 0 auto; padding: 110px 20px 70px; position: relative; z-index: 2; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: var(--primary-accent); text-decoration: none;
+            padding: 7px 16px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 30px; transition: all 0.2s;
+            margin-bottom: 32px; font-size: 0.88rem; font-weight: 500;
+        }
+        .back-btn:hover { background: rgba(59, 130, 246, 0.2); color: var(--primary-accent-hover); }
+        .case-header { text-align: center; margin-bottom: 56px; }
+        .case-badge {
+            display: inline-block; padding: 6px 16px;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.35);
+            border-radius: 30px; font-size: 0.82rem; color: var(--primary-accent-hover);
+            margin-bottom: 14px; font-family: 'JetBrains Mono', monospace;
+        }
+        .case-title { font-size: 2.4rem; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
+        .case-subtitle { font-size: 1.15rem; color: var(--text-secondary); font-weight: 400; }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 36px; margin-bottom: 28px;
+            backdrop-filter: blur(16px);
+        }
+        .card-title {
+            font-size: 1.2rem; font-weight: 600;
+            margin-bottom: 22px; color: var(--text-primary);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px; margin-top: 18px; margin-bottom: 28px;
+        }
+        .stat-item {
+            background: var(--border-light);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 18px 14px; text-align: center;
+        }
+        .stat-value {
+            font-size: 1.35rem; font-weight: 600;
+            color: var(--primary-accent-hover);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 5px;
+        }
+        .stat-label { font-size: 0.78rem; color: var(--text-secondary); }
+        .insight-list { list-style: none; }
+        .insight-list li {
+            padding: 11px 0 11px 28px; position: relative;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-secondary);
+        }
+        .insight-list li:last-child { border-bottom: none; }
+        .insight-list li::before {
+            content: '✓'; position: absolute; left: 0; top: 11px;
+            color: var(--success-color); font-weight: bold;
+        }
+        .quote {
+            background: rgba(59, 130, 246, 0.06);
+            border-left: 4px solid var(--primary-accent);
+            padding: 20px 24px; margin: 28px 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            font-style: italic; color: var(--text-secondary);
+        }
+        .timeline { position: relative; padding-left: 36px; margin: 24px 0; }
+        .timeline::before {
+            content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+            width: 2px; background: var(--border-color);
+        }
+        .timeline-item { position: relative; margin-bottom: 24px; padding-left: 18px; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -30px; top: 6px;
+            width: 11px; height: 11px;
+            background: var(--bg-dark); border-radius: 50%;
+            border: 2px solid var(--primary-accent);
+        }
+        .timeline-year { font-family: 'JetBrains Mono', monospace; color: var(--primary-accent-hover); font-size: 0.85rem; margin-bottom: 6px; }
+        .timeline-content { color: var(--text-secondary); font-size: 0.93rem; }
+        .highlight-box {
+            background: rgba(59, 130, 246, 0.06);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: var(--radius-md);
+            padding: 20px 22px;
+            margin: 18px 0;
+        }
+        .shrimp-box {
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: var(--radius-md);
+            padding: 22px; margin-top: 10px;
+            font-size: 0.93rem; color: var(--text-secondary);
+        }
+        .shrimp-box .shrimp-title {
+            font-weight: 600; color: var(--success-color);
+            margin-bottom: 8px; font-size: 1rem;
+        }
+        footer { text-align: center; margin-top: 60px; padding-top: 28px; border-top: 1px solid var(--border-light); color: var(--text-secondary); font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    <nav class="nav">
+        <a href="index.html" class="nav-logo">🦞 沃伦·巴菲虾</a>
+        <div class="nav-links">
+            <a href="index.html">主控台</a>
+            <a href="cases.html">案例库</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <a href="cases.html" class="back-btn">← 返回案例库</a>
+
+        <header class="case-header">
+            <span class="case-badge">💳 巴菲特经典案例 #04</span>
+            <h1 class="case-title">美国运通</h1>
+            <p class="case-subtitle">American Express · 1964 色拉油丑闻 · 30+ 倍长期回报</p>
+        </header>
+
+        <!-- 案例概况 -->
+        <div class="card">
+            <h2 class="card-title">📊 案例概况</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">1964</div>
+                    <div class="stat-label">投资年份</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">$1300 万</div>
+                    <div class="stat-label">投资金额</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">~40%</div>
+                    <div class="stat-label">占组合比例</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">−50%</div>
+                    <div class="stat-label">买入时股价回撤</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">30+ 倍</div>
+                    <div class="stat-label">长期回报</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">至今</div>
+                    <div class="stat-label">仍在持仓</div>
+                </div>
+            </div>
+            <div class="highlight-box">
+                <strong style="color: var(--primary-accent-hover);">💡 美国运通法则</strong><br><br>
+                <span style="color: var(--text-secondary);">巴菲特在奥马哈的牛排馆和银行实地观察，发现餐厅依然在收受 AmEx 卡，即丑闻并未损伤核心业务。一次性的法律损失被市场放大成永久性损伤，正是逆向重仓的最佳时机。</span>
+            </div>
+        </div>
+
+        <!-- 投资逻辑 -->
+        <div class="card">
+            <h2 class="card-title">🎯 投资逻辑</h2>
+            <ul class="insight-list">
+                <li><strong>品牌未受损</strong> — 色拉油丑闻只是子公司担保问题，运通核心的信用卡和旅行支票业务完全未受影响，消费者依然信任 AmEx 这块牌子</li>
+                <li><strong>分清"一次性损失"和"永久性损伤"</strong> — 法律赔偿是一次性账面损失，但护城河（品牌信任、商户网络、高端客群）仍在</li>
+                <li><strong>市场过度反应</strong> — 股价腰斩远超实际损失。情绪驱动的暴跌为理性买家创造极佳价格</li>
+                <li><strong>高端客群粘性</strong> — AmEx 客户多为商务和高净值人群，对手续费不敏感，为商户网络提供巨大溢价能力</li>
+                <li><strong>实地调研验证</strong> — 巴菲特派人去奥马哈的牛排馆观察，发现没有人取消运通卡支付，这是经典的"原始一手数据"研究方法</li>
+            </ul>
+            <div class="quote">
+                "当所有人都在抛售 AmEx 时，我去了奥马哈的牛排馆和银行——人们仍在用美国运通的卡和旅行支票。市场惊慌的不是核心生意，是一笔可量化的官司。" — 沃伦·巴菲特
+            </div>
+        </div>
+
+        <!-- 投资决策时间轴 -->
+        <div class="card">
+            <h2 class="card-title">⏳ 关键时间节点</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-year">1963 年 11 月</div>
+                    <div class="timeline-content">美国运通子公司为一批不存在的色拉油担保仓单（实际是水），事件曝光后股价腰斩，短期面临约 1.5 亿美元的潜在赔偿</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1964 年</div>
+                    <div class="timeline-content">巴菲特在合伙基金（Buffett Partnership）大举建仓，最高时占组合 40%。同期他通过实地调研发现：餐厅、酒店、商务客户仍在正常使用运通卡——核心业务安全</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1965 年</div>
+                    <div class="timeline-content">运通公司主动承担担保责任，与债权人和解。市场恐慌消散，股价开始反弹，巴菲特持仓两年回报已超 100%</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1980 年代起</div>
+                    <div class="timeline-content">伯克希尔再次成为运通最大股东之一。经历多次行业震荡（VISA/Master 崛起、2008 金融危机）但巴菲特从不减仓，回报超过 30 倍</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">至今</div>
+                    <div class="timeline-content">仍是伯克希尔前五大重仓之一，年分红收入丰厚。巴菲特将 AmEx 与可口可乐、苹果并列为"长期持有的旗舰股"</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关键启示 -->
+        <div class="card">
+            <h2 class="card-title">💡 关键启示与认知升级</h2>
+            <ul class="insight-list">
+                <li><strong>危机中找机会（Be greedy when others are fearful）</strong> — 别人恐惧时正是低成本入场的最好时机，前提是核心业务没受损</li>
+                <li><strong>分清一次性损失和永久性损伤</strong> — 一笔账面赔偿 ≠ 商业模式坍塌。看准这点就能在恐慌中拿到便宜筹码</li>
+                <li><strong>实地调研 &gt; 报表分析</strong> — 跑去餐厅、银行、客户那里直接看，比读财报更接近真相</li>
+                <li><strong>看准了可以重仓</strong> — 当确信度极高时，不要分散，集中下注是合伙基金式投资的精髓</li>
+                <li><strong>护城河的本质是信任</strong> — 运通靠的是用户对品牌的信任而不是技术专利，这种信任修复很慢但也极其稳固</li>
+            </ul>
+            <div class="quote">
+                "投资 AmEx 学到最重要的一课是：分清杂音和信号。色拉油丑闻是杂音，运通卡片在每个商户里被刷出去的事实，才是信号。" — 沃伦·巴菲特
+            </div>
+        </div>
+
+        <!-- 巴菲虾联想 -->
+        <div class="card">
+            <h2 class="card-title">🦞 巴菲虾联想</h2>
+            <div class="shrimp-box">
+                <div class="shrimp-title">从美国运通想到的：危机不是终点，是入场点</div>
+                <p>
+                    <strong>危机中找机会</strong> → 别人恐慌抛售时（虾价低迷、池塘转让），正是低成本入场的好时机。<br><br>
+                    <strong>一次性损失 vs 永久损伤</strong> → 一批虾生病失败是暂时的，不是能力问题；关键是不犯重复错误，知识和经验积累没有损失。<br><br>
+                    <strong>实地调研后才能逆向投资</strong> → 进入新品种或新渠道前，先做足功课（水质测试、市场调研、成本核算），别只看新闻头条。<br><br>
+                    <strong>看准了就重仓</strong> → 找到验证过的成功模式后，要集中资源扩大（租更多池塘、建自己的渠道），不要把好机会摊薄。<br><br>
+                    <strong>核心资产 intact</strong> → 即使某一批虾失败，你的人脉、品牌、技术这些核心资产还在，能快速恢复。
+                </p>
+            </div>
+        </div>
+
+        <footer>
+            🦞 沃伦·巴菲虾 · 每天学习一个巴菲特投资案例<br>
+            <span style="font-size: 0.78rem; opacity: 0.6;">Case #04 · American Express · 1964</span>
+        </footer>
+    </div>
+</body>
+</html>
