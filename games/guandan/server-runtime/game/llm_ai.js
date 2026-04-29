@@ -48,7 +48,7 @@ function cardsToStr(cards, level) {
 /**
  * 获取或创建 NPC 的记牌器
  */
-function getMemory(roomId, seat, level, currentLevel) {
+export function getMemory(roomId, seat, level, currentLevel) {
   const key = `${roomId}_${seat}`;
   if (!npcMemories.has(key)) {
     npcMemories.set(key, createMemory(level, seat, currentLevel));

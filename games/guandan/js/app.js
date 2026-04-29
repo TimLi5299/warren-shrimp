@@ -69,9 +69,10 @@
       // 静态模式：自动添加 3 个 NPC + 自己 ready，免去用户手动操作
       if (isStaticHost) {
         setTimeout(() => {
-          socket.addNPC('normal', 1);
-          socket.addNPC('normal', 2);
-          socket.addNPC('normal', 3);
+          // expert 等级使用完整规则 AI（拆牌 / 记牌 / 配合 / 炸弹时机）
+          socket.addNPC('expert', 1);
+          socket.addNPC('expert', 2);
+          socket.addNPC('expert', 3);
           socket.ready(); // 自动标记自己已准备
         }, 200);
       }
