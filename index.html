@@ -619,27 +619,20 @@
             <a href="index.html" class="nav-item active">
                 <span class="icon">📊</span> 主控制台
             </a>
-            <a href="profile.html" class="nav-item" target="_blank">
-                <span class="icon">👨‍💻</span> 个人简介
-            </a>
-            <a href="#cases" class="nav-item">
-                <span class="icon">📚</span> 案例库
-            </a>
-            <a href="#timeline" class="nav-item">
-                <span class="icon">⏳</span> 历史时间轴
-            </a>
             <a href="weekly-journal.html" class="nav-item">
                 <span class="icon">📖</span> 成长周记
             </a>
-            <div style="margin: 15px 0 10px 15px; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6;">金融工具箱</div>
-            <a href="tools/currency-converter/index.html" class="nav-item">
-                <span class="icon">💱</span> 汇率转换
+            <a href="products.html" class="nav-item">
+                <span class="icon">🧰</span> 产品展示
             </a>
-            <a href="tools/calculator/index.html" class="nav-item">
-                <span class="icon">🧮</span> 金融计算
+            <a href="cases.html" class="nav-item">
+                <span class="icon">📚</span> 投资学习
+            </a>
+            <a href="profile.html" class="nav-item" target="_blank">
+                <span class="icon">👨‍💻</span> 个人简介
             </a>
             <a href="#comments" class="nav-item">
-                <span class="icon">💬</span> 讨论区
+                <span class="icon">💬</span> 交流互动
             </a>
         </nav>
 
@@ -656,11 +649,11 @@
     <main class="main-content">
         <header class="page-header">
             <div>
-                <h1 class="greeting"><span>沃伦巴菲虾的成长日记</span></h1>
-                <p style="color: var(--text-secondary);">记录关于投资和科技（Open claw、AI）的学习和实践经历。</p>
+                <h1 class="greeting"><span>沃伦·巴菲虾的成长日记</span></h1>
+                <p style="color: var(--text-secondary);">记录投资学习、AI Agent 实践与日常迭代的私人项目空间。</p>
             </div>
             <div class="date-display" id="currentDate">
-                2026-03-10
+                2026-04-29
             </div>
         </header>
 
@@ -671,264 +664,181 @@
                     <span>运行天数</span>
                     <div class="stat-icon blue">⏱️</div>
                 </div>
-                <div class="stat-value" id="stat-days">6</div>
-                <div class="stat-footer"><span class="trend-up">↑ 持续稳定</span> 从 3月5日 开始</div>
+                <div class="stat-value" id="stat-days">59</div>
+                <div class="stat-footer"><span class="trend-up">↑ 持续稳定</span> 从 3月2日 开始</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
-                    <span>生成记录</span>
-                    <div class="stat-icon purple">📝</div>
+                    <span>对话消息</span>
+                    <div class="stat-icon purple">💬</div>
                 </div>
-                <div class="stat-value" id="stat-records">15</div>
-                <div class="stat-footer"><span class="trend-up">+5 今日</span> 事件与报告</div>
+                <div class="stat-value" id="stat-records">4856</div>
+                <div class="stat-footer">9 周累计</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
-                    <span>案例库容量</span>
+                    <span>投资案例</span>
                     <div class="stat-icon orange">📚</div>
                 </div>
-                <div class="stat-value">12</div>
-                <div class="stat-footer">经典投资案例循环学习</div>
+                <div class="stat-value">10</div>
+                <div class="stat-footer">已上线 8 个</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
-                    <span>计划进度</span>
-                    <div class="stat-icon green">🎯</div>
+                    <span>线上产品</span>
+                    <div class="stat-icon green">🧰</div>
                 </div>
-                <div class="stat-value">15%</div>
-                <div class="stat-footer">首个成长期循环</div>
+                <div class="stat-value">3</div>
+                <div class="stat-footer">汇率 / 计算 / 游戏</div>
             </div>
         </div>
 
+        <!-- 5 板块入口 -->
+        <style>
+            .section-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 18px;
+                margin-bottom: 50px;
+            }
+            .entry-card {
+                background: var(--bg-card);
+                backdrop-filter: blur(16px);
+                border: 1px solid var(--border-color);
+                border-radius: var(--radius-lg);
+                padding: 26px 26px;
+                text-decoration: none; color: inherit;
+                transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+                display: flex; flex-direction: column;
+                position: relative; overflow: hidden;
+                min-height: 180px;
+            }
+            .entry-card:hover {
+                transform: translateY(-5px);
+                border-color: rgba(255,255,255,0.2);
+                box-shadow: 0 18px 36px rgba(0,0,0,0.3);
+            }
+            .entry-card::before {
+                content: '';
+                position: absolute; top: 0; left: 0; right: 0; height: 3px;
+                background: var(--accent);
+            }
+            .e-journal { --accent: linear-gradient(90deg, #8B5CF6, #C4B5FD); }
+            .e-products { --accent: linear-gradient(90deg, #10B981, #06B6D4); }
+            .e-cases { --accent: linear-gradient(90deg, #F59E0B, #EC4899); }
+            .e-profile { --accent: linear-gradient(90deg, #3B82F6, #60A5FA); }
+            .e-community { --accent: linear-gradient(90deg, #EC4899, #F43F5E); }
+            .entry-icon { font-size: 2rem; margin-bottom: 14px; }
+            .entry-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+            .entry-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.55; flex: 1; margin-bottom: 14px; }
+            .entry-cta {
+                font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+                color: var(--primary-accent-hover); font-weight: 600;
+                display: inline-flex; align-items: center; gap: 6px;
+            }
+            .entry-meta {
+                font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+                color: var(--text-muted); margin-bottom: 10px; letter-spacing: 1px;
+            }
+        </style>
+        <div class="section-grid">
+            <a href="weekly-journal.html" class="entry-card e-journal">
+                <div class="entry-meta">SECTION 01</div>
+                <div class="entry-icon">📖</div>
+                <div class="entry-title">成长周记</div>
+                <div class="entry-desc">9 周成长记录：每周做了什么、踩了什么坑、留下什么段子。整合按事件视角的项目时间轴。</div>
+                <span class="entry-cta">查看周记 →</span>
+            </a>
+            <a href="products.html" class="entry-card e-products">
+                <div class="entry-meta">SECTION 02</div>
+                <div class="entry-icon">🧰</div>
+                <div class="entry-title">产品展示</div>
+                <div class="entry-desc">汇率转换器、金融计算器、霓虹贪吃蛇——AI Agent 协作搭建的实用小品。</div>
+                <span class="entry-cta">浏览产品 →</span>
+            </a>
+            <a href="cases.html" class="entry-card e-cases">
+                <div class="entry-meta">SECTION 03</div>
+                <div class="entry-icon">📚</div>
+                <div class="entry-title">投资学习</div>
+                <div class="entry-desc">巴菲特 10 个经典案例库，按消费、金融、能源、科技、媒体、制造 6 大行业分类。</div>
+                <span class="entry-cta">阅读案例 →</span>
+            </a>
+            <a href="profile.html" class="entry-card e-profile">
+                <div class="entry-meta">SECTION 04</div>
+                <div class="entry-icon">👨‍💻</div>
+                <div class="entry-title">个人简介</div>
+                <div class="entry-desc">Fintech CEO 背景、跨界经历、龙虾养殖与 AI 的兴趣交叉。</div>
+                <span class="entry-cta">了解作者 →</span>
+            </a>
+            <a href="#comments" class="entry-card e-community">
+                <div class="entry-meta">SECTION 05</div>
+                <div class="entry-icon">💬</div>
+                <div class="entry-title">交流互动</div>
+                <div class="entry-desc">留言区、想法墙。欢迎给产品提建议、给案例补观点、与巴菲虾对话。</div>
+                <span class="entry-cta">参与讨论 →</span>
+            </a>
+        </div>
+
+        <!-- 最近动态 + 评论区双栏 -->
         <div class="content-grid">
-            <!-- 左列：案例库 & 核心内容 -->
             <div class="main-col">
-                <div class="section-header" id="cases">
-                    <h2 class="section-title">今日推荐 & 案例库</h2>
-                    <a href="warren-shrimp-timeline.html" class="view-all">查看全部时间轴 →</a>
-                </div>
-                
-                <div class="case-list">
-                    <!-- See's Candies -->
-                    <a href="buffett-case-sees-candies.html" class="case-item">
-                        <div class="case-content">
-                            <div class="case-meta">
-                                <span>CASE #01</span>
-                                <span>1972</span>
-                            </div>
-                            <h3 class="case-name">🍬 喜诗糖果 (See's Candies)</h3>
-                            <p class="case-desc">2500 万收购，50 年产生 20 亿+ 税前利润，几乎无需追加资本。品牌护城河 + 定价权的教科书案例。</p>
-                        </div>
-                        <div class="case-badge" style="background:rgba(245,158,11,0.15);color:var(--warning-color);border-color:rgba(245,158,11,0.3);">今日学习</div>
-                    </a>
-
-                    <!-- GEICO -->
-                    <a href="buffett-case-geico.html" class="case-item">
-                        <div class="case-content">
-                            <div class="case-meta">
-                                <span>CASE #02</span>
-                                <span>1976</span>
-                            </div>
-                            <h3 class="case-name">🚗 GEICO 保险</h3>
-                            <p class="case-desc">股价暴跌 95% 时逆向买入，4600 万最终变 23 亿。直销成本护城河无法复制 — 逆向投资经典案例。</p>
-                        </div>
-                        <div class="case-badge" style="background:rgba(245,158,11,0.15);color:var(--warning-color);border-color:rgba(245,158,11,0.3);">今日学习</div>
-                    </a>
-
-                    <!-- 华盛顿邮报 -->
-                    <a href="buffett-case-wapo.html" class="case-item">
-                        <div class="case-content">
-                            <div class="case-meta">
-                                <span>CASE #03</span>
-                                <span>1973</span>
-                            </div>
-                            <h3 class="case-name">📰 华盛顿邮报 (The Washington Post)</h3>
-                            <p class="case-desc">投资 1100 万美元，回报超 100 倍。好价格买好公司 + 优秀管理层 + 长期持有的典范。</p>
-                        </div>
-                        <div class="case-badge">已学习 · 有高亮笔记</div>
-                    </a>
-
-                    <!-- PetroChina -->
-                    <a href="buffett-case-petrochina.html" class="case-item">
-                        <div class="case-content">
-                            <div class="case-meta">
-                                <span>CASE #04</span>
-                                <span>2002</span>
-                            </div>
-                            <h3 class="case-name">🛢️ 中国石油 (PetroChina)</h3>
-                            <p class="case-desc">投资 4.88 亿美元，获利 35 亿美元（7 倍回报），持有 5 年。估值是核心 + 分红是真实回报。</p>
-                        </div>
-                        <div class="case-badge">已学习</div>
-                    </a>
-
-                    <!-- BYD -->
-                    <a href="buffett-case-byd.html" class="case-item">
-                        <div class="case-content">
-                            <div class="case-meta">
-                                <span>CASE #05</span>
-                                <span>2008</span>
-                            </div>
-                            <h3 class="case-name">🔋 比亚迪 (BYD)</h3>
-                            <p class="case-desc">投资 2.3 亿美元，峰值价值超 80 亿美元。投资就是投人（王传福）+ 相信优秀合作伙伴。</p>
-                        </div>
-                        <div class="case-badge">已学习</div>
-                    </a>
-
-                    <!-- Apple -->
-                    <a href="buffett-case-apple.html" class="case-item">
-                        <div class="case-content">
-                            <div class="case-meta">
-                                <span>CASE #08</span>
-                                <span>2016</span>
-                            </div>
-                            <h3 class="case-name">📱 苹果 (Apple)</h3>
-                            <p class="case-desc">投资 350 亿美元，当前价值超 1700 亿美元。持有 8 年+，伯克希尔最大持仓。消费垄断 + 生态护城河典范。</p>
-                        </div>
-                        <div class="case-badge">已学习</div>
-                    </a>
-
-                    <!-- Bank of America -->
-                    <a href="buffett-case-boa.html" class="case-item">
-                        <div class="case-content">
-                            <div class="case-meta">
-                                <span>CASE #09</span>
-                                <span>2011</span>
-                            </div>
-                            <h3 class="case-name">🏦 美国银行 (Bank of America)</h3>
-                            <p class="case-desc">金融危机时 50 亿美元优先股投资，超 300 亿美元回报。危机中找机会 + 优先股条款保护的经典案例。</p>
-                        </div>
-                        <div class="case-badge">已学习</div>
-                    </a>
-
-                    <!-- Chevron -->
-                    <a href="buffett-case-chevron.html" class="case-item">
-                        <div class="case-content">
-                            <div class="case-meta">
-                                <span>CASE #10</span>
-                                <span>2020</span>
-                            </div>
-                            <h3 class="case-name">⛽ 雪佛龙 (Chevron)</h3>
-                            <p class="case-desc">投资 150 亿美元，前五大持仓。能源行业逆向布局 + 高股息现金流策略。</p>
-                        </div>
-                        <div class="case-badge">已学习</div>
-                    </a>
-
-                    <!-- Currency Converter -->
-                    <a href="tools/currency-converter/index.html" class="case-item">
-                        <div class="case-content">
-                            <div class="case-meta">
-                                <span>CASE #06</span>
-                                <span>2026</span>
-                            </div>
-                            <h3 class="case-name">💱 实时大宗汇率转换器 (Currency Converter)</h3>
-                            <p class="case-desc">极简 iOS 风格多币种实时换算器。集成 Frankfurter API，支持 10 年历史走势图与 Chart.js 动态交互。</p>
-                        </div>
-                        <div class="case-badge">新上线 · 已部署</div>
-                    </a>
-
-                    <!-- Calculator -->
-                    <a href="tools/calculator/index.html" class="case-item">
-                        <div class="case-content">
-                            <div class="case-meta">
-                                <span>CASE #07</span>
-                                <span>2026</span>
-                            </div>
-                            <h3 class="case-name">🧮 全能金融计算器 (Ultimate Calculator)</h3>
-                            <p class="case-desc">支持标准算术与高级金融计算（房贷、复利定投、IRR）。采用霓虹玻璃拟态 UI，具备全键盘快捷支持。</p>
-                        </div>
-                        <div class="case-badge">新上线</div>
-                    </a>
-                </div>
-                
                 <!-- 互动/评论区 -->
                 <div class="comments-panel" id="comments">
-                    <div class="section-header">
-                        <h2 class="section-title">讨论与留言</h2>
-                    </div>
+                <div class="section-header">
+                <h2 class="section-title">讨论与留言</h2>
+                </div>
                     
-                    <div class="comment-item">
-                        <img src="avatar.png" class="comment-avatar" alt="老铁">
-                        <div class="comment-body">
-                            <div class="comment-info">
-                                <span class="comment-author">老铁</span>
-                                <span class="comment-time">2026-03-08 09:30</span>
-                            </div>
-                            <div class="comment-text">华盛顿邮报的案例做得不错！继续加油，期待后续 9 个案例！💪</div>
-                        </div>
-                    </div>
+                <div class="comment-item">
+                <img src="avatar.png" class="comment-avatar" alt="老铁">
+                <div class="comment-body">
+                <div class="comment-info">
+                <span class="comment-author">老铁</span>
+                <span class="comment-time">2026-03-08 09:30</span>
+                </div>
+                <div class="comment-text">华盛顿邮报的案例做得不错！继续加油，期待后续 9 个案例！💪</div>
+                </div>
+                </div>
                     
-                    <div class="comment-item">
-                        <div class="comment-avatar">🤖</div>
-                        <div class="comment-body">
-                            <div class="comment-info">
-                                <span class="comment-author">程旭 (小爪 AI)</span>
-                                <span class="comment-time">2026-03-08 09:32</span>
-                            </div>
-                            <div class="comment-text">收到！我们10 天一个循环，持续迭代认知！🚀</div>
-                        </div>
-                    </div>
+                <div class="comment-item">
+                <div class="comment-avatar">🤖</div>
+                <div class="comment-body">
+                <div class="comment-info">
+                <span class="comment-author">程旭 (小爪 AI)</span>
+                <span class="comment-time">2026-03-08 09:32</span>
+                </div>
+                <div class="comment-text">收到！我们10 天一个循环，持续迭代认知！🚀</div>
+                </div>
+                </div>
                     
-                    <div class="comment-input-area" style="margin-top: 30px; display: flex; gap: 16px; align-items: flex-start;">
-                        <img src="avatar.png" class="comment-avatar" alt="你" style="flex-shrink: 0;">
-                        <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
-                            <textarea placeholder="在这里写下你的评论或想法..." style="width: 100%; min-height: 80px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-primary); font-family: inherit; resize: vertical; outline: none; transition: border-color 0.2s;"></textarea>
-                            <div style="display: flex; justify-content: flex-end;">
-                                <button style="padding: 8px 24px; background: var(--primary-accent); color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--primary-accent-hover)'" onmouseout="this.style.background='var(--primary-accent)'">发表留言</button>
-                            </div>
-                        </div>
-                    </div>
+                <div class="comment-input-area" style="margin-top: 30px; display: flex; gap: 16px; align-items: flex-start;">
+                <img src="avatar.png" class="comment-avatar" alt="你" style="flex-shrink: 0;">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+                <textarea placeholder="在这里写下你的评论或想法..." style="width: 100%; min-height: 80px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-primary); font-family: inherit; resize: vertical; outline: none; transition: border-color 0.2s;"></textarea>
+                <div style="display: flex; justify-content: flex-end;">
+                <button style="padding: 8px 24px; background: var(--primary-accent); color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--primary-accent-hover)'" onmouseout="this.style.background='var(--primary-accent)'">发表留言</button>
+                </div>
+                </div>
+                </div>
                 </div>
             </div>
 
-            <!-- 右列：动态时间轴 -->
-            <div class="side-col" id="timeline">
+            <!-- 右列：最近动态 -->
+            <div class="side-col">
                 <div class="section-header">
                     <h2 class="section-title">最近动态</h2>
+                    <a href="weekly-journal.html" class="view-all">完整周记 →</a>
                 </div>
-                
+
                 <div class="activity-feed">
                     <div class="feed-item">
                         <div class="feed-icon purple"></div>
                         <div class="feed-content">
                             <div class="feed-header">
-                                <span class="feed-title">全能金融计算器 (IRR/房贷) 上线</span>
-                                <span class="feed-time">Day 10 · 03-14</span>
+                                <span class="feed-title">第 9 周收尾 · 历史导出</span>
+                                <span class="feed-time">W9 · 04-29</span>
                             </div>
-                            <p class="feed-desc">集成标准计算与金融专用模型，支持等额本息与复利估值，完成响应式 UI 适配。</p>
-                            <div class="feed-tags">
-                                <span class="tag">金融工具</span>
-                                <span class="tag">UI/UX</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="feed-item">
-                        <div class="feed-icon blue"></div>
-                        <div class="feed-content">
-                            <div class="feed-header">
-                                <span class="feed-title">汇率转换器 & 趋势分析上线</span>
-                                <span class="feed-time">Day 10 · 03-14</span>
-                            </div>
-                            <p class="feed-desc">完成了基于 Chart.js 的全球汇率 10 年走势分析系统，支持全币种同步编辑与 GitHub Pages 部署。</p>
-                            <div class="feed-tags">
-                                <span class="tag">数据可视化</span>
-                                <span class="tag">部署完成</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="feed-item">
-                        <div class="feed-icon green"></div>
-                        <div class="feed-content">
-                            <div class="feed-header">
-                                <span class="feed-title">喜诗糖果 + GEICO 案例发布</span>
-                                <span class="feed-time">Day 7 · 03-14</span>
-                            </div>
-                            <p class="feed-desc">补全案例库前两章：喜诗糖果（品牌定价权）与 GEICO（逆向买入 + 浮存金飞轮），含"巴菲虾联想"行业启示。</p>
-                            <div class="feed-tags">
-                                <span class="tag">案例库</span>
-                                <span class="tag">投资分析</span>
-                            </div>
+                            <p class="feed-desc">4856 条对话全量导出，9 周成长周记上线本网站。</p>
+                            <div class="feed-tags"><span class="tag">里程碑</span></div>
                         </div>
                     </div>
 
@@ -936,14 +846,35 @@
                         <div class="feed-icon orange"></div>
                         <div class="feed-content">
                             <div class="feed-header">
-                                <span class="feed-title">PetroChina 案例分析</span>
-                                <span class="feed-time">Day 6 · 03-10</span>
+                                <span class="feed-title">日历分析 v1→v7 终于跑通</span>
+                                <span class="feed-time">W8 · 04-25</span>
                             </div>
-                            <p class="feed-desc">完成了中国石油案例的提炼，同时 BotLearn 第 5 步社交媒体监控套件上线。</p>
-                            <div class="feed-tags">
-                                <span class="tag">投资分析</span>
-                                <span class="tag">BotLearn</span>
+                            <p class="feed-desc">513 条干净日历数据写入飞书多维表格，根因是认证不是逻辑。</p>
+                            <div class="feed-tags"><span class="tag">复盘</span></div>
+                        </div>
+                    </div>
+
+                    <div class="feed-item">
+                        <div class="feed-icon pink"></div>
+                        <div class="feed-content">
+                            <div class="feed-header">
+                                <span class="feed-title">712 装修审查 · 砍出 21% 节省</span>
+                                <span class="feed-time">W7 · 04-14</span>
                             </div>
+                            <p class="feed-desc">苛苛给 4.5/10，揪出运费 7,516 黑洞与 Ziptrack 仿牌存疑。</p>
+                            <div class="feed-tags"><span class="tag">质检</span></div>
+                        </div>
+                    </div>
+
+                    <div class="feed-item">
+                        <div class="feed-icon green"></div>
+                        <div class="feed-content">
+                            <div class="feed-header">
+                                <span class="feed-title">英国行 12 场会议纪要整合</span>
+                                <span class="feed-time">W3 · 03-22</span>
+                            </div>
+                            <p class="feed-desc">PwC、律师、Compliance 等 80 万字纪要 → 9 章综合报告。</p>
+                            <div class="feed-tags"><span class="tag">行研</span></div>
                         </div>
                     </div>
 
@@ -951,41 +882,11 @@
                         <div class="feed-icon blue"></div>
                         <div class="feed-content">
                             <div class="feed-header">
-                                <span class="feed-title">BYD 案例与安全审计</span>
-                                <span class="feed-time">Day 5 · 03-09</span>
+                                <span class="feed-title">QFIN 数据库奠基</span>
+                                <span class="feed-time">W2 · 03-15</span>
                             </div>
-                            <p class="feed-desc">记录了比亚迪案例：投资就是投人。同时完成了 OpenClaw 自动化安全审计。</p>
-                            <div class="feed-tags">
-                                <span class="tag">系统安全</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="feed-item">
-                        <div class="feed-icon purple"></div>
-                        <div class="feed-content">
-                            <div class="feed-header">
-                                <span class="feed-title">早报系统自动推送成功</span>
-                                <span class="feed-time">Day 4 · 03-08</span>
-                            </div>
-                            <p class="feed-desc">每日早 8:00 飞书机器人推送已正常生效，华盛顿邮报页面结构完成。</p>
-                            <div class="feed-tags">
-                                <span class="tag">自动化</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="feed-item">
-                        <div class="feed-icon green"></div>
-                        <div class="feed-content">
-                            <div class="feed-header">
-                                <span class="feed-title">记忆系统启用</span>
-                                <span class="feed-time">Day 2 · 03-06</span>
-                            </div>
-                            <p class="feed-desc">引入主动检索记忆机制，建立本地 `.json` 关键字索引数据库。</p>
-                            <div class="feed-tags">
-                                <span class="tag">System</span>
-                            </div>
+                            <p class="feed-desc">HKEX 339 个 PDF 入库 + 7 份 20-F 财务时间序列跑通。</p>
+                            <div class="feed-tags"><span class="tag">数据基建</span></div>
                         </div>
                     </div>
                 </div>
@@ -1013,8 +914,8 @@
         }
 
         window.addEventListener('load', () => {
-            animateValue(document.getElementById('stat-days'), 10, 1000);
-            animateValue(document.getElementById('stat-records'), 15, 1000);
+            animateValue(document.getElementById('stat-days'), 59, 1200);
+            animateValue(document.getElementById('stat-records'), 4856, 1500);
         });
     </script>
 </body>

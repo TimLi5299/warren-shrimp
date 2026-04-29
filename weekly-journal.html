@@ -267,12 +267,87 @@
             line-height: 1.75; max-width: 720px; margin: 0 auto;
         }
 
+        /* Tab 切换器 */
+        .view-tabs {
+            display: inline-flex; gap: 4px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-color);
+            padding: 4px; border-radius: 12px;
+            margin-bottom: 36px;
+        }
+        .view-tab {
+            padding: 8px 18px; border-radius: 8px;
+            font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            color: var(--text-secondary); transition: all 0.2s;
+            background: transparent; border: none;
+            font-family: inherit; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .view-tab.active {
+            background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.15));
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .view-tab:hover:not(.active) { color: var(--text-primary); }
+        .view-content { display: none; }
+        .view-content.active { display: block; }
+
+        /* 事件视图样式（来自 timeline 页） */
+        .timeline-container { position: relative; max-width: 800px; margin: 0 auto; }
+        .timeline-container::before {
+            content: ''; position: absolute; top: 0; bottom: 0; width: 2px;
+            background: var(--border-color); left: 50%; transform: translateX(-50%);
+        }
+        .timeline-item { position: relative; margin-bottom: 50px; width: 100%;
+            display: flex; justify-content: flex-end; }
+        .timeline-item:nth-child(even) { justify-content: flex-start; }
+        .timeline-marker {
+            position: absolute; left: 50%; top: 24px;
+            transform: translate(-50%, -50%); width: 18px; height: 18px;
+            border-radius: 50%; background: var(--bg-dark);
+            border: 4px solid var(--primary-accent); z-index: 2;
+            box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.8);
+        }
+        .marker-blue { border-color: #3B82F6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+        .marker-purple { border-color: #8B5CF6; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); }
+        .marker-green { border-color: #10B981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+        .marker-orange { border-color: #F59E0B; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); }
+        .marker-pink { border-color: #EC4899; box-shadow: 0 0 15px rgba(236, 72, 153, 0.5); }
+        .timeline-content {
+            width: calc(50% - 40px); background: var(--bg-card);
+            backdrop-filter: blur(16px); border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg); padding: 24px 26px;
+            transition: transform 0.3s, border-color 0.3s; position: relative;
+        }
+        .timeline-content:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .time-badge {
+            display: inline-block; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem; color: var(--text-secondary);
+            background: var(--border-light); padding: 4px 10px;
+            border-radius: 20px; margin-bottom: 12px;
+        }
+        .timeline-title { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+        .timeline-desc { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 14px; line-height: 1.65; }
+        .timeline-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .tag {
+            background: rgba(255,255,255,0.05); color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+            padding: 3px 9px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.06);
+        }
+
         @media (max-width: 900px) {
             .sidebar { transform: translateX(-100%); }
             .main-content { margin-left: 0; padding: 30px 20px; }
             .overview-bar { grid-template-columns: repeat(2, 1fr); }
             .page-title { font-size: 2rem; }
             .week-card { padding: 24px 22px; }
+            .timeline-container::before { left: 28px; }
+            .timeline-item, .timeline-item:nth-child(even) { justify-content: flex-end; }
+            .timeline-marker { left: 28px; }
+            .timeline-content { width: calc(100% - 60px); }
         }
     </style>
 </head>
@@ -290,14 +365,11 @@
         </div>
         <nav class="nav-menu">
             <a href="index.html" class="nav-item"><span class="icon">📊</span> 主控制台</a>
-            <a href="profile.html" class="nav-item" target="_blank"><span class="icon">👨‍💻</span> 个人简介</a>
-            <a href="index.html#cases" class="nav-item"><span class="icon">📚</span> 案例库</a>
-            <a href="warren-shrimp-timeline.html" class="nav-item"><span class="icon">⏳</span> 历史时间轴</a>
             <a href="weekly-journal.html" class="nav-item active"><span class="icon">📖</span> 成长周记</a>
-            <div style="margin: 15px 0 10px 15px; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6;">金融工具箱</div>
-            <a href="tools/currency-converter/index.html" class="nav-item"><span class="icon">💱</span> 汇率转换</a>
-            <a href="tools/calculator/index.html" class="nav-item"><span class="icon">🧮</span> 金融计算</a>
-            <a href="index.html#comments" class="nav-item"><span class="icon">💬</span> 讨论区</a>
+            <a href="products.html" class="nav-item"><span class="icon">🧰</span> 产品展示</a>
+            <a href="cases.html" class="nav-item"><span class="icon">📚</span> 投资学习</a>
+            <a href="profile.html" class="nav-item" target="_blank"><span class="icon">👨‍💻</span> 个人简介</a>
+            <a href="index.html#comments" class="nav-item"><span class="icon">💬</span> 交流互动</a>
         </nav>
         <div class="user-profile" style="opacity: 0.6; transform: scale(0.9); transform-origin: left bottom; border-top: 1px solid rgba(255,255,255,0.05);">
             <img src="avatar.png" class="avatar" alt="老铁" style="width: 32px; height: 32px;">
@@ -335,6 +407,15 @@
                 <div class="ov-label">运行天数 / DAYS</div>
             </div>
         </div>
+
+        <!-- Tab 切换 -->
+        <div class="view-tabs">
+            <button class="view-tab active" data-view="weeks">📖 按周视图</button>
+            <button class="view-tab" data-view="events">⏳ 按事件视图</button>
+        </div>
+
+        <!-- 视图 1：按周 -->
+        <div class="view-content active" id="view-weeks">
 
         <!-- 9 周内容 -->
         <div class="weeks">
@@ -701,6 +782,107 @@
 
         </div>
 
+        </div><!-- /view-weeks -->
+
+        <!-- 视图 2：按事件 -->
+        <div class="view-content" id="view-events">
+            <div class="timeline-container">
+
+                <div class="timeline-item">
+                    <div class="timeline-marker marker-pink"></div>
+                    <div class="timeline-content">
+                        <div class="time-badge">Day 10 · 2026-03-14</div>
+                        <h3 class="timeline-title">🎨 终极体验重塑 & 工具链集成上线</h3>
+                        <p class="timeline-desc">抛弃早期赛博朋克风，全面升级为 Glassmorphism 玻璃拟态现代仪表盘。同期上线全能金融计算器（IRR / 复利 / 房贷）与汇率转换器（Frankfurter API + Chart.js 10 年走势）。引入 <code>/tools/</code> 统一管理微应用。</p>
+                        <div class="timeline-tags">
+                            <span class="tag">UI/UX</span>
+                            <span class="tag">Glassmorphism</span>
+                            <span class="tag">金融工具</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker marker-green"></div>
+                    <div class="timeline-content">
+                        <div class="time-badge">Day 7 · 2026-03-14</div>
+                        <h3 class="timeline-title">📚 喜诗糖果 & GEICO 案例库补全发布</h3>
+                        <p class="timeline-desc">深度剖析巴菲特核心护城河概念。喜诗糖果：品牌定价权与消费心理学；GEICO：破产危机的逆向买入与浮存金飞轮。新增"巴菲虾联想"板块平移至 Fintech 大数据风控。</p>
+                        <div class="timeline-tags">
+                            <span class="tag">投资分析</span>
+                            <span class="tag">案例库扩充</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker marker-orange"></div>
+                    <div class="timeline-content">
+                        <div class="time-badge">Day 6 · 2026-03-10</div>
+                        <h3 class="timeline-title">🛢️ 中国石油案例 & 监控套件</h3>
+                        <p class="timeline-desc">完成中国石油 (PetroChina) 案例的价值分析（估值是核心 + 分红是真实回报）。同步上线 BotLearn 第 5 步：自动化社交媒体监控套件。</p>
+                        <div class="timeline-tags">
+                            <span class="tag">投资分析</span>
+                            <span class="tag">BotLearn</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker marker-blue"></div>
+                    <div class="timeline-content">
+                        <div class="time-badge">Day 5 · 2026-03-09</div>
+                        <h3 class="timeline-title">🔋 BYD 案例上线 & 安全审计</h3>
+                        <p class="timeline-desc">新增比亚迪 (BYD)"投资就是投人"（王传福）的经典信任投资案例。完成 OpenClaw 自动化安全审计系统集成。</p>
+                        <div class="timeline-tags">
+                            <span class="tag">投资分析</span>
+                            <span class="tag">系统安全</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker marker-purple"></div>
+                    <div class="timeline-content">
+                        <div class="time-badge">Day 4 · 2026-03-08</div>
+                        <h3 class="timeline-title">📰 巴菲特案例系统 & 早报自动化</h3>
+                        <p class="timeline-desc">10 个经典案例循环阅读机制确定，首个"华盛顿邮报"详情页完成。每日早 8:00 飞书机器人定时推送上线。</p>
+                        <div class="timeline-tags">
+                            <span class="tag">自动化</span>
+                            <span class="tag">Cron Job</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker marker-green"></div>
+                    <div class="timeline-content">
+                        <div class="time-badge">Day 2 · 2026-03-06</div>
+                        <h3 class="timeline-title">🧠 记忆系统启用 & 初版 UI</h3>
+                        <p class="timeline-desc">引入主动检索记忆机制，建立本地 .json 关键字索引数据库。完成项目初代 UI 视觉风格定调（赛博朋克风，后被淘汰）。</p>
+                        <div class="timeline-tags">
+                            <span class="tag">系统核心</span>
+                            <span class="tag">v1.0 Design</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker marker-blue"></div>
+                    <div class="timeline-content">
+                        <div class="time-badge">Day 1 · 2026-03-05</div>
+                        <h3 class="timeline-title">🚀 沃伦巴菲虾项目立项</h3>
+                        <p class="timeline-desc">项目正式立项！理念确立：龙虾养殖实操 × AI 辅助学习 × 巴菲特投资智慧。目标：提高认知，成为具备跨界复利思维的有趣灵魂。</p>
+                        <div class="timeline-tags">
+                            <span class="tag">Project Genesis</span>
+                            <span class="tag">立项</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div><!-- /view-events -->
+
         <!-- 结尾感言 -->
         <div class="closing">
             <div class="closing-title">🦞 9 周观察</div>
@@ -713,5 +895,17 @@
         </div>
 
     </main>
+
+    <script>
+        document.querySelectorAll('.view-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const view = tab.dataset.view;
+                document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t === tab));
+                document.querySelectorAll('.view-content').forEach(c => {
+                    c.classList.toggle('active', c.id === 'view-' + view);
+                });
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沃伦·巴菲虾 | 投资学习</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark: #0F172A; --bg-sidebar: rgba(15, 23, 42, 0.95);
+            --bg-card: rgba(30, 41, 59, 0.7); --bg-card-hover: rgba(51, 65, 85, 0.8);
+            --primary-accent: #3B82F6; --primary-accent-hover: #60A5FA;
+            --secondary-accent: #8B5CF6; --success-color: #10B981;
+            --warning-color: #F59E0B; --pink-color: #EC4899;
+            --text-primary: #F8FAFC; --text-secondary: #94A3B8; --text-muted: #64748B;
+            --border-color: rgba(255, 255, 255, 0.1); --border-light: rgba(255, 255, 255, 0.05);
+            --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 24px;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary);
+            min-height: 100vh; display: flex; overflow-x: hidden; line-height: 1.6; }
+        .ambient-glow { position: fixed; top: -20%; left: -10%; width: 70vw; height: 70vh;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 60%);
+            z-index: 0; pointer-events: none; }
+        .ambient-glow-2 { position: fixed; bottom: -20%; right: -10%; width: 60vw; height: 60vh;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 60%);
+            z-index: 0; pointer-events: none; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--bg-sidebar); backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-color); position: fixed; height: 100vh;
+            padding: 30px 20px; display: flex; flex-direction: column; z-index: 100; }
+        .logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 50px; padding: 0 10px; }
+        .logo-icon { font-size: 1.8rem; }
+        .logo-text { font-weight: 700; font-size: 1.2rem; color: var(--text-primary); letter-spacing: -0.5px; }
+        .logo-subtext { display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+            color: var(--primary-accent); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+        .nav-menu { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            border-radius: var(--radius-sm); color: var(--text-secondary); text-decoration: none;
+            font-weight: 500; font-size: 0.95rem; transition: all 0.2s ease; }
+        .nav-item:hover { background: var(--border-light); color: var(--text-primary); }
+        .nav-item.active { background: rgba(59, 130, 246, 0.1); color: var(--primary-accent);
+            border-left: 3px solid var(--primary-accent); }
+        .nav-item .icon { font-size: 1.2rem; opacity: 0.7; }
+        .nav-item.active .icon { opacity: 1; }
+        .user-profile { display: flex; align-items: center; gap: 12px; padding: 16px 12px;
+            border-top: 1px solid var(--border-color); margin-top: auto; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+
+        /* Main */
+        .main-content { flex: 1; margin-left: 260px; padding: 50px 60px;
+            position: relative; z-index: 1; max-width: 1300px; }
+        .page-header { margin-bottom: 50px; }
+        .page-tag { display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fbbf24; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem;
+            letter-spacing: 1.5px; margin-bottom: 18px; font-family: 'JetBrains Mono', monospace; }
+        .page-tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--warning-color); }
+        .page-title { font-size: 2.4rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 14px; }
+        .page-subtitle { color: var(--text-secondary); font-size: 1.05rem; max-width: 700px; }
+
+        /* 数据概览 */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+        .stat-card { background: var(--bg-card); backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 20px 22px; }
+        .stat-num { font-size: 2rem; font-weight: 800; line-height: 1;
+            font-family: 'JetBrains Mono', monospace; }
+        .stat-num.amber { color: #fbbf24; }
+        .stat-num.green { color: #6ee7b7; }
+        .stat-num.blue { color: var(--primary-accent-hover); }
+        .stat-num.pink { color: #f9a8d4; }
+        .stat-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px; }
+
+        /* 分类区 */
+        .category { margin-bottom: 40px; }
+        .category-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 10px; }
+        .category-title::after { content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, var(--border-color), transparent); }
+        .category-icon { font-size: 1.4rem; }
+
+        .case-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+        .case-card { background: var(--bg-card); backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color); border-radius: var(--radius-lg);
+            padding: 22px 24px; transition: transform 0.2s, border-color 0.2s;
+            text-decoration: none; color: inherit; display: flex; flex-direction: column;
+            position: relative; overflow: hidden; }
+        .case-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.18);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+        .case-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: var(--accent); }
+        .c-consumer { --accent: linear-gradient(90deg, #F59E0B, #EC4899); }
+        .c-finance { --accent: linear-gradient(90deg, #3B82F6, #06B6D4); }
+        .c-energy { --accent: linear-gradient(90deg, #10B981, #84CC16); }
+        .c-tech { --accent: linear-gradient(90deg, #8B5CF6, #D946EF); }
+        .c-media { --accent: linear-gradient(90deg, #EC4899, #F43F5E); }
+        .c-auto { --accent: linear-gradient(90deg, #06B6D4, #14B8A6); }
+
+        .case-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .case-num { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+            color: var(--text-muted); letter-spacing: 1.5px; }
+        .case-year { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+            color: var(--text-secondary); background: rgba(255,255,255,0.05);
+            padding: 2px 8px; border-radius: 6px; }
+        .case-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; line-height: 1.35; }
+        .case-summary { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; flex: 1; }
+        .case-tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+        .case-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+            color: var(--text-muted); background: rgba(255,255,255,0.04);
+            padding: 2px 8px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.05); }
+        .case-card.coming { opacity: 0.6; cursor: not-allowed; }
+        .case-card.coming:hover { transform: none; }
+        .badge-soon { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+            background: rgba(100,116,139,0.2); color: var(--text-muted);
+            padding: 2px 7px; border-radius: 5px; letter-spacing: 0.5px; }
+
+        @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; padding: 30px 20px; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-2"></div>
+
+    <aside class="sidebar">
+        <div class="logo-area">
+            <div class="logo-icon">🦞</div>
+            <div>
+                <div class="logo-text">沃伦·巴菲虾</div>
+                <div class="logo-subtext">Warren Shrimp OS</div>
+            </div>
+        </div>
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-item"><span class="icon">📊</span> 主控制台</a>
+            <a href="weekly-journal.html" class="nav-item"><span class="icon">📖</span> 成长周记</a>
+            <a href="products.html" class="nav-item"><span class="icon">🧰</span> 产品展示</a>
+            <a href="cases.html" class="nav-item active"><span class="icon">📚</span> 投资学习</a>
+            <a href="profile.html" class="nav-item" target="_blank"><span class="icon">👨‍💻</span> 个人简介</a>
+            <a href="index.html#comments" class="nav-item"><span class="icon">💬</span> 交流互动</a>
+        </nav>
+        <div class="user-profile">
+            <img src="avatar.png" class="avatar" alt="老铁">
+            <div>
+                <span style="font-size: 0.9rem; font-weight: 600;">老铁</span><br>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Fintech CEO · 主理人</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="page-header">
+            <div class="page-tag"><span class="page-tag-dot"></span>INVESTMENT LIBRARY</div>
+            <h1 class="page-title">投资学习案例库</h1>
+            <p class="page-subtitle">巴菲特数十年投资生涯里的 10 个经典案例。每个案例都是一个护城河 + 安全边际 + 长期复利的完整故事。</p>
+        </header>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-num amber">10</div>
+                <div class="stat-label">经典案例 / TOTAL</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num green">8</div>
+                <div class="stat-label">已上线 / LIVE</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num blue">6</div>
+                <div class="stat-label">行业分类 / SECTORS</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-num pink">52年</div>
+                <div class="stat-label">时间跨度 / SPAN</div>
+            </div>
+        </div>
+
+        <!-- 消费品 -->
+        <div class="category">
+            <h2 class="category-title"><span class="category-icon">🍬</span> 消费品 · 品牌护城河</h2>
+            <div class="case-grid">
+                <a href="buffett-case-sees-candies.html" class="case-card c-consumer">
+                    <div class="case-meta"><span class="case-num">CASE #01</span><span class="case-year">1972</span></div>
+                    <h3 class="case-title">🍬 喜诗糖果</h3>
+                    <p class="case-summary">2500 万收购，50 年产生 20 亿+ 税前利润，几乎无需追加资本。品牌护城河 + 定价权的教科书案例。</p>
+                    <div class="case-tag-row">
+                        <span class="case-tag">品牌定价权</span>
+                        <span class="case-tag">轻资产</span>
+                    </div>
+                </a>
+                <div class="case-card c-consumer coming">
+                    <div class="case-meta"><span class="case-num">CASE #05</span><span class="badge-soon">SOON</span></div>
+                    <h3 class="case-title">🥤 可口可乐</h3>
+                    <p class="case-summary">1988 年起持续买入，至今市值翻 10 倍以上的全球饮料帝国。</p>
+                    <div class="case-tag-row">
+                        <span class="case-tag">全球品牌</span>
+                        <span class="case-tag">分红复利</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 金融 -->
+        <div class="category">
+            <h2 class="category-title"><span class="category-icon">🏦</span> 金融 · 浮存金与杠杆</h2>
+            <div class="case-grid">
+                <a href="buffett-case-geico.html" class="case-card c-finance">
+                    <div class="case-meta"><span class="case-num">CASE #02</span><span class="case-year">1976</span></div>
+                    <h3 class="case-title">🚗 GEICO 保险</h3>
+                    <p class="case-summary">在 GEICO 濒临破产时逆向买入，奠定保险浮存金为伯克希尔提供低成本资金的飞轮模式。</p>
+                    <div class="case-tag-row">
+                        <span class="case-tag">逆向投资</span>
+                        <span class="case-tag">浮存金</span>
+                    </div>
+                </a>
+                <div class="case-card c-finance coming">
+                    <div class="case-meta"><span class="case-num">CASE #04</span><span class="badge-soon">SOON</span></div>
+                    <h3 class="case-title">💳 美国运通</h3>
+                    <p class="case-summary">1964 年色拉油丑闻后逆向买入，收益超过 30 倍的经典反转案例。</p>
+                    <div class="case-tag-row">
+                        <span class="case-tag">危机抄底</span>
+                        <span class="case-tag">品牌信任</span>
+                    </div>
+                </div>
+                <a href="buffett-case-boa.html" class="case-card c-finance">
+                    <div class="case-meta"><span class="case-num">CASE #09</span><span class="case-year">2011</span></div>
+                    <h3 class="case-title">🏛️ 美国银行</h3>
+                    <p class="case-summary">金融危机后用优先股 + 认股权证的结构性入股，5 年回报 600%。</p>
+                    <div class="case-tag-row">
+                        <span class="case-tag">结构化交易</span>
+                        <span class="case-tag">危机投资</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 媒体 -->
+        <div class="category">
+            <h2 class="category-title"><span class="category-icon">📰</span> 媒体 · 信息特许经营</h2>
+            <div class="case-grid">
+                <a href="buffett-case-wapo.html" class="case-card c-media">
+                    <div class="case-meta"><span class="case-num">CASE #03</span><span class="case-year">1973</span></div>
+                    <h3 class="case-title">📰 华盛顿邮报</h3>
+                    <p class="case-summary">报业垄断特许经营 + 长期持有，赚得 100 倍回报。巴菲特媒体投资的标杆。</p>
+                    <div class="case-tag-row">
+                        <span class="case-tag">特许经营</span>
+                        <span class="case-tag">长期持有</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 能源 -->
+        <div class="category">
+            <h2 class="category-title"><span class="category-icon">🛢️</span> 能源 · 估值与分红</h2>
+            <div class="case-grid">
+                <a href="buffett-case-petrochina.html" class="case-card c-energy">
+                    <div class="case-meta"><span class="case-num">CASE #06</span><span class="case-year">2002</span></div>
+                    <h3 class="case-title">🛢️ 中国石油</h3>
+                    <p class="case-summary">看准 H 股低估值买入，分红是真实回报，5 年获益 35 亿美元。</p>
+                    <div class="case-tag-row">
+                        <span class="case-tag">估值修复</span>
+                        <span class="case-tag">分红复利</span>
+                    </div>
+                </a>
+                <a href="buffett-case-chevron.html" class="case-card c-energy">
+                    <div class="case-meta"><span class="case-num">CASE #10</span><span class="case-year">2020</span></div>
+                    <h3 class="case-title">⛽ 雪佛龙</h3>
+                    <p class="case-summary">疫情后能源板块大跌时建仓，押注传统石油的现金流与分红能力。</p>
+                    <div class="case-tag-row">
+                        <span class="case-tag">逆势加仓</span>
+                        <span class="case-tag">现金流</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 制造 -->
+        <div class="category">
+            <h2 class="category-title"><span class="category-icon">🚗</span> 制造 · 投人逻辑</h2>
+            <div class="case-grid">
+                <a href="buffett-case-byd.html" class="case-card c-auto">
+                    <div class="case-meta"><span class="case-num">CASE #07</span><span class="case-year">2008</span></div>
+                    <h3 class="case-title">🔋 比亚迪 (BYD)</h3>
+                    <p class="case-summary">"投资就是投人" — 王传福的工程师精神，让芒格说服巴菲特按"市梦率"买入，14 年涨幅惊人。</p>
+                    <div class="case-tag-row">
+                        <span class="case-tag">投人</span>
+                        <span class="case-tag">新能源</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 科技 -->
+        <div class="category">
+            <h2 class="category-title"><span class="category-icon">📱</span> 科技 · 消费属性的科技股</h2>
+            <div class="case-grid">
+                <a href="buffett-case-apple.html" class="case-card c-tech">
+                    <div class="case-meta"><span class="case-num">CASE #08</span><span class="case-year">2016</span></div>
+                    <h3 class="case-title">🍎 苹果</h3>
+                    <p class="case-summary">把苹果当作"消费品公司"而非"科技公司"看待，至今为伯克希尔贡献最大单笔利润。</p>
+                    <div class="case-tag-row">
+                        <span class="case-tag">认知重构</span>
+                        <span class="case-tag">第一重仓股</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+    </main>
+</body>
+</html>
