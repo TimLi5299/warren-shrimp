@@ -10,6 +10,7 @@ import {
   startLesson, validateStep, getTutorialSession, advanceStep, clearSession, preloadLesson
 } from './tutorial/TutorialEngine.js';
 import { startTribute, handleTribute, handleReturnTribute } from './game/engine.js';
+import { selectTributeCard } from './game/rules.js';
 
 export class LoopbackServer {
   constructor() {
@@ -316,6 +317,80 @@ export class LoopbackServer {
       const nextPlayer = room.players[turnEvent.seat];
       if (nextPlayer && nextPlayer.isNPC) this._handleNPCTurn(room, turnEvent.seat);
     }
+
+    // 进贡阶段：让 NPC 自动选最大牌进贡
+    const tributeReq = events.find(e => e.type === 'TRIBUTE_REQUEST');
+    if (tributeReq) {
+      for (const fromSeat of tributeReq.fromSeats) {
+        const player = room.players[fromSeat];
+        if (player && player.isNPC) this._handleNPCTribute(room, fromSeat);
+      }
+    }
+
+    // 还贡阶段：让 NPC 自动选小牌还贡
+    const returnReq = events.find(e => e.type === 'RETURN_REQUEST');
+    if (returnReq) {
+      for (const toSeat of returnReq.fromSeats) {
+        const player = room.players[toSeat];
+        if (player && player.isNPC) this._handleNPCReturn(room, toSeat);
+      }
+    }
+  }
+
+  /**
+   * NPC 自动进贡：选手中除王外最大的非级牌
+   */
+  _handleNPCTribute(room, seat) {
+    const delay = 600 + Math.random() * 600;
+    setTimeout(() => {
+      if (!room.gameState || !room.gameState.tributeState) return;
+      if (room.gameState.tributeState.phase !== 'waiting_tribute') return;
+      if (room.gameState.tributeState.tributeCards[seat]) return; // 已交过
+
+      const hand = room.gameState.hands[seat];
+      const card = selectTributeCard(hand);
+      if (!card) return;
+
+      const result = handleTribute(room.gameState, seat, card.id);
+      if (result.error) {
+        console.warn('[NPC tribute] 失败', seat, result.error);
+        return;
+      }
+      room.gameState = result.state;
+      this._broadcastGameEvents(room, result.events);
+    }, delay);
+  }
+
+  /**
+   * NPC 自动还贡：选最小的非级牌（保留好牌打）
+   */
+  _handleNPCReturn(room, seat) {
+    const delay = 600 + Math.random() * 600;
+    setTimeout(() => {
+      if (!room.gameState || !room.gameState.tributeState) return;
+      if (room.gameState.tributeState.phase !== 'waiting_return') return;
+      if (room.gameState.tributeState.returnCards[seat]) return;
+
+      const hand = room.gameState.hands[seat];
+      const currentLevel = room.gameState.currentLevel;
+      // 选除级牌、王外最小的牌还回去
+      const candidates = hand
+        .filter(c => c.rank !== currentLevel && c.rank < 15)
+        .sort((a, b) => a.rank - b.rank);
+      const card = candidates[0] || hand.find(c => c.rank !== currentLevel);
+      if (!card) return;
+
+      const result = handleReturnTribute(room.gameState, seat, card.id);
+      if (result.error) {
+        console.warn('[NPC return] 失败', seat, result.error);
+        return;
+      }
+      room.gameState = result.state;
+      this._broadcastGameEvents(room, result.events);
+
+      // 进贡完成后，事件链里会触发 PLAYING + 第一个出牌人的 YOUR_TURN
+      // 已由 _broadcastGameEvents 的 turnEvent 检测处理
+    }, delay);
   }
 
   _handleNPCTurn(room, seat) {

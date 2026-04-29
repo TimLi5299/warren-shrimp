@@ -213,22 +213,25 @@ function isEffectivelyMax(rank, kind, memory, currentLevel) {
 
 /* ============================================================
  * Quick Win ③ 配合策略：判断是否应"主动让"
+ *
+ * 策略：队友是 lastPlaySeat 时，几乎总是让。
+ * 唯一例外：自己也快赢（≤5 张可以一手出完）或对手快赢（必须顶）。
  * ========================================================== */
 function shouldYieldToTeammate(gameState, hand, currentLevel) {
   const { isTeammateWinning, playersHandCounts = [], seat, lastPlay } = gameState;
   if (!isTeammateWinning) return false;
   if (!lastPlay) return false; // 自己领牌不可让
 
-  const teammateSeat = (seat + 2) % 4;
-  const teammateCount = playersHandCounts[teammateSeat] || 27;
+  const leftCount  = playersHandCounts[(seat + 3) % 4] || 27;
+  const rightCount = playersHandCounts[(seat + 1) % 4] || 27;
+  const opponentNearWin = (leftCount > 0 && leftCount <= 4) || (rightCount > 0 && rightCount <= 4);
 
-  // 队友牌很少（≤8）→ 强烈让
-  if (teammateCount <= 8) return true;
-  // 队友牌一般 → 看 lastPlay 强度。lastPlay 已经是大牌就不需要顶
-  const lastIsBig = lastPlay.mainRank >= 12 || isBombType(lastPlay.type);
-  if (lastIsBig) return true;
-  // 默认 70% 让
-  return Math.random() < 0.7;
+  // 对手快赢（≤4 张）→ 必须顶，不能让
+  if (opponentNearWin) return false;
+  // 自己手牌 ≤5 且能一手出完 → 自己赢比让队友更直接
+  if (hand.length <= 5) return false;
+  // 其他场景：队友打牌就让，不要去顶
+  return true;
 }
 
 /* ============================================================
@@ -318,8 +321,12 @@ function decideStrategic(hints, hand, gameState, mustPlay, full) {
   }
 
   // ============= 跟牌 =============
+  // 双重保险：即使 yield 通过了也再过一遍——队友领出绝不用炸弹
+  // （shouldYieldToTeammate 已在上面 return null，但防御性编程）
+  const teammateLeading = full && gameState.isTeammateWinning;
+
   // 生死关头：对手快赢
-  if (opponentNearWin) {
+  if (opponentNearWin && !teammateLeading) {
     if (bombs.length > 0 && shouldUseBomb(gameState, hand, myDecomp, true, true)) {
       return bombs[0];
     }
@@ -361,8 +368,8 @@ function decideStrategic(hints, hand, gameState, mustPlay, full) {
     return candidate;
   }
 
-  // ④ 炸弹时机
-  if (bombs.length > 0 && shouldUseBomb(gameState, hand, myDecomp, opponentNearWin, true)) {
+  // ④ 炸弹时机：队友是当前最大牌时永远不动炸弹
+  if (bombs.length > 0 && !teammateLeading && shouldUseBomb(gameState, hand, myDecomp, opponentNearWin, true)) {
     return bombs[0];
   }
   return null;
