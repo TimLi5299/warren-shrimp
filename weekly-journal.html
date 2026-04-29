@@ -239,6 +239,21 @@
         }
         .empty-note { color: var(--text-muted); font-size: 0.85rem; font-style: italic; }
 
+        /* 隐私打码：黑底色块 + 模糊，hover 略减少模糊但仍不可读 */
+        .redacted {
+            background: linear-gradient(135deg, #1f2937 0%, #0f172a 100%);
+            color: rgba(255, 255, 255, 0.85);
+            padding: 1px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            filter: blur(4px);
+            transition: filter 0.25s ease;
+            cursor: help;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .redacted:hover { filter: blur(2.5px); }
+
         /* 装饰角标 */
         .week-card-num {
             position: absolute; top: 24px; right: 32px;
@@ -388,6 +403,14 @@
             <p class="page-subtitle">从 2026 年 3 月 2 日的第一句"你好"，到今天的第 9 周。<br>每周做了什么、踩了什么坑、留下什么段子，全部展开看。</p>
         </header>
 
+        <!-- 隐私说明 -->
+        <div style="max-width: 720px; margin: 0 auto 32px; padding: 14px 20px;
+            background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 12px; color: var(--text-secondary); font-size: 0.85rem;
+            text-align: center; line-height: 1.6;">
+            🔒 <strong style="color: #fbbf24;">隐私提示</strong>：涉及具体公司、人名、邮箱、出行行程、装修金额等敏感内容已打码（<span class="redacted" style="filter: blur(3px);">█████</span>）。鼠标悬停可见模糊轮廓但内容不可读。
+        </div>
+
         <!-- 总览数据 -->
         <div class="overview-bar">
             <div class="ov-card">
@@ -437,8 +460,8 @@
                     <div class="col-section">
                         <div class="col-title">📌 这周的事</div>
                         <ul class="col-list">
-                            <li class="col-item"><span class="date">03/02</span>第一次接触 OpenClaw，连刷 4 个 pairing 码终于打通；起名 Ariel，定位个人健康顾问，体重目标 65kg</li>
-                            <li class="col-item"><span class="date">03/02</span>Gmail 一次性清理 113 封（删 66 + 归档 47），生成 12 个月支出报告，打成带 FINV LOGO 的 PDF</li>
+                            <li class="col-item"><span class="date">03/02</span>第一次接触 OpenClaw，连刷 4 个 pairing 码终于打通；起名 Ariel，定位个人健康顾问，目标减重</li>
+                            <li class="col-item"><span class="date">03/02</span>Gmail 一次性清理 113 封（删 66 + 归档 47），生成 12 个月支出报告，打成带 <span class="redacted">某美股公司B</span> LOGO 的 PDF</li>
                             <li class="col-item"><span class="date">03/03</span>配 Gmail OAuth 折腾 5 小时，发出第一封"完全自动化邮件"</li>
                             <li class="col-item"><span class="date">03/04</span>BotLearn 七天协议 A-D 四件套同日打通：早报、Gmail监控、TechCrunch、文件整理</li>
                             <li class="col-item"><span class="date">03/05</span>把贝壳/Kimi/小爪拉进"老铁_龙虾群"，商业助手自取名"远舟"；隐私原则写入 SOUL.md</li>
@@ -470,8 +493,8 @@
                     <div class="week-num-box">
                         <span class="week-badge">WEEK 02</span>
                         <div>
-                            <div class="week-title">token 算账翻车 · QFIN 资料库奠基</div>
-                            <div class="week-theme">HKEX 339 个 PDF 入库，跑通 7 份 20-F 财务时间序列</div>
+                            <div class="week-title">token 算账翻车 · <span class="redacted">某美股公司A</span> 资料库奠基</div>
+                            <div class="week-theme"><span class="redacted">港交所 339 份公告入库，跑通 7 份美股年报财务时间序列</span></div>
                         </div>
                     </div>
                     <div class="week-date">2026/03/09 — 03/15</div>
@@ -481,8 +504,8 @@
                         <div class="col-title">📌 这周的事</div>
                         <ul class="col-list">
                             <li class="col-item"><span class="date">03/09</span>早报 token 费用显示 ¥0.00 被当场抓 bug</li>
-                            <li class="col-item"><span class="date">03/11</span>信也春季战略会 12 页深色科技风 HTML PPT《AI加速崛起》</li>
-                            <li class="col-item"><span class="date">03/15</span>关键一日：HKEX 公告 339 个 PDF 全部入库；7 份 QFIN 20-F 年报跑通 2018-2024 财务时间序列</li>
+                            <li class="col-item"><span class="date">03/11</span><span class="redacted">某金融科技公司</span>春季战略会 12 页深色科技风 HTML PPT《AI加速崛起》</li>
+                            <li class="col-item"><span class="date">03/15</span>关键一日：<span class="redacted">港交所公告 339 份 PDF</span> 全部入库；7 份 <span class="redacted">某美股公司A</span> <span class="redacted">美股年报</span>跑通 2018-2024 财务时间序列</li>
                         </ul>
                     </div>
                     <div class="col-section">
@@ -490,7 +513,7 @@
                         <ul class="col-list">
                             <li class="col-item problem">早报 token 费用永远 0：grep 关键字写错"预估费用 vs 预估总费用"</li>
                             <li class="col-item problem">Moonshot 和 kimi-coding 双 key 同时过期，故障转移失败，消息石沉大海几小时</li>
-                            <li class="col-item problem">QFIN 年报提取调一整天：列对齐反复猜错、零宽空格 ​ 截断</li>
+                            <li class="col-item problem"><span class="redacted">某美股公司A</span> 年报提取调一整天：列对齐反复猜错、零宽空格 ​ 截断</li>
                         </ul>
                     </div>
                     <div class="col-section">
@@ -520,25 +543,25 @@
                     <div class="col-section">
                         <div class="col-title">📌 这周的事</div>
                         <ul class="col-list">
-                            <li class="col-item"><span class="date">03/17</span>QFIN Q4 2025 财报同步入库；解决 SEC SGML 容器格式</li>
-                            <li class="col-item"><span class="date">03/18</span>QFIN 字段升级：从精简版到 30+ 字段，含拨备、Day-1 逾期率、ICE 收入等</li>
+                            <li class="col-item"><span class="date">03/17</span><span class="redacted">某美股公司A</span> <span class="redacted">Q4 财报</span>同步入库；解决 SEC SGML 容器格式</li>
+                            <li class="col-item"><span class="date">03/18</span><span class="redacted">某美股公司A</span> 字段升级：从精简版到 30+ 字段，含拨备、Day-1 逾期率、ICE 收入等</li>
                             <li class="col-item"><span class="date">03/19</span>出发英国行；妙记开始连续记录</li>
-                            <li class="col-item"><span class="date">03/19–22</span>英国一周 12 场会议（律师、Compliance Interview、PwC M&A 等）<span class="desc">多 Agent 协作机制正式上线：贝壳/Kimi/苛苛/深深/小G/小七/拉拉</span></li>
+                            <li class="col-item"><span class="date">03/19–22</span><span class="redacted">英国一周 12 场行业访谈</span>（律师、Compliance Interview、<span class="redacted">某事务所 M&A</span> 等）<span class="desc">多 Agent 协作机制正式上线：贝壳/Kimi/苛苛/深深/小G/小七/拉拉</span></li>
                         </ul>
                     </div>
                     <div class="col-section">
                         <div class="col-title">⚠️ 踩的坑</div>
                         <ul class="col-list">
                             <li class="col-item problem">SEC EDGAR 6-K 大部分是 SGML 容器格式，直接打开乱码</li>
-                            <li class="col-item problem">Kimi 抓 QFIN Form 3/4/5 用错 CIK</li>
-                            <li class="col-item problem">QFIN 2023 股权激励一开始报 82.8 亿（实际 1.86 亿），数量级差几十倍</li>
+                            <li class="col-item problem">Kimi 抓 <span class="redacted">某美股公司A</span> Form 3/4/5 用错 CIK</li>
+                            <li class="col-item problem"><span class="redacted">某美股公司A</span> 2023 <span class="redacted">股权激励数据数量级出错</span>，数量级差几十倍</li>
                         </ul>
                     </div>
                     <div class="col-section">
                         <div class="col-title">😄 段子时刻</div>
                         <ul class="col-list">
-                            <li class="col-item fun">用户：<em>"我们之前下载是在 QFIN 官网上下载 PDF，而不是 HTML"</em>——铁助瞬间顿悟自己绕了一大圈</li>
-                            <li class="col-item fun">FINV 早期季报怎么找都只 16 期，被提醒后一查 SEC EDGAR <em>49 份全在那</em></li>
+                            <li class="col-item fun">用户：<em>"我们之前下载是在 <span class="redacted">某美股公司A</span> 官网上下载 PDF，而不是 HTML"</em>——铁助瞬间顿悟自己绕了一大圈</li>
+                            <li class="col-item fun"><span class="redacted">某美股公司B</span> 早期季报怎么找都只 16 期，被提醒后一查 SEC EDGAR <em>49 份全在那</em></li>
                         </ul>
                     </div>
                 </div>
@@ -552,7 +575,7 @@
                         <span class="week-badge">WEEK 04</span>
                         <div>
                             <div class="week-title">数据全量化 · lark-cli 生根</div>
-                            <div class="week-theme">三家公司季报最终：QFIN 29 + LX 30 + FINV 17</div>
+                            <div class="week-theme">三家公司季报最终：<span class="redacted">某美股公司A</span> 29 +<span class="redacted"> 某美股公司C </span>30 + <span class="redacted">某美股公司B</span> 17</div>
                         </div>
                     </div>
                     <div class="week-date">2026/03/23 — 03/29</div>
@@ -561,10 +584,10 @@
                     <div class="col-section">
                         <div class="col-title">📌 这周的事</div>
                         <ul class="col-list">
-                            <li class="col-item"><span class="date">03/23</span>苛苛逐字读 Note 13 重核 QFIN 股权激励数据</li>
-                            <li class="col-item"><span class="date">03/23</span>三家公司季报最终：QFIN 29 + LX 30 + FINV 17</li>
+                            <li class="col-item"><span class="date">03/23</span>苛苛逐字读 Note 13 重核 <span class="redacted">某美股公司A</span> 股权激励数据</li>
+                            <li class="col-item"><span class="date">03/23</span>三家公司季报最终：<span class="redacted">某美股公司A</span> 29 +<span class="redacted"> 某美股公司C </span>30 + <span class="redacted">某美股公司B</span> 17</li>
                             <li class="col-item"><span class="date">03/24</span>数据上传飞书 Bitable，触发"飞书 CLI 配置长征"</li>
-                            <li class="col-item"><span class="date">03/27</span>TfL 退款（伦敦地铁 £17.70）项目立项</li>
+                            <li class="col-item"><span class="date">03/27</span><span class="redacted">某退款跟进</span>项目立项</li>
                         </ul>
                     </div>
                     <div class="col-section">
@@ -572,13 +595,13 @@
                         <ul class="col-list">
                             <li class="col-item problem">同一张 Bitable 反复被 Kimi 和贝壳并行写入 → 多处重复</li>
                             <li class="col-item problem">周报永远显示"所有 Agent 0 次未被调用"</li>
-                            <li class="col-item problem">Kimi 第二轮把文件路径写错（用了大写 FINV）</li>
+                            <li class="col-item problem">Kimi 第二轮把文件路径写错（用了大写 <span class="redacted">某美股公司B</span>）</li>
                         </ul>
                     </div>
                     <div class="col-section">
                         <div class="col-title">😄 段子时刻</div>
                         <ul class="col-list">
-                            <li class="col-item fun">用户：<em>"QFIN2023年这里检查下，不可能这么高"</em>——一句话掀翻整张管理层薪酬表</li>
+                            <li class="col-item fun">用户：<em>"<span class="redacted">某美股公司A</span>2023年这里检查下，不可能这么高"</em>——一句话掀翻整张管理层薪酬表</li>
                         </ul>
                     </div>
                 </div>
@@ -642,8 +665,8 @@
                         <div class="col-title">📌 这周的事</div>
                         <ul class="col-list">
                             <li class="col-item"><span class="date">04/07</span>Outlook 日历同步三连败：飞书 API（只读）→ 飞书 .ics 邀请（无邮箱）→ himalaya（Microsoft 禁用 Basic Auth）</li>
-                            <li class="col-item"><span class="date">04/07</span>5 月 9 号墨西哥 → 23 号上海三段航线，最便宜 $2,226</li>
-                            <li class="col-item"><span class="date">04/12</span>上海交大相册 172 张照片，461 MB</li>
+                            <li class="col-item"><span class="date">04/07</span><span class="redacted">5 月某次出行三段航线规划</span></li>
+                            <li class="col-item"><span class="date">04/12</span><span class="redacted">某校友活动</span>相册 172 张照片，461 MB</li>
                         </ul>
                     </div>
                     <div class="col-section">
@@ -671,7 +694,7 @@
                         <span class="week-badge">WEEK 07</span>
                         <div>
                             <div class="week-title">装修估价 · 学习任务自动化修复</div>
-                            <div class="week-theme">苛苛审 712 装修，砍出 21% 节省</div>
+                            <div class="week-theme">苛苛审 <span class="redacted">海外房屋装修项目</span>，砍出 21% 节省</div>
                         </div>
                     </div>
                     <div class="week-date">2026/04/13 — 04/19</div>
@@ -680,15 +703,15 @@
                     <div class="col-section">
                         <div class="col-title">📌 这周的事</div>
                         <ul class="col-list">
-                            <li class="col-item"><span class="date">04/14</span>712-装修：首次报价 $108,814 / 实际 $85,943 / 节省 21%<span class="desc">苛苛审给 4.5/10，揪出家具小计 1k 缺口、运费 $7,516 黑洞、Ziptrack 仿牌存疑</span></li>
-                            <li class="col-item"><span class="date">04/15</span>TfL 退款今日截止；daily-learning-task cron skip 排查 → Gemini key 失效 → 重建为 agentTurn</li>
+                            <li class="col-item"><span class="date">04/14</span><span class="redacted">海外房屋装修项目</span>：<span class="redacted">节省约 21% 装修预算</span><span class="desc">苛苛审给 4.5/10，揪出家具小计 1k 缺口、<span class="redacted">运费某项</span> 黑洞、<span class="redacted">某品牌</span> 仿牌存疑</span></li>
+                            <li class="col-item"><span class="date">04/15</span><span class="redacted">退款跟进截止</span>；daily-learning-task cron skip 排查 → Gemini key 失效 → 重建为 agentTurn</li>
                             <li class="col-item"><span class="date">04/16</span>Gemini 模型升级 pro 失败回退 flash（503 过载）</li>
                         </ul>
                     </div>
                     <div class="col-section">
                         <div class="col-title">⚠️ 踩的坑</div>
                         <ul class="col-list">
-                            <li class="col-item problem">712 装修：家具/灯具小计算错 1k+ 缺口，运费 7,516 整张报价单最大单项却无任何拆分</li>
+                            <li class="col-item problem"><span class="redacted">海外房屋装修项目</span>：家具/灯具小计算错 1k+ 缺口，<span class="redacted">运费某项</span> 整张报价单最大单项却无任何拆分</li>
                             <li class="col-item problem">相册下载脚本写好但喔图按钮需登录态，凌晨 cron 实际下不到东西</li>
                             <li class="col-item problem">04/14 用户问"这个项目在做吗？"被两次重复发问，连续 23 分钟没回复</li>
                         </ul>
@@ -696,7 +719,7 @@
                     <div class="col-section">
                         <div class="col-title">😄 段子时刻</div>
                         <ul class="col-list">
-                            <li class="col-item fun">苛苛审 712 装修：<em>"总体评分：4.5 / 10，不适合签约"</em>——直接给 100 万装修预算定了"暂缓"</li>
+                            <li class="col-item fun">苛苛审 <span class="redacted">海外房屋装修项目</span>：<em>"总体评分：4.5 / 10，不适合签约"</em>——直接给 <span class="redacted">装修预算</span>定了"暂缓"</li>
                         </ul>
                     </div>
                 </div>
@@ -759,7 +782,7 @@
                     <div class="col-section">
                         <div class="col-title">📌 这周的事</div>
                         <ul class="col-list">
-                            <li class="col-item"><span class="date">04/27</span>5 条待办：日历分析报告、TfL 退款（仍等）、AI 分享会（待定）、完善 MEMORY.md</li>
+                            <li class="col-item"><span class="date">04/27</span>5 条待办：日历分析报告、<span class="redacted">退款跟进</span>（仍等）、AI 分享会（待定）、完善 MEMORY.md</li>
                             <li class="col-item"><span class="date">04/28</span>历史聊天记录全量导出（龙虾群 + 主对话 + 程旭对话）</li>
                             <li class="col-item"><span class="date">04/29</span>周记上线本网站</li>
                         </ul>
@@ -888,7 +911,7 @@
             <div class="closing-title">🦞 9 周观察</div>
             <p class="closing-text">
                 约 60% 时间花在配置和工具构建（飞书 / Gmail / Outlook / lark-cli / Token 反复授权）。
-                高质量产出集中在 W2-W3 的 QFIN 财务数据库、W3 末英国行 12 场纪要 + 候选人评估、W5 三家公司 208 条 Bitable 数据、W7 装修审查、W8 末日历 513 条。
+                高质量产出集中在 W2-W3 的 <span class="redacted">某美股公司A</span> 财务数据库、W3 末英国行 12 场纪要 + 候选人评估、W5 三家公司 208 条 Bitable 数据、W7 装修审查、W8 末日历 513 条。
                 多 Agent 体系真正跑通是 W5 起，贝壳 / Kimi / 苛苛 / 深深 / 小G / 小七 / 拉拉 / 远舟 各司其职。
                 长期老坑还在：周报 Agent 统计始终错、Outlook 日历无法全自动写入、Token 反复过期、相册 cron 未真实生效。
             </p>
