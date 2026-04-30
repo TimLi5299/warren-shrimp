@@ -76,7 +76,7 @@ export class LoopbackServer {
         case 'ADD_NPC': {
           const room = this.roomManager.getRoom(conn.roomId);
           if (!room) return;
-          const result = room.addNPC(msg.level, msg.seat);
+          const result = room.addNPC(msg.level, msg.seat, msg.skillProfile ?? null);
           if (result.error) { send({ type: 'ERROR', message: result.error }); return; }
           this._broadcastRoomUpdate(room);
           break;

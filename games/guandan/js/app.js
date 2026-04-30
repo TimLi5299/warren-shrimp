@@ -9,6 +9,108 @@
   const ui = window.gameUI;
   const isStaticHost = !!window.__GUANDAN_STATIC_HOST__;
 
+  // ====== 单人模式配置 ======
+  let appMode = 'solo';   // 'solo' | 'multi'
+  let isSoloLaunch = false;
+
+  // 技能 ID 列表（与 SkillProfiles.js 对应）
+  const ALL_SKILL_IDS = [
+    'r1_yield', 'r2_bomb_timing', 'r3_decomp_quality', 'r4_memory',
+    'r5_level_guard', 'r6_opponent_infer', 'r7_signal', 'r8_endgame', 'r9_lead_score'
+  ];
+  const PROFILE_SKILLS = {
+    noob:   [],
+    normal: ['r1_yield', 'r2_bomb_timing', 'r3_decomp_quality', 'r4_memory'],
+    expert: ALL_SKILL_IDS.slice(),
+  };
+  const PROFILE_LABELS = { noob: '小白', normal: '普通', expert: '专家', custom: '定制' };
+  const SKILL_INFO = [
+    { id: 'r1_yield',          label: '让队友',   desc: '队友领牌时主动让路' },
+    { id: 'r2_bomb_timing',    label: '炸弹时机', desc: '对手快赢时精准用炸' },
+    { id: 'r3_decomp_quality', label: '拆牌优化', desc: '跟牌选破坏最小方案' },
+    { id: 'r4_memory',         label: '记牌',     desc: '记住场上已出的牌' },
+    { id: 'r5_level_guard',    label: '护大牌',   desc: '不轻易消耗级牌/万能牌' },
+    { id: 'r6_opponent_infer', label: '读对手',   desc: '推断对手无法应对的牌' },
+    { id: 'r7_signal',         label: '传信号',   desc: '出牌时向队友暗示强弱' },
+    { id: 'r8_endgame',        label: '残局',     desc: '少牌时精确规划出牌' },
+    { id: 'r9_lead_score',     label: '出牌评分', desc: '评分挑选最优领牌' },
+  ];
+
+  // 每个 NPC 座位的当前配置（seat → { profile, customSkills }）
+  const soloConfig = {
+    2: { profile: 'normal', customSkills: [...PROFILE_SKILLS.normal] },  // 队友
+    1: { profile: 'expert', customSkills: [...PROFILE_SKILLS.expert] },  // 对手一
+    3: { profile: 'expert', customSkills: [...PROFILE_SKILLS.expert] },  // 对手二
+  };
+
+  /** 返回某座位的 skillProfile 数组（null = 用 level 默认） */
+  function getSeatSkillArray(seat) {
+    const cfg = soloConfig[seat];
+    if (cfg.profile === 'noob')   return [];
+    if (cfg.profile === 'normal') return [...PROFILE_SKILLS.normal];
+    if (cfg.profile === 'expert') return [...PROFILE_SKILLS.expert];
+    if (cfg.profile === 'custom') return [...cfg.customSkills];
+    return null;
+  }
+
+  /** 返回某座位的 level 字符串 */
+  function getSeatLevel(seat) {
+    const cfg = soloConfig[seat];
+    if (cfg.profile === 'custom') {
+      const n = cfg.customSkills.length;
+      return n === 0 ? 'noob' : n >= ALL_SKILL_IDS.length ? 'expert' : 'normal';
+    }
+    return cfg.profile; // noob/normal/expert
+  }
+
+  /** 初始化技能面板 DOM（在 bindUIEvents 之后调用一次） */
+  function initSkillPanels() {
+    for (const seat of [1, 2, 3]) {
+      const panel = document.getElementById(`skill-panel-${seat}`);
+      if (!panel) continue;
+      panel.innerHTML = `<div class="skill-panel-title">⚙️ 自选技能</div>
+        <div class="skill-grid">${SKILL_INFO.map(s => `
+          <label class="skill-item">
+            <input type="checkbox" class="skill-checkbox" data-seat="${seat}" data-skill="${s.id}">
+            <span><span class="skill-item-label">${s.label}</span><span class="skill-item-desc">${s.desc}</span></span>
+          </label>`).join('')}
+        </div>`;
+      // 绑定 checkbox 变化
+      panel.querySelectorAll('.skill-checkbox').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const s = parseInt(cb.dataset.seat);
+          const skill = cb.dataset.skill;
+          const skills = soloConfig[s].customSkills;
+          if (cb.checked) { if (!skills.includes(skill)) skills.push(skill); }
+          else { const idx = skills.indexOf(skill); if (idx >= 0) skills.splice(idx, 1); }
+        });
+      });
+    }
+  }
+
+  /** 切换某座位的 profile（更新 UI + 状态） */
+  function selectProfile(seat, profile, prevProfile) {
+    soloConfig[seat].profile = profile;
+    // 切换到 custom 时，用上一个 preset 初始化 checkboxes
+    if (profile === 'custom') {
+      const base = PROFILE_SKILLS[prevProfile] || PROFILE_SKILLS.expert;
+      soloConfig[seat].customSkills = [...base];
+      const panel = document.getElementById(`skill-panel-${seat}`);
+      if (panel) {
+        panel.querySelectorAll('.skill-checkbox').forEach(cb => {
+          cb.checked = soloConfig[seat].customSkills.includes(cb.dataset.skill);
+        });
+        panel.style.display = 'block';
+      }
+    } else {
+      const panel = document.getElementById(`skill-panel-${seat}`);
+      if (panel) panel.style.display = 'none';
+    }
+    // 更新右上角 profile 名
+    const nameEl = document.getElementById(`slot-name-${seat}`);
+    if (nameEl) nameEl.textContent = PROFILE_LABELS[profile] || profile;
+  }
+
   // 等 gameSocket 就绪（loopback 是 ES module，异步注册到 window）
   async function waitForSocket() {
     if (window.gameSocket) return window.gameSocket;
@@ -27,12 +129,13 @@
     socket = await waitForSocket();
     bindSocketEvents();
     bindUIEvents();
+    initSkillPanels();  // 生成定制技能面板 DOM
 
     if (isStaticHost) {
       // 静态模式：本地 loopback 服务器
       try {
         await socket.connect('loopback');
-        ui.setLobbyStatus('🦞 演示模式 · 与 3 个 AI 机器人对战（输入昵称 → 创建房间）');
+        ui.setLobbyStatus('🦞 本地模式 · 选择 NPC 配置后点击「开始对战」');
       } catch (e) {
         ui.setLobbyStatus('本地引擎初始化失败');
       }
@@ -64,18 +167,23 @@
     });
 
     socket.on('ROOM_CREATED', (msg) => {
+      // 单人模式：跳过房间等待页，直接配置 NPC 并开始
+      if (isSoloLaunch) {
+        isSoloLaunch = false;
+        setTimeout(() => {
+          for (const seat of [1, 2, 3]) {
+            const level = getSeatLevel(seat);
+            const skills = getSeatSkillArray(seat);
+            socket.addNPC(level, seat, skills);
+          }
+          socket.ready();
+          setTimeout(() => socket.startGame(), 400);
+        }, 150);
+        return; // 不跳转到房间页
+      }
+      // 多人模式：正常进入房间等待页
       ui.showRoom(msg.roomId);
       ui.showStartButton(true);
-      // 静态模式：自动添加 3 个 NPC + 自己 ready，免去用户手动操作
-      if (isStaticHost) {
-        setTimeout(() => {
-          // expert 等级使用完整规则 AI（拆牌 / 记牌 / 配合 / 炸弹时机）
-          socket.addNPC('expert', 1);
-          socket.addNPC('expert', 2);
-          socket.addNPC('expert', 3);
-          socket.ready(); // 自动标记自己已准备
-        }, 200);
-      }
     });
 
     socket.on('JOINED_ROOM', (msg) => {
@@ -203,7 +311,47 @@
 
   // ====== UI 事件绑定 ======
   function bindUIEvents() {
-    // 大厅 - 创建房间
+
+    // ── 模式切换 ──
+    document.getElementById('solo-mode-btn').addEventListener('click', () => {
+      appMode = 'solo';
+      document.getElementById('solo-mode-btn').classList.add('active');
+      document.getElementById('multi-mode-btn').classList.remove('active');
+      document.getElementById('solo-panel').style.display = 'block';
+      document.getElementById('multi-panel').style.display = 'none';
+    });
+    document.getElementById('multi-mode-btn').addEventListener('click', () => {
+      appMode = 'multi';
+      document.getElementById('multi-mode-btn').classList.add('active');
+      document.getElementById('solo-mode-btn').classList.remove('active');
+      document.getElementById('multi-panel').style.display = 'block';
+      document.getElementById('solo-panel').style.display = 'none';
+    });
+
+    // ── 单人模式：profile tab 切换 ──
+    document.querySelectorAll('.profile-tabs').forEach(tabGroup => {
+      const seat = parseInt(tabGroup.dataset.seat);
+      tabGroup.querySelectorAll('.profile-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const newProfile = tab.dataset.profile;
+          const prevProfile = soloConfig[seat].profile;
+          // 更新 active 样式
+          tabGroup.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          selectProfile(seat, newProfile, prevProfile);
+        });
+      });
+    });
+
+    // ── 单人模式：开始对战 ──
+    document.getElementById('solo-start-btn').addEventListener('click', () => {
+      const nickname = document.getElementById('nickname-input').value.trim() || '玩家';
+      isSoloLaunch = true;
+      socket.login(nickname);
+      setTimeout(() => socket.createRoom(), 150);
+    });
+
+    // 大厅 - 创建房间（多人模式）
     document.getElementById('create-room-btn').addEventListener('click', () => {
       const nickname = document.getElementById('nickname-input').value.trim() || '匿名玩家';
       socket.login(nickname);

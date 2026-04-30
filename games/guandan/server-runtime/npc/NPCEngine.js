@@ -32,8 +32,13 @@ export async function getNPCDecision(npc, seat, hand, gameState, roomId) {
     }
 
     if (npcType === 'practice') {
+      // skillProfile 从前端传来是 JSON array，需要转成 Set
+      const rawProfile = npc.skillProfile ?? null;
+      const skillProfile = rawProfile
+        ? (rawProfile instanceof Set ? rawProfile : new Set(rawProfile))
+        : null;
       // expert级别在浏览器无LLM时，由 PracticeNPC 走增强规则；保留入口以便服务端有 LLM 时使用
-      if (level === AILevel.EXPERT) {
+      if (level === AILevel.EXPERT && !skillProfile) {
         try {
           const play = await getLLMAIDecision(seat, hand, gameState, level, roomId);
           const action = play ? 'PLAY' : 'PASS';
@@ -41,10 +46,10 @@ export async function getNPCDecision(npc, seat, hand, gameState, roomId) {
           return { play, decisionLog: createDecisionLog(action, play, primaryReason) };
         } catch (e) {
           // LLM 不可用 → 走增强规则（带 roomId 取记牌器）
-          return getPracticeNPCDecision(hand, { ...gameState, seat, roomId }, level, seat);
+          return getPracticeNPCDecision(hand, { ...gameState, seat, roomId }, level, seat, skillProfile);
         }
       }
-      return getPracticeNPCDecision(hand, { ...gameState, seat, roomId }, level, seat);
+      return getPracticeNPCDecision(hand, { ...gameState, seat, roomId }, level, seat, skillProfile);
     }
 
     if (npcType === 'competitive') {

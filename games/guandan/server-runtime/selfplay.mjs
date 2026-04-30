@@ -2,9 +2,12 @@
 /**
  * selfplay.mjs — 掼蛋 NPC 自战模拟
  *
- * 用法: node server-runtime/selfplay.mjs [局数=50] [级别=expert|normal|noob]
+ * 用法:
+ *   node server-runtime/selfplay.mjs [局数=10] [级别=expert|normal|noob]
+ *   node server-runtime/selfplay.mjs --ablation [局数=20]
  *
  * 输出统计：胜率、PASS率、队友让路合规率、炸弹拦截率、进贡正确率、异常行为
+ * --ablation 模式：逐项去掉 R1-R9，与基准（全技能）对比，量化每项技能的贡献
  */
 
 import {
@@ -12,46 +15,51 @@ import {
   initTribute, startTribute, handleTribute, handleReturnTribute
 } from './game/engine.js';
 import { getPracticeNPCDecision, AILevel } from './npc/PracticeNPC.js';
+import { SKILLS, NPC_PRESETS } from './npc/SkillProfiles.js';
 import { isBomb as isBombType } from './game/handClassifier.js';
 
-const N_GAMES    = parseInt(process.argv[2]) || 10;  // 完整游戏场数
-const levelStr   = (process.argv[3] || 'expert').toLowerCase();
-const LEVEL      = levelStr === 'normal' ? AILevel.NORMAL
-                 : levelStr === 'noob'   ? AILevel.NOOB
-                 :                         AILevel.EXPERT;
+// ─────────── 参数解析 ───────────
+const args = process.argv.slice(2);
+const ABLATION_MODE = args.includes('--ablation');
+const numArgs = args.filter(a => !a.startsWith('--'));
 
-// ─────────── 统计累积 ───────────
-const S = {
-  roundsPlayed: 0,
-  team1Wins: 0,           // team 0&2
-  team2Wins: 0,           // team 1&3
-  totalDecisions: 0,
-  totalPasses: 0,
+let N_GAMES, levelStr, LEVEL, PROFILE;
 
-  // ③ 队友让路合规
-  shouldYield: 0,         // 应该让的场合
-  didYield: 0,            // 实际让了
+if (ABLATION_MODE) {
+  N_GAMES  = parseInt(numArgs[0]) || 20;
+  LEVEL    = AILevel.EXPERT;
+  PROFILE  = NPC_PRESETS.expert;
+} else {
+  N_GAMES  = parseInt(numArgs[0]) || 10;
+  levelStr = (numArgs[1] || 'expert').toLowerCase();
+  LEVEL    = levelStr === 'normal' ? AILevel.NORMAL
+           : levelStr === 'noob'   ? AILevel.NOOB
+           :                         AILevel.EXPERT;
+  PROFILE  = NPC_PRESETS[levelStr] ?? NPC_PRESETS.expert;
+}
 
-  // ⑦ 万能牌/大牌节约
-  levelCardOpportunities: 0, // 可以出但不该出级牌/万能的场合
-  levelCardSaved: 0,
-
-  // ④ 炸弹拦截
-  bombOpportunities: 0,   // 对手≤5张 + 我有炸弹 + 跟牌
-  bombsUsed: 0,
-
-  // 进贡
-  tributeTotal: 0,
-  tributeMaxCard: 0,      // 进贡了正确最大牌
-  returnTotal: 0,
-  returnSmall: 0,         // 还了较小牌 (rank ≤ 8)
-
-  // 杂项
-  totalTricks: 0,
-  totalBombs: 0,
-  anomalies: [],
-  errors: 0,
-};
+// ─────────── 统计累积（每次 runNGames 独立） ───────────
+function makeStats() {
+  return {
+    roundsPlayed: 0,
+    team1Wins: 0,
+    team2Wins: 0,
+    totalDecisions: 0,
+    totalPasses: 0,
+    shouldYield: 0,
+    didYield: 0,
+    bombOpportunities: 0,
+    bombsUsed: 0,
+    tributeTotal: 0,
+    tributeMaxCard: 0,
+    returnTotal: 0,
+    returnSmall: 0,
+    totalTricks: 0,
+    totalBombs: 0,
+    anomalies: [],
+    errors: 0,
+  };
+}
 
 // ─────────── 工具 ───────────
 function looksLikeBomb(cards) {
@@ -76,7 +84,6 @@ function hasBombInHand(hand) {
   if (Object.values(rc).some(n => n >= 4)) return true;
   const jokers = hand.filter(c => c.rank === 15 || c.rank === 16);
   if (jokers.length >= 4) return true;
-  // 同花顺：同花色5+张连续（简化：只检查5张）
   const bySuit = {};
   for (const c of hand) (bySuit[c.suit] = bySuit[c.suit] || []).push(c.rank);
   for (const ranks of Object.values(bySuit)) {
@@ -91,25 +98,22 @@ function hasBombInHand(hand) {
 
 // ─────────── 进贡选牌 ───────────
 function pickTributeCard(hand, currentLevel) {
-  // 进贡：最大的非2非王牌（引擎规则强制）
   const valid = hand.filter(c => c.rank <= 14 && c.rank !== 2 && c.rank !== currentLevel);
-  if (valid.length === 0) return hand.sort((a, b) => a.rank - b.rank)[0]; // fallback
+  if (valid.length === 0) return hand.sort((a, b) => a.rank - b.rank)[0];
   return valid.sort((a, b) => b.rank - a.rank)[0];
 }
 
 function pickReturnCard(hand, currentLevel) {
-  // 还贡：最小的非级牌
   const valid = hand.filter(c => c.rank !== currentLevel);
   if (valid.length === 0) return hand[0];
   return valid.sort((a, b) => a.rank - b.rank)[0];
 }
 
 // ─────────── 驱动进贡阶段 ───────────
-function driveTribute(state) {
+function driveTribute(state, S) {
   const ts = state.tributeState;
   if (!ts || ts.phase === 'completed') return;
 
-  // 进贡
   for (const fromSeat of ts.fromSeats) {
     if (ts.tributeCards[fromSeat]) continue;
     const card = pickTributeCard(state.hands[fromSeat], state.currentLevel);
@@ -117,12 +121,10 @@ function driveTribute(state) {
     const r = handleTribute(state, fromSeat, card.id);
     if (r.error) { S.errors++; continue; }
     S.tributeTotal++;
-    // 验证是否是最大非2非王牌
     const maxCard = pickTributeCard(state.hands[fromSeat].concat([card]), state.currentLevel);
     if (!maxCard || card.rank >= maxCard.rank) S.tributeMaxCard++;
   }
 
-  // 还贡
   if (ts.phase !== 'waiting_return') return;
   for (const toSeat of ts.toSeats) {
     if (ts.returnCards[toSeat]) continue;
@@ -136,7 +138,7 @@ function driveTribute(state) {
 }
 
 // ─────────── 驱动出牌（一局） ───────────
-function drivePlay(state) {
+function drivePlay(state, S, profile) {
   const MAX_MOVES = 400;
   let moves = 0;
 
@@ -153,11 +155,9 @@ function drivePlay(state) {
     const rCount = state.hands[(seat + 1) % 4].length;
     const opponentNearWin = (lCount > 0 && lCount <= 5) || (rCount > 0 && rCount <= 5);
 
-    // ─ 合规统计条件 ─
     const shouldYield = !isFreePlay && isTeammateWinning && hand.length > 5 && !opponentNearWin;
     const canBomb = !isFreePlay && opponentNearWin && hasBombInHand(hand);
 
-    // ─ gameState for NPC ─
     const gameState = {
       lastPlay: isFreePlay ? null : state.lastPlay,
       lastPlaySeat: state.lastPlaySeat,
@@ -169,11 +169,9 @@ function drivePlay(state) {
       roundHistory: state.roundHistory,
     };
 
-    // ─ 决策 ─
-    const { play } = getPracticeNPCDecision(hand, gameState, LEVEL, seat);
+    const { play } = getPracticeNPCDecision(hand, gameState, LEVEL, seat, profile);
     S.totalDecisions++;
 
-    // 让路合规统计
     if (shouldYield) {
       S.shouldYield++;
       if (play === null) {
@@ -185,26 +183,22 @@ function drivePlay(state) {
       }
     }
 
-    // 炸弹拦截统计（排除队友领先时不该炸的情况）
     const canBombReal = canBomb && !isTeammateWinning;
     if (canBombReal) {
       S.bombOpportunities++;
       if (play && looksLikeBomb(play)) S.bombsUsed++;
     }
 
-    // ─ 执行决策 ─
     if (play === null) {
       S.totalPasses++;
       const r = pass(state, seat);
       if (r.error) {
-        // 自由出牌不能PASS，兜底出第一张
         const fr = playCards(state, seat, [hand[0].id]);
         if (fr.error) { S.errors++; break; }
       }
     } else {
       const r = playCards(state, seat, play.map(c => c.id));
       if (r.error) {
-        // 出牌不合法，兜底出第一张
         const fr = playCards(state, seat, [hand[0].id]);
         if (fr.error) { S.errors++; break; }
       }
@@ -213,12 +207,10 @@ function drivePlay(state) {
 
   if (moves >= MAX_MOVES) S.errors++;
 
-  // 收集本局统计
   S.totalTricks += state.roundHistory.length;
   S.totalBombs  += state.bombCount;
   S.roundsPlayed++;
 
-  // 胜负判断
   if (state.finishOrder.length >= 2) {
     const [f1, f2] = state.finishOrder;
     const t1 = [0, 2], t2 = [1, 3];
@@ -229,15 +221,13 @@ function drivePlay(state) {
   }
 }
 
-// ─────────── 运行单场完整游戏（直到 game_over）───────────
-function runOneGame() {
+// ─────────── 运行单场完整游戏 ───────────
+function runOneGame(S, profile) {
   const state = createGameState();
-
-  // 第一局直接开始
   startRound(state);
-  drivePlay(state);
+  drivePlay(state, S, profile);
 
-  const MAX_ROUNDS = 60; // 单场最多 60 局防死循环
+  const MAX_ROUNDS = 60;
   let roundsThisGame = 1;
 
   while (state.phase !== 'game_over' && roundsThisGame < MAX_ROUNDS) {
@@ -245,7 +235,7 @@ function runOneGame() {
       const tributeInfo = state.tributeNextRound;
       state.tributeNextRound = null;
       startTribute(state, tributeInfo);
-      driveTribute(state);
+      driveTribute(state, S);
       state.finishOrder  = [];
       state.roundHistory = [];
       state.bombCount    = 0;
@@ -254,72 +244,129 @@ function runOneGame() {
     }
 
     if (state.phase !== 'playing') { S.errors++; break; }
-    drivePlay(state);
+    drivePlay(state, S, profile);
     roundsThisGame++;
   }
 }
 
-// ─────────── 主循环 ───────────
-function main() {
-  const t0 = Date.now();
-
-  for (let g = 0; g < N_GAMES; g++) {
-    runOneGame();
+// ─────────── 运行 N 场并返回统计 ───────────
+function runNGames(n, profile) {
+  const S = makeStats();
+  for (let g = 0; g < n; g++) {
+    runOneGame(S, profile);
   }
+  return S;
+}
 
-  const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
+// ─────────── 统计 → 指标 ───────────
+function calcMetrics(S) {
+  const avgTricks = S.roundsPlayed > 0 ? S.totalTricks / S.roundsPlayed : 0;
+  const yieldRate = S.shouldYield > 0 ? S.didYield / S.shouldYield * 100 : null;
+  const blockRate = S.bombOpportunities > 0 ? S.bombsUsed / S.bombOpportunities * 100 : null;
+  const passRate  = S.totalDecisions > 0 ? S.totalPasses / S.totalDecisions * 100 : 0;
+  return { avgTricks, yieldRate, blockRate, passRate };
+}
 
-  // ─────────── 报告 ───────────
+// ─────────── 普通模式报告 ───────────
+function printReport(S, n, label, elapsed) {
+  const { avgTricks, yieldRate, blockRate, passRate } = calcMetrics(S);
   const total  = S.team1Wins + S.team2Wins;
   const t1Rate = total > 0 ? (S.team1Wins / total * 100).toFixed(1) : '?';
   const t2Rate = total > 0 ? (S.team2Wins / total * 100).toFixed(1) : '?';
-  const passRate = S.totalDecisions > 0
-    ? (S.totalPasses / S.totalDecisions * 100).toFixed(1) : '?';
-  const yieldRate = S.shouldYield > 0
-    ? (S.didYield / S.shouldYield * 100).toFixed(1) : 'N/A';
-  const blockRate = S.bombOpportunities > 0
-    ? (S.bombsUsed / S.bombOpportunities * 100).toFixed(1) : 'N/A';
-  const avgTricks = S.roundsPlayed > 0
-    ? (S.totalTricks / S.roundsPlayed).toFixed(1) : '?';
-  const avgBombs  = S.roundsPlayed > 0
-    ? (S.totalBombs / S.roundsPlayed).toFixed(2) : '?';
-  const tributeRate = S.tributeTotal > 0
-    ? (S.tributeMaxCard / S.tributeTotal * 100).toFixed(0) : 'N/A';
 
-  const fy  = S.shouldYield > 0  ? parseFloat(yieldRate) : 100;
-  const fb  = S.bombOpportunities > 0 ? parseFloat(blockRate) : 100;
-
-  const bar = '='.repeat(52);
+  const bar = '='.repeat(54);
   console.log(`\n${bar}`);
-  console.log(` 掼蛋 NPC 自战结果  (${N_GAMES}场 / ${S.roundsPlayed}局 · ${LEVEL} · ${elapsed}s)`);
+  console.log(` 掼蛋 NPC 自战结果  (${n}场 / ${S.roundsPlayed}局 · ${label} · ${elapsed}s)`);
   console.log(bar);
   console.log(` 胜率   Team 0/2 = ${t1Rate}%   Team 1/3 = ${t2Rate}%`);
-  console.log(` 平均手数/局: ${avgTricks}   平均炸弹/局: ${avgBombs}`);
-  console.log(` PASS率: ${passRate}%   总决策: ${S.totalDecisions}`);
+  console.log(` 平均手数/局: ${avgTricks.toFixed(1)}   平均炸弹/局: ${(S.totalBombs/S.roundsPlayed).toFixed(2)}`);
+  console.log(` PASS率: ${passRate.toFixed(1)}%   总决策: ${S.totalDecisions}`);
   console.log('');
   console.log(' 行为指标:');
 
-  const yieldMark  = fy >= 85 ? '✅' : fy >= 70 ? '⚠ ' : '❌';
-  const blockMark  = fb >= 60 ? '✅' : fb >= 40 ? '⚠ ' : '❌';
-  const tributeMark = S.tributeTotal > 0 && parseInt(tributeRate) >= 95 ? '✅' : '⚠ ';
+  const yr = yieldRate !== null ? yieldRate.toFixed(1) + '%' : 'N/A';
+  const br = blockRate !== null ? blockRate.toFixed(1) + '%' : 'N/A';
+  const ym = yieldRate === null ? '' : yieldRate >= 85 ? '✅' : yieldRate >= 70 ? '⚠ ' : '❌';
+  const bm = blockRate === null ? '' : blockRate >= 60 ? '✅' : blockRate >= 40 ? '⚠ ' : '❌';
 
-  console.log(`   队友领先让路率:  ${String(yieldRate + '%').padStart(7)}  ${yieldMark}  (目标>85%, 样本${S.shouldYield})`);
-  console.log(`   对手快完炸弹拦:  ${String(blockRate + '%').padStart(7)}  ${blockMark}  (目标>60%, 样本${S.bombOpportunities})`);
-  if (S.tributeTotal > 0) {
-    console.log(`   进贡最大牌率:    ${String(tributeRate + '%').padStart(7)}  ${tributeMark}  (样本${S.tributeTotal})`);
-  }
+  console.log(`   队友领先让路率:  ${String(yr).padStart(7)}  ${ym}  (目标>85%, 样本${S.shouldYield})`);
+  console.log(`   对手快完炸弹拦:  ${String(br).padStart(7)}  ${bm}  (目标>60%, 样本${S.bombOpportunities})`);
 
   if (S.anomalies.length > 0) {
     const show = S.anomalies.slice(0, 5);
     console.log(`\n 异常行为（共${S.anomalies.length}条，前5条）:`);
     show.forEach(a => console.log(`   ⚠  ${a}`));
   }
-
-  if (S.errors > 0) {
-    console.log(`\n ❌ 引擎/逻辑错误: ${S.errors} 次`);
-  }
-
+  if (S.errors > 0) console.log(`\n ❌ 引擎/逻辑错误: ${S.errors} 次`);
   console.log('');
+}
+
+// ─────────── 消融测试报告 ───────────
+function printAblationReport(baseline, ablationResults, n) {
+  const bm = calcMetrics(baseline);
+  const bar = '='.repeat(60);
+
+  console.log(`\n${bar}`);
+  console.log(` 掼蛋 NPC 技能消融测试  (每组 ${n} 场)`);
+  console.log(bar);
+  console.log(` 基准 (全技能 expert):`);
+  console.log(`   平均手数=${bm.avgTricks.toFixed(1)}  让路率=${bm.yieldRate !== null ? bm.yieldRate.toFixed(1)+'%' : 'N/A'}  炸弹拦=${bm.blockRate !== null ? bm.blockRate.toFixed(1)+'%' : 'N/A'}`);
+  console.log('');
+  console.log(' 各技能贡献（去掉后 vs 基准）:');
+  console.log(' ' + '-'.repeat(58));
+
+  const skillNames = {
+    [SKILLS.R1]: 'R1 队友让路     ',
+    [SKILLS.R2]: 'R2 炸弹时机     ',
+    [SKILLS.R3]: 'R3 拆牌优化     ',
+    [SKILLS.R4]: 'R4 记牌推断     ',
+    [SKILLS.R5]: 'R5 级牌保护     ',
+    [SKILLS.R6]: 'R6 对手推断     ',
+    [SKILLS.R7]: 'R7 信号传递     ',
+    [SKILLS.R8]: 'R8 残局解算     ',
+    [SKILLS.R9]: 'R9 领牌评分     ',
+  };
+
+  for (const { skill, S } of ablationResults) {
+    const m = calcMetrics(S);
+    const dTricks = m.avgTricks - bm.avgTricks;
+    const sign = dTricks >= 0 ? '+' : '';
+    const impact = Math.abs(dTricks) >= 3 ? '⬆ 显著' : Math.abs(dTricks) >= 1 ? '△ 有效' : '~ 微弱';
+    const yr = m.yieldRate !== null ? m.yieldRate.toFixed(1) + '%' : 'N/A';
+    console.log(
+      ` 去掉 ${skillNames[skill] ?? skill.padEnd(16)} ` +
+      `手数=${m.avgTricks.toFixed(1)} (Δ${sign}${dTricks.toFixed(1)})  ` +
+      `让路=${yr}  ${impact}`
+    );
+  }
+  console.log(' ' + '-'.repeat(58));
+  console.log('');
+}
+
+// ─────────── 主循环 ───────────
+function main() {
+  const t0 = Date.now();
+
+  if (ABLATION_MODE) {
+    console.log(`\n运行消融测试，每组 ${N_GAMES} 场...`);
+    const baseline = runNGames(N_GAMES, NPC_PRESETS.expert);
+
+    const ablationResults = [];
+    for (const [id, skill] of Object.entries(SKILLS)) {
+      const withoutSkill = new Set([...NPC_PRESETS.expert].filter(s => s !== skill));
+      const S = runNGames(N_GAMES, withoutSkill);
+      ablationResults.push({ skill, S });
+    }
+
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
+    console.log(`(用时 ${elapsed}s)`);
+    printAblationReport(baseline, ablationResults, N_GAMES);
+  } else {
+    const S = runNGames(N_GAMES, PROFILE);
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
+    const label = `${levelStr || 'expert'}`;
+    printReport(S, N_GAMES, label, elapsed);
+  }
 }
 
 main();

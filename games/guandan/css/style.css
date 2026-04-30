@@ -927,3 +927,193 @@ html, body {
   margin-bottom: 8px;
   font-weight: 600;
 }
+
+/* ====== 单人/多人模式选择 ====== */
+.mode-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.mode-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 8px;
+  background: rgba(0,0,0,0.25);
+  border: 2px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  font-family: var(--font-sans);
+  text-transform: none;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+.mode-btn:hover { filter: brightness(1.15); border-color: rgba(255,255,255,0.25); }
+.mode-btn.active {
+  background: rgba(252,194,0,0.12);
+  border-color: var(--accent-gold);
+  color: var(--text-primary);
+  box-shadow: 0 0 12px rgba(252,194,0,0.2);
+}
+.mode-icon { font-size: 26px; line-height: 1; }
+.mode-label { font-size: 15px; font-weight: 700; }
+.mode-desc { font-size: 11px; color: var(--text-muted); }
+
+/* ====== 单人 NPC 配置面板 ====== */
+.mode-panel {
+  width: 100%;
+}
+
+.config-heading {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.npc-config-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.npc-config-slot {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  transition: border-color 0.2s;
+}
+
+.slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.slot-role {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+.slot-team-a {
+  background: rgba(231,76,60,0.2);
+  color: #ff7f7f;
+  border: 1px solid rgba(231,76,60,0.35);
+}
+.slot-team-b {
+  background: rgba(52,152,219,0.2);
+  color: #7ecfff;
+  border: 1px solid rgba(52,152,219,0.35);
+}
+
+.slot-profile-name {
+  font-size: 12px;
+  color: var(--accent-gold);
+  font-weight: 700;
+}
+
+/* 技能档位选择 */
+.profile-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.profile-tab {
+  flex: 1;
+  padding: 8px 4px 7px;
+  background: rgba(0,0,0,0.3);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.15s;
+  line-height: 1.4;
+  text-transform: none;
+  letter-spacing: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.profile-tab:hover { filter: brightness(1.2); border-color: rgba(255,255,255,0.2); }
+.profile-tab:active { transform: scale(0.93); }
+.profile-tab.active {
+  background: linear-gradient(180deg, rgba(252,194,0,0.25) 0%, rgba(252,194,0,0.1) 100%);
+  border-color: var(--accent-gold);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(252,194,0,0.2);
+}
+
+/* 定制技能面板 */
+.skill-panel {
+  margin-top: 10px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+
+.skill-panel-title {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.skill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 14px;
+}
+
+.skill-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  cursor: pointer;
+}
+.skill-item input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  accent-color: var(--accent-gold);
+  cursor: pointer;
+}
+.skill-item-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  display: block;
+}
+.skill-item-desc {
+  font-size: 10px;
+  color: var(--text-muted);
+  display: block;
+  line-height: 1.3;
+}
+
+/* 多人模式面板里的按钮间距 */
+#multi-panel .lobby-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}

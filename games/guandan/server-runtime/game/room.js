@@ -48,7 +48,7 @@ class Room {
   /**
    * 添加机器人 (NPC)
    */
-  addNPC(level = 'normal', seatIndex = -1) {
+  addNPC(level = 'normal', seatIndex = -1, skillProfile = null) {
     let targetSeat = seatIndex;
     if (targetSeat === -1 || targetSeat < 0 || targetSeat >= 4) {
       targetSeat = this.players.findIndex(p => p === null);
@@ -59,15 +59,27 @@ class Room {
     }
 
     const npcId = `npc_${Math.random().toString(36).substr(2, 9)}`;
-    const names = { noob: '小白机器人', normal: '普通机器人', expert: '专家机器人' };
-    
+    // 根据 skillProfile 生成昵称：传了 skillProfile 数组 → 显示技能数，否则按 level
+    let nickname;
+    if (skillProfile !== null && Array.isArray(skillProfile)) {
+      const n = skillProfile.length;
+      const total = 9;
+      if (n === 0)     nickname = '小白机器人';
+      else if (n >= total) nickname = '专家机器人';
+      else nickname = `定制机器人`;
+    } else {
+      const names = { noob: '小白机器人', normal: '普通机器人', expert: '专家机器人' };
+      nickname = names[level] || '机器人';
+    }
+
     this.players[targetSeat] = {
       id: npcId,
-      nickname: names[level] || '机器人',
+      nickname,
       ready: true, // 机器人自动准备
       connected: true,
       isNPC: true,
-      level: level
+      level: level,
+      skillProfile: skillProfile, // null = 按 level 默认；Array = 指定技能列表
     };
 
     this.lastActivityAt = Date.now();

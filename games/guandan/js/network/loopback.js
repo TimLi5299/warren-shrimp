@@ -50,7 +50,7 @@ class LoopbackSocket {
   playCards(cardIds) { this.send({ type: 'PLAY_CARDS', cardIds }); }
   pass() { this.send({ type: 'PASS' }); }
   hint() { this.send({ type: 'HINT' }); }
-  addNPC(level, seat) { this.send({ type: 'ADD_NPC', level, seat }); }
+  addNPC(level, seat, skillProfile) { this.send({ type: 'ADD_NPC', level, seat, skillProfile: skillProfile ?? null }); }
   removeNPC(seat) { this.send({ type: 'REMOVE_NPC', seat }); }
   nextRound() { this.send({ type: 'NEXT_ROUND' }); }
 }

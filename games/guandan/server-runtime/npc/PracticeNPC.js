@@ -20,6 +20,16 @@ import { isWildCard, classifyHand, isBomb as isBombType, HandType } from '../gam
 import { getNormalizedRank } from '../game/deck.js';
 import { createDecisionLog, inferPrimaryReason } from './NPCDecisionLog.js';
 import { getMemory } from '../game/llm_ai.js';
+import { SKILLS, profileFromLevel } from './SkillProfiles.js';
+
+/** 工具：判断 profile 是否包含某项技能 */
+const has = (profile, skill) => profile.has(skill);
+
+/** 判断 profile 是否包含任意一项"高级领牌"技能（R5-R9） */
+function hasAnyAdvancedLead(profile) {
+  return has(profile, SKILLS.R5) || has(profile, SKILLS.R6) ||
+         has(profile, SKILLS.R7) || has(profile, SKILLS.R8) || has(profile, SKILLS.R9);
+}
 
 export const AILevel = {
   NOOB: 'noob',
@@ -443,12 +453,15 @@ function scoreLeadPlay(play, hand, gameState, memory, decomp, currentLevel) {
 /* ============================================================
  * 主决策入口
  * ========================================================== */
-export function getAIDecision(hand, gameState, level = AILevel.NORMAL) {
+export function getAIDecision(hand, gameState, level = AILevel.NORMAL, skillProfile = null) {
   const { lastPlay, currentLevel, roomId, seat } = gameState;
   const hints = findPlayableHands(hand, lastPlay, currentLevel);
   if (hints.length === 0) return null;
 
   const mustPlay = !lastPlay;
+
+  // 若未显式传入 skillProfile，则从 level 推导（向后兼容）
+  const profile = skillProfile ?? profileFromLevel(level);
 
   let memory = null;
   if (roomId !== undefined && (level === AILevel.NORMAL || level === AILevel.EXPERT)) {
@@ -457,11 +470,10 @@ export function getAIDecision(hand, gameState, level = AILevel.NORMAL) {
   const ctx = { ...gameState, _memory: memory, _decomp: decomposeHand(hand, currentLevel) };
 
   let decision;
-  switch (level) {
-    case AILevel.NOOB:    decision = decideNoob(hints, mustPlay); break;
-    case AILevel.EXPERT:  decision = decideStrategic(hints, hand, ctx, mustPlay, true); break;
-    case AILevel.NORMAL:
-    default:              decision = decideStrategic(hints, hand, ctx, mustPlay, false); break;
+  if (level === AILevel.NOOB && profile.size === 0) {
+    decision = decideNoob(hints, mustPlay);
+  } else {
+    decision = decideStrategic(hints, hand, ctx, mustPlay, profile);
   }
   if (mustPlay && !decision) return hints[0];
   return decision;
@@ -478,7 +490,7 @@ function decideNoob(hints, mustPlay = false) {
 /* ============================================================
  * 核心：策略型决策（NORMAL 与 EXPERT 共用）
  * ========================================================== */
-function decideStrategic(hints, hand, gameState, mustPlay, full) {
+function decideStrategic(hints, hand, gameState, mustPlay, profile) {
   const {
     lastPlay, currentLevel, seat,
     playersHandCounts = [],
@@ -494,11 +506,12 @@ function decideStrategic(hints, hand, gameState, mustPlay, full) {
   const rightCount = playersHandCounts[rightSeat] || 27;
   const opponentNearWin = (leftCount > 0 && leftCount <= 5) || (rightCount > 0 && rightCount <= 5);
 
-  // ③ 配合：让出主动权
-  if (full && shouldYieldToTeammate(gameState, hand, currentLevel) && !mustPlay) {
+  // ③ R1 配合：让出主动权（全量）
+  if (has(profile, SKILLS.R1) && shouldYieldToTeammate(gameState, hand, currentLevel) && !mustPlay) {
     return null;
   }
-  if (!full && gameState.isTeammateWinning && !mustPlay && Math.random() < 0.5) return null;
+  // R1 缺失时：退化为概率让路
+  if (!has(profile, SKILLS.R1) && gameState.isTeammateWinning && !mustPlay && Math.random() < 0.5) return null;
 
   const sorted = [...hints].sort((a, b) =>
     evalCardsCost(a, currentLevel) - evalCardsCost(b, currentLevel)
@@ -508,11 +521,12 @@ function decideStrategic(hints, hand, gameState, mustPlay, full) {
 
   // ============= 领牌 =============
   if (!lastPlay) {
-    return chooseLeading(normalPlays, bombs, hand, myDecomp, gameState, full, opponentNearWin, memory);
+    return chooseLeading(normalPlays, bombs, hand, myDecomp, gameState, profile, opponentNearWin, memory);
   }
 
   // ============= 跟牌 =============
-  const teammateLeading = full && gameState.isTeammateWinning;
+  // R1：精确判断队友是否在领牌（没有 R1 时不认为队友领牌，不会主动让）
+  const teammateLeading = has(profile, SKILLS.R1) && gameState.isTeammateWinning;
 
   // 生死关头：对手快赢
   if (opponentNearWin && !teammateLeading) {
@@ -525,18 +539,17 @@ function decideStrategic(hints, hand, gameState, mustPlay, full) {
   if (normalPlays.length > 0) {
     let candidate = normalPlays[0];
 
-    // ⑧ 对手推断（增强版）：桌面牌无敌 → 更主动地 PASS
-    if (full && memory && lastPlay && !opponentNearWin && !teammateLeading) {
+    // ⑧ R6 对手推断（增强版）：桌面牌无敌 → 更主动地 PASS
+    if (has(profile, SKILLS.R6) && memory && lastPlay && !opponentNearWin && !teammateLeading) {
       if (isLastPlayUnbeatable(lastPlay, memory, currentLevel)) {
-        // 桌面牌没人能打过，跟上只是浪费
         const cost = evalCardsCost(candidate, currentLevel);
         const avgCost = cost / candidate.length;
-        if (cost >= 50 || avgCost >= 15) return null; // 成本稍高就省下来
+        if (cost >= 50 || avgCost >= 15) return null;
       }
     }
 
-    // ② 记牌（旧逻辑保留）：lastPlay 是实际最大
-    if (full && memory && lastPlay && !opponentNearWin) {
+    // ② R4 记牌推断：lastPlay 是实际最大
+    if (has(profile, SKILLS.R4) && memory && lastPlay && !opponentNearWin) {
       const lastKind = inferKind(lastPlay);
       if (isEffectivelyMax(lastPlay.mainRank, lastKind, memory, currentLevel)) {
         const cost = evalCardsCost(candidate, currentLevel);
@@ -544,14 +557,13 @@ function decideStrategic(hints, hand, gameState, mustPlay, full) {
       }
     }
 
-    // ⑦ 万能牌保护：不用万能牌跟对手的低 rank 牌
-    if (full && !opponentNearWin && hand.length > 5) {
+    // ⑦ R5 万能牌 / 级牌保护
+    if (has(profile, SKILLS.R5) && !opponentNearWin && hand.length > 5) {
       if (hasWildCard(candidate, currentLevel) && lastPlay && lastPlay.mainRank < 11) {
         const nonWild = normalPlays.filter(p => !hasWildCard(p, currentLevel));
         if (nonWild.length > 0) return nonWild[0];
-        return null; // 没有不含万能牌的选项 → PASS
+        return null;
       }
-      // 级牌保护：不用级牌跟很小的牌（rank < 8）
       if (hasLevelCard(candidate, currentLevel) && lastPlay && lastPlay.mainRank < 8) {
         const nonLevel = normalPlays.filter(p => !hasLevelCard(p, currentLevel));
         if (nonLevel.length > 0) {
@@ -562,8 +574,8 @@ function decideStrategic(hints, hand, gameState, mustPlay, full) {
       }
     }
 
-    // ① 拆牌质量：尝试找破坏性更低的替代
-    if (full && hand.length > 8) {
+    // ① R3 拆牌质量：尝试找破坏性更低的替代
+    if (has(profile, SKILLS.R3) && hand.length > 8) {
       const breakLoss = breakageLoss(hand, candidate, currentLevel, myDecomp);
       for (const alt of normalPlays.slice(0, 5)) {
         const altLoss = breakageLoss(hand, alt, currentLevel, myDecomp);
@@ -582,9 +594,10 @@ function decideStrategic(hints, hand, gameState, mustPlay, full) {
     return candidate;
   }
 
-  // ④ 炸弹时机：队友领牌时永远不动炸弹
+  // ④ R2 炸弹时机：队友领牌时永远不动炸弹
   if (bombs.length > 0 && !teammateLeading && shouldUseBomb(gameState, hand, myDecomp, opponentNearWin, true)) {
-    return bombs[0];
+    // R2 缺失时：随机用炸弹（退化行为）
+    if (has(profile, SKILLS.R2) || Math.random() < 0.2) return bombs[0];
   }
   return null;
 }
@@ -592,20 +605,20 @@ function decideStrategic(hints, hand, gameState, mustPlay, full) {
 /* ============================================================
  * ⑤⑥⑦⑨ 领牌策略（全面重写）
  * ========================================================== */
-function chooseLeading(normalPlays, bombs, hand, decomp, gameState, full, opponentNearWin, memory) {
+function chooseLeading(normalPlays, bombs, hand, decomp, gameState, profile, opponentNearWin, memory) {
   const { currentLevel, seat, playersHandCounts = [] } = gameState;
   const teammateSeat = (seat + 2) % 4;
   const teammateCount = playersHandCounts[teammateSeat] || 27;
   const rightCount = playersHandCounts[(seat + 1) % 4] || 27;
   const leftCount  = playersHandCounts[(seat + 3) % 4] || 27;
 
-  // ④ 炸弹结束：手牌 ≤6 且剩1手就是炸弹
-  if (full && hand.length <= 6 && decomp.tricksNeeded <= 1 && bombs.length > 0) {
+  // ④ R2 炸弹结束：手牌 ≤6 且剩1手就是炸弹
+  if (has(profile, SKILLS.R2) && hand.length <= 6 && decomp.tricksNeeded <= 1 && bombs.length > 0) {
     return bombs[0];
   }
 
-  // 队友只剩 ≤5 张：清场护送，出最难跟的牌压住对手
-  if (full && teammateCount > 0 && teammateCount <= 5 && normalPlays.length > 0) {
+  // ③ R1 队友只剩 ≤5 张：清场护送，出最难跟的牌压住对手
+  if (has(profile, SKILLS.R1) && teammateCount > 0 && teammateCount <= 5 && normalPlays.length > 0) {
     const difficult = [...normalPlays].sort((a, b) => {
       if (b.length !== a.length) return b.length - a.length;
       return Math.max(...b.map(c => c.rank)) - Math.max(...a.map(c => c.rank));
@@ -615,51 +628,70 @@ function chooseLeading(normalPlays, bombs, hand, decomp, gameState, full, oppone
 
   // 对手快赢：出"无敌牌"或"最大张数"
   if (opponentNearWin && normalPlays.length > 0) {
-    if (full && memory) {
+    // R6：记牌推断无敌牌
+    if (has(profile, SKILLS.R6) && memory) {
       const unbeatable = normalPlays.filter(p => isMyPlayUnbeatable(p, memory, currentLevel));
       if (unbeatable.length > 0) return unbeatable.sort((a, b) => b.length - a.length)[0];
     }
-    return normalPlays[normalPlays.length - 1]; // 最大成本的牌
+    return normalPlays[normalPlays.length - 1];
   }
 
-  if (!full) {
-    // NORMAL 级别：简单按成本出最低的
+  // 没有任何高级领牌技能：退化为简单按成本出最低的
+  if (!hasAnyAdvancedLead(profile)) {
     return normalPlays[0] || bombs[0];
   }
 
-  // ⑦ 级牌/万能牌保护：过滤不必要使用级牌的选项
-  const filteredPlays = filterLevelCardAbuse(normalPlays, currentLevel, 'lead');
+  // ⑦ R5 级牌/万能牌保护：过滤不必要使用级牌的选项
+  const filteredPlays = has(profile, SKILLS.R5)
+    ? filterLevelCardAbuse(normalPlays, currentLevel, 'lead')
+    : normalPlays;
 
-  // ⑥ 残局解算器优先
-  const endgamePlay = endgameSolve(hand, filteredPlays, gameState, currentLevel, memory);
-  if (endgamePlay) return endgamePlay;
+  // ⑥ R8 残局解算器优先
+  if (has(profile, SKILLS.R8)) {
+    const endgamePlay = endgameSolve(hand, filteredPlays, gameState, currentLevel, memory);
+    if (endgamePlay) return endgamePlay;
+  }
 
-  // ⑤ 出牌评分 + ⑨ 信号编码
+  // ⑤⑨ R9 + R7 出牌评分 + 信号编码
   if (filteredPlays.length > 0) {
-    const signal = computeMySignal(hand, decomp, currentLevel);
+    // R7 信号：弱势信号 → 出最小单张告知队友"我很弱"
+    if (has(profile, SKILLS.R7)) {
+      const signal = computeMySignal(hand, decomp, currentLevel);
+      if (signal === Signal.WEAK) {
+        const singles = filteredPlays.filter(p => p.length === 1);
+        if (singles.length > 0) {
+          return singles.sort((a, b) => a[0].rank - b[0].rank)[0];
+        }
+      }
 
-    // ⑨ 弱势信号：出最小单张，告诉队友"我很弱，请接管"
-    if (signal === Signal.WEAK) {
-      const singles = filteredPlays.filter(p => p.length === 1);
-      if (singles.length > 0) {
-        return singles.sort((a, b) => a[0].rank - b[0].rank)[0];
+      if (has(profile, SKILLS.R9)) {
+        // R9 评分排序
+        const scored = filteredPlays.map(p => ({
+          play: p,
+          score: scoreLeadPlay(p, hand, gameState, memory, decomp, currentLevel)
+        })).sort((a, b) => b.score - a.score);
+
+        // R7 强势信号：前3中有复杂牌型优先
+        if (signal === Signal.STRONG) {
+          const top3 = scored.slice(0, 3);
+          const complex = top3.find(s => s.play.length >= 4);
+          if (complex) return complex.play;
+        }
+        return scored[0].play;
       }
     }
 
-    // ⑤ 评分排序，选最优
-    const scored = filteredPlays.map(p => ({
-      play: p,
-      score: scoreLeadPlay(p, hand, gameState, memory, decomp, currentLevel)
-    })).sort((a, b) => b.score - a.score);
-
-    // ⑨ 强势信号：如果评分榜前3有复杂牌型（len≥4），优先选它
-    if (signal === Signal.STRONG) {
-      const top3 = scored.slice(0, 3);
-      const complex = top3.find(s => s.play.length >= 4);
-      if (complex) return complex.play;
+    // 只有 R9（无 R7）：纯评分排序
+    if (has(profile, SKILLS.R9)) {
+      const scored = filteredPlays.map(p => ({
+        play: p,
+        score: scoreLeadPlay(p, hand, gameState, memory, decomp, currentLevel)
+      })).sort((a, b) => b.score - a.score);
+      return scored[0].play;
     }
 
-    return scored[0].play;
+    // 只有 R5/R6/R8 但无评分：用过滤后的结果按成本最低
+    return filteredPlays[0];
   }
 
   // 兜底
@@ -728,8 +760,8 @@ function breakageLoss(hand, candidate, currentLevel, baseDecomp) {
 /* ============================================================
  * 包装：Practice NPC 决策
  * ========================================================== */
-export function getPracticeNPCDecision(hand, gameState, level = AILevel.NORMAL, seat = 0) {
-  const play = getAIDecision(hand, gameState, level);
+export function getPracticeNPCDecision(hand, gameState, level = AILevel.NORMAL, seat = 0, skillProfile = null) {
+  const play = getAIDecision(hand, gameState, level, skillProfile);
   const action = play ? 'PLAY' : 'PASS';
   const primaryReason = inferPrimaryReason(action, play, gameState, seat);
   const decisionLog = createDecisionLog(action, play, primaryReason);

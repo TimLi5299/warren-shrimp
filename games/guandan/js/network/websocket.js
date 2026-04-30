@@ -95,8 +95,8 @@ class GameSocket {
     this.send({ type: 'HINT' });
   }
 
-  addNPC(level, seat) {
-    this.send({ type: 'ADD_NPC', level, seat });
+  addNPC(level, seat, skillProfile) {
+    this.send({ type: 'ADD_NPC', level, seat, skillProfile: skillProfile ?? null });
   }
 
   removeNPC(seat) {
