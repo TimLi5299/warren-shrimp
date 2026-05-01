@@ -27,8 +27,9 @@ const has = (profile, skill) => profile.has(skill);
 
 /** 判断 profile 是否包含任意一项"高级领牌"技能（R5-R9） */
 function hasAnyAdvancedLead(profile) {
-  return has(profile, SKILLS.R5) || has(profile, SKILLS.R6) ||
-         has(profile, SKILLS.R7) || has(profile, SKILLS.R8) || has(profile, SKILLS.R9);
+  return has(profile, SKILLS.R5)  || has(profile, SKILLS.R6) ||
+         has(profile, SKILLS.R7)  || has(profile, SKILLS.R8) || has(profile, SKILLS.R9) ||
+         has(profile, SKILLS.R10) || has(profile, SKILLS.R13);
 }
 
 export const AILevel = {
@@ -229,7 +230,7 @@ function isEffectivelyMax(rank, kind, memory, currentLevel) {
  * ========================================================== */
 
 /** 判断"我们的出牌"是否无人能打过（基于记牌推断） */
-function isMyPlayUnbeatable(play, memory, currentLevel) {
+function isMyPlayUnbeatable(play, memory, currentLevel, includeSequences = false) {
   if (!memory || !play || play.length === 0) return false;
   // 炸弹/同花顺：简化为"当前最强"（不考虑更大炸弹）
   if (looksLikeBomb(play)) return true;
@@ -237,17 +238,55 @@ function isMyPlayUnbeatable(play, memory, currentLevel) {
   const ranks = play.map(c => c.rank);
   const maxRank = Math.max(...ranks);
   const len = play.length;
-  // 只对简单牌型做推断（单/对/三），复杂牌型略过
+  // 单/对/三：检查是否还有更高同型牌
   const needed = len === 1 ? 1 : len === 2 ? 2 : len === 3 ? 3 : 0;
-  if (needed === 0) return false;
-
-  const totalOf = (r) => (r === 15 || r === 16) ? 4 : 8;
-  for (let r = maxRank + 1; r <= 16; r++) {
-    const played = memory.playedCount[r] || 0;
-    const remaining = Math.max(0, totalOf(r) - played);
-    if (remaining >= needed) return false; // 还有人可能跟上
+  if (needed > 0) {
+    const totalOf = (r) => (r === 15 || r === 16) ? 4 : 8;
+    for (let r = maxRank + 1; r <= 16; r++) {
+      const played = memory.playedCount[r] || 0;
+      const remaining = Math.max(0, totalOf(r) - played);
+      if (remaining >= needed) return false;
+    }
+    return true;
   }
-  return true; // 没有更高 rank 的同型牌了
+
+  // R10 增强：顺子序列无敌推断
+  if (includeSequences) return isSequenceUnbeatable(play, memory, currentLevel);
+  return false;
+}
+
+/**
+ * R10 增强推断：纯顺子（无万能牌）是否已是场上最高、无人能跟
+ * 思路：遍历所有可能"比我高"的同长度顺子，若每条都因某 rank 无牌而不可能，则我的顺子无敌。
+ */
+function isSequenceUnbeatable(play, memory, currentLevel) {
+  if (!memory) return false;
+  // 只处理纯顺子（不含万能牌，避免复杂情况）
+  const wilds = play.filter(c => isWildCard(c, currentLevel));
+  if (wilds.length > 0) return false;
+
+  const sorted = [...play.map(c => c.rank)].sort((a, b) => a - b);
+  const len = sorted.length;
+  if (len < 5) return false; // 顺子至少 5 张
+
+  // 验证是否连续
+  for (let i = 1; i < len; i++) {
+    if (sorted[i] !== sorted[i - 1] + 1) return false;
+  }
+
+  const startRank = sorted[0];
+
+  // 枚举所有能打过我顺子的"更高起点"顺子
+  for (let s = startRank + 1; s <= 14 - len + 1; s++) {
+    let counterPossible = true;
+    for (let r = s; r < s + len; r++) {
+      const played = memory.playedCount[r] || 0;
+      const remaining = 8 - played; // 每个普通 rank 共 8 张
+      if (remaining <= 0) { counterPossible = false; break; }
+    }
+    if (counterPossible) return false; // 该反制顺子仍可能存在
+  }
+  return true; // 所有反制路径均已封死
 }
 
 /** 判断"桌面上对手出的牌"是否无人能打过（应该 PASS 省大牌） */
@@ -410,7 +449,7 @@ function endgameSolve(hand, hints, gameState, currentLevel, memory) {
  * ⑤ 领牌评分
  *   综合考虑牌型难度 + 记牌推断 + 分组损失 + 级牌浪费 + rank
  * ========================================================== */
-function scoreLeadPlay(play, hand, gameState, memory, decomp, currentLevel) {
+function scoreLeadPlay(play, hand, gameState, memory, decomp, currentLevel, fullUnbeatable = false, wildAware = false) {
   if (!play || play.length === 0) return -Infinity;
   let score = 0;
   const len = play.length;
@@ -423,8 +462,8 @@ function scoreLeadPlay(play, hand, gameState, memory, decomp, currentLevel) {
   else if (len === 2) score += 8;   // 对子
   // 单张 = 0
 
-  // 2. 记牌推断：无敌牌优先打出，早出早占便宜
-  if (memory && isMyPlayUnbeatable(play, memory, currentLevel)) {
+  // 2. 记牌推断：无敌牌优先打出，早出早占便宜（R10 开启时扩展至顺子推断）
+  if (memory && isMyPlayUnbeatable(play, memory, currentLevel, fullUnbeatable)) {
     score += 55;
   }
 
@@ -432,9 +471,10 @@ function scoreLeadPlay(play, hand, gameState, memory, decomp, currentLevel) {
   const breakLoss = breakageLoss(hand, play, currentLevel, decomp);
   score -= breakLoss * 18;
 
-  // 4. 万能牌扣分（永远不轻易出）
+  // 4. 万能牌扣分（R11启用时顺子中扣分较少，其他场合严格保护）
   const wildCount = play.filter(c => isWildCard(c, currentLevel)).length;
-  score -= wildCount * 90;
+  const penaltyPerWild = (len >= 5 && wildAware) ? 35 : 90;
+  score -= wildCount * penaltyPerWild;
 
   // 5. 普通级牌扣分（中等保护）
   const levelCount = play.filter(c => c.rank === currentLevel && !isWildCard(c, currentLevel)).length;
@@ -448,6 +488,115 @@ function scoreLeadPlay(play, hand, gameState, memory, decomp, currentLevel) {
   score += len * 4;
 
   return score;
+}
+
+/* ============================================================
+ * R11 万能牌感知拆牌
+ * ========================================================== */
+
+/**
+ * 尝试利用万能牌填补顺子缺口，返回比贪心分组更优的结果（手数更少），
+ * 或原始贪心结果（若无改善）。
+ */
+function decomposeHandWildAware(hand, currentLevel) {
+  const wilds = hand.filter(c => isWildCard(c, currentLevel));
+  if (wilds.length === 0) return decomposeHand(hand, currentLevel);
+
+  const baseline = decomposeHand(hand, currentLevel);
+  const improved = tryFormStraightWithWilds(hand, wilds, currentLevel);
+  if (improved && improved.tricksNeeded < baseline.tricksNeeded) return improved;
+  return baseline;
+}
+
+/**
+ * 在手牌中找最有潜力的 5 张顺子窗口，用万能牌填补缺口后形成顺子，
+ * 返回新的完整分组；若无有效改善则返回 null。
+ */
+function tryFormStraightWithWilds(hand, wilds, currentLevel) {
+  const wildCount = wilds.length;
+  const regulars  = hand.filter(c => !isWildCard(c, currentLevel));
+
+  // rank → 可用非万能牌列表
+  const rankMap = {};
+  for (const c of regulars) {
+    if (!rankMap[c.rank]) rankMap[c.rank] = [];
+    rankMap[c.rank].push(c);
+  }
+
+  // 找缺口最少（且 ≤ wildCount）的 5 连区间
+  let bestStart = -1, bestGaps = wildCount + 1;
+  for (let r = 2; r <= 10; r++) {
+    let gaps = 0, hasAny = false;
+    for (let i = 0; i < 5; i++) {
+      if ((rankMap[r + i] || []).length > 0) hasAny = true;
+      else gaps++;
+    }
+    if (hasAny && gaps > 0 && gaps <= wildCount && gaps < bestGaps) {
+      bestGaps = gaps; bestStart = r;
+    }
+  }
+  if (bestStart < 0) return null;
+
+  // 组成顺子：有牌用牌，缺口用万能
+  const straightCards = [];
+  let wildIdx = 0;
+  for (let i = 0; i < 5; i++) {
+    const rank = bestStart + i;
+    const pool = rankMap[rank] || [];
+    if (pool.length > 0) {
+      straightCards.push(pool.shift());
+    } else {
+      straightCards.push(wilds[wildIdx++]);
+    }
+  }
+
+  // 剩余牌 → 继续贪心分组
+  const usedIds = new Set(straightCards.map(c => c.id));
+  const remaining = hand.filter(c => !usedIds.has(c.id));
+  const restDecomp = decomposeHand(remaining, currentLevel);
+
+  return {
+    groups: [{ kind: 'straight', rank: bestStart, cards: straightCards }, ...restDecomp.groups],
+    tricksNeeded: 1 + restDecomp.tricksNeeded,
+    bombGroups: restDecomp.bombGroups,
+  };
+}
+
+/* ============================================================
+ * R10 形势感知领牌加成
+ * ========================================================== */
+
+/**
+ * 在 R9 基础评分之上叠加局势动态因子：
+ *   · 游戏阶段（终局时鼓励多张组合快速清场）
+ *   · 对手快赢（仅出"无敌牌"；弱牌则扣分）
+ *   · 护送队友（队友手牌少时，出多张复杂牌拦截对手跟牌）
+ */
+function adaptiveLeadBonus(play, hand, gameState, memory, currentLevel, opponentNearWin) {
+  let delta = 0;
+  const { playersHandCounts = [], seat } = gameState;
+  const teammateSeat  = (seat + 2) % 4;
+  const teammateCount = playersHandCounts[teammateSeat] || 27;
+
+  // 全场剩余牌数 → 游戏进度（0=开局，1=终局）
+  const totalLeft    = playersHandCounts.reduce((s, c) => s + (c || 0), 0) + hand.length;
+  const gameProgress = Math.max(0, 1 - totalLeft / 108);
+
+  // 终局加速：每多打一张额外得分
+  delta += gameProgress * play.length * 4;
+
+  // 对手快赢：无敌牌 +50，弱牌 -35
+  if (opponentNearWin) {
+    const unbeatable = memory && isMyPlayUnbeatable(play, memory, currentLevel);
+    delta += unbeatable ? 50 : -35;
+  }
+
+  // 护送队友：队友手牌 ≤8 时，多张牌型更难跟，加分
+  if (teammateCount > 0 && teammateCount <= 8) {
+    delta += (play.length - 1) * 6;
+  }
+
+  return delta;
 }
 
 /* ============================================================
@@ -467,7 +616,9 @@ export function getAIDecision(hand, gameState, level = AILevel.NORMAL, skillProf
   if (roomId !== undefined && (level === AILevel.NORMAL || level === AILevel.EXPERT)) {
     try { memory = getMemory(roomId, seat, level, currentLevel); } catch (e) { memory = null; }
   }
-  const ctx = { ...gameState, _memory: memory, _decomp: decomposeHand(hand, currentLevel) };
+  // R11：万能牌感知拆牌（比贪心更优；R11 未启用时退回标准分组）
+  const decompFn = has(profile, SKILLS.R11) ? decomposeHandWildAware : decomposeHand;
+  const ctx = { ...gameState, _memory: memory, _decomp: decompFn(hand, currentLevel) };
 
   let decision;
   if (level === AILevel.NOOB && profile.size === 0) {
@@ -586,6 +737,37 @@ function decideStrategic(hints, hand, gameState, mustPlay, profile) {
       }
     }
 
+    // R12 忍牌保型：R3 优化后仍高破坏且场面不紧急 → 不出（保留手型等好机会）
+    if (has(profile, SKILLS.R12) && !mustPlay && !opponentNearWin && !teammateLeading && hand.length > 8) {
+      if (lastPlay && lastPlay.mainRank < 10) {
+        const loss = breakageLoss(hand, candidate, currentLevel, myDecomp);
+        if (loss >= 2) return null;
+      }
+    }
+
+    // R14 顺子保护：跟牌出顺子/连对时，只要有破坏（loss≥1）且场面不紧急，选择不出
+    // （顺子比对子难重建，容忍度更低）
+    if (has(profile, SKILLS.R14) && !mustPlay && !opponentNearWin && !teammateLeading && hand.length > 8) {
+      if (candidate.length >= 5) {
+        const cType = classifyHand(candidate, currentLevel).type;
+        if (cType === HandType.STRAIGHT || cType === HandType.DOUBLE_STRAIGHT) {
+          const loss = breakageLoss(hand, candidate, currentLevel, myDecomp);
+          if (loss >= 1) return null;
+        }
+      }
+    }
+
+    // R15 三张保护：跟牌出三张会破坏三带二组合时，选择不出
+    if (has(profile, SKILLS.R15) && !mustPlay && !opponentNearWin && !teammateLeading && hand.length > 8) {
+      if (candidate.length === 3) {
+        const cType = classifyHand(candidate, currentLevel).type;
+        if (cType === HandType.TRIPLE) {
+          const loss = breakageLoss(hand, candidate, currentLevel, myDecomp);
+          if (loss >= 1) return null;
+        }
+      }
+    }
+
     const value = evalCardsCost(candidate, currentLevel);
     const avgVal = value / candidate.length;
     if (value >= 100 && !opponentNearWin && hand.length > 5) return null;
@@ -627,10 +809,12 @@ function chooseLeading(normalPlays, bombs, hand, decomp, gameState, profile, opp
   }
 
   // 对手快赢：出"无敌牌"或"最大张数"
+  // R10 在此路径下也启用扩展序列推断
+  const fullUnbeatable = has(profile, SKILLS.R10);
   if (opponentNearWin && normalPlays.length > 0) {
-    // R6：记牌推断无敌牌
-    if (has(profile, SKILLS.R6) && memory) {
-      const unbeatable = normalPlays.filter(p => isMyPlayUnbeatable(p, memory, currentLevel));
+    // R6 / R10：记牌推断无敌牌（R10 额外覆盖顺子）
+    if ((has(profile, SKILLS.R6) || fullUnbeatable) && memory) {
+      const unbeatable = normalPlays.filter(p => isMyPlayUnbeatable(p, memory, currentLevel, fullUnbeatable));
       if (unbeatable.length > 0) return unbeatable.sort((a, b) => b.length - a.length)[0];
     }
     return normalPlays[normalPlays.length - 1];
@@ -665,11 +849,29 @@ function chooseLeading(normalPlays, bombs, hand, decomp, gameState, profile, opp
       }
 
       if (has(profile, SKILLS.R9)) {
-        // R9 评分排序
-        const scored = filteredPlays.map(p => ({
-          play: p,
-          score: scoreLeadPlay(p, hand, gameState, memory, decomp, currentLevel)
-        })).sort((a, b) => b.score - a.score);
+        // R9 + R10 评分排序（R10: 扩展无敌推断 + 形势感知加成）
+        const wildAware = has(profile, SKILLS.R11);
+        const exitPlan = has(profile, SKILLS.R13) && decomp.tricksNeeded <= 3 && memory;
+        const scored = filteredPlays.map(p => {
+          let score = scoreLeadPlay(p, hand, gameState, memory, decomp, currentLevel, fullUnbeatable, wildAware);
+          if (fullUnbeatable) {
+            score += adaptiveLeadBonus(p, hand, gameState, memory, currentLevel, opponentNearWin);
+          }
+          // R13 出口规划：快要赢时，偏好能留下无敌下一手的出法
+          if (exitPlan) {
+            const remaining = hand.filter(c => !p.includes(c));
+            if (remaining.length === 0) {
+              score += 80; // 此牌打出即清手
+            } else {
+              const nxtHints = findPlayableHands(remaining, null, currentLevel)
+                .filter(np => !looksLikeBomb(np));
+              if (nxtHints.some(np => isMyPlayUnbeatable(np, memory, currentLevel, true))) {
+                score += 30; // 下一步有无敌牌型 → 优先走此路
+              }
+            }
+          }
+          return { play: p, score };
+        }).sort((a, b) => b.score - a.score);
 
         // R7 强势信号：前3中有复杂牌型优先
         if (signal === Signal.STRONG) {
@@ -681,12 +883,30 @@ function chooseLeading(normalPlays, bombs, hand, decomp, gameState, profile, opp
       }
     }
 
-    // 只有 R9（无 R7）：纯评分排序
+    // 只有 R9（±R10，无 R7）：纯评分排序
     if (has(profile, SKILLS.R9)) {
-      const scored = filteredPlays.map(p => ({
-        play: p,
-        score: scoreLeadPlay(p, hand, gameState, memory, decomp, currentLevel)
-      })).sort((a, b) => b.score - a.score);
+      const wildAware = has(profile, SKILLS.R11);
+      const exitPlan = has(profile, SKILLS.R13) && decomp.tricksNeeded <= 3 && memory;
+      const scored = filteredPlays.map(p => {
+        let score = scoreLeadPlay(p, hand, gameState, memory, decomp, currentLevel, fullUnbeatable, wildAware);
+        if (fullUnbeatable) {
+          score += adaptiveLeadBonus(p, hand, gameState, memory, currentLevel, opponentNearWin);
+        }
+        // R13 出口规划
+        if (exitPlan) {
+          const remaining = hand.filter(c => !p.includes(c));
+          if (remaining.length === 0) {
+            score += 80;
+          } else {
+            const nxtHints = findPlayableHands(remaining, null, currentLevel)
+              .filter(np => !looksLikeBomb(np));
+            if (nxtHints.some(np => isMyPlayUnbeatable(np, memory, currentLevel, true))) {
+              score += 30;
+            }
+          }
+        }
+        return { play: p, score };
+      }).sort((a, b) => b.score - a.score);
       return scored[0].play;
     }
 

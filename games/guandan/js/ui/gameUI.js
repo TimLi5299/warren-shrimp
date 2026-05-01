@@ -163,6 +163,16 @@ class GameUI {
     this.renderMyHand();
   }
 
+  // 理牌：按点数排序（小到大），同点数按花色排，大小王排最后
+  sortHand() {
+    this.myHand.sort((a, b) => {
+      if (a.rank !== b.rank) return a.rank - b.rank;
+      return a.suit - b.suit;
+    });
+    this.selectedCardIds.clear();
+    this.renderMyHand();
+  }
+
   // 从手牌中移除已出的牌
   removeCardsFromHand(cardIds) {
     this.myHand = this.myHand.filter(c => !cardIds.includes(c.id));

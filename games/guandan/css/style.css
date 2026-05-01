@@ -153,6 +153,7 @@ html, body {
   transform: translateY(3px);
 }
 
+.btn-sort { background: linear-gradient(180deg, #f9ca24, #f0932b); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 .btn-hint { background: linear-gradient(180deg, #00d2d3, #0abde3); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 .btn-pass { background: linear-gradient(180deg, #a4b0be, #747d8c); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 .btn-play { background: linear-gradient(180deg, #1dd1a1, #10ac84); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
@@ -688,8 +689,8 @@ html, body {
   .player-top { top: 70px; }
   .player-left { left: 5px; }
   .player-right { right: 5px; }
-  .action-buttons { gap: 8px; }
-  .btn-small { padding: 12px 20px; font-size: 14px; } /* Larger touch target for mobile */
+  .action-buttons { gap: 6px; }
+  .btn-small { padding: 10px 14px; font-size: 13px; } /* Compact but tappable on mobile */
 }
 
 /* ====== 炸弹动画特效 ====== */

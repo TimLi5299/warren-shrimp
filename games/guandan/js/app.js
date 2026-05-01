@@ -16,7 +16,8 @@
   // 技能 ID 列表（与 SkillProfiles.js 对应）
   const ALL_SKILL_IDS = [
     'r1_yield', 'r2_bomb_timing', 'r3_decomp_quality', 'r4_memory',
-    'r5_level_guard', 'r6_opponent_infer', 'r7_signal', 'r8_endgame', 'r9_lead_score'
+    'r5_level_guard', 'r6_opponent_infer', 'r7_signal', 'r8_endgame', 'r9_lead_score',
+    'r10_adaptive_lead', 'r11_wild_decomp', 'r12_hold_back', 'r13_exit_plan', 'r14_seq_guard', 'r15_triple_guard',
   ];
   const PROFILE_SKILLS = {
     noob:   [],
@@ -34,6 +35,12 @@
     { id: 'r7_signal',         label: '传信号',   desc: '出牌时向队友暗示强弱' },
     { id: 'r8_endgame',        label: '残局',     desc: '少牌时精确规划出牌' },
     { id: 'r9_lead_score',     label: '出牌评分', desc: '评分挑选最优领牌' },
+    { id: 'r10_adaptive_lead', label: '形势感知', desc: '按局势动态调整领牌策略' },
+    { id: 'r11_wild_decomp',   label: '万能拆牌', desc: '利用万能牌填补顺子缺口' },
+    { id: 'r12_hold_back',     label: '忍牌保型', desc: '避免破坏关键组合，适时不出' },
+    { id: 'r13_exit_plan',     label: '出口规划', desc: '快要赢时优先留下无敌后手，加速清手' },
+    { id: 'r14_seq_guard',     label: '顺子保护', desc: '跟牌时避免用顺子破坏手型，留作主动领牌' },
+    { id: 'r15_triple_guard',  label: '三张保护', desc: '跟牌时避免拆散三带二组合，保留复合牌型' },
   ];
 
   // 每个 NPC 座位的当前配置（seat → { profile, customSkills }）
@@ -213,9 +220,17 @@
     socket.on('GAME_START', (msg) => {
       ui.incrementRound();
       ui.startGame(msg.hand, msg.mySeat, msg.currentLevel, msg.team1Level, msg.team2Level);
+      // Fix：直接用 GAME_START 里的 currentTurn 激活按钮，不依赖后续 TURN_UPDATE
+      if (msg.currentTurn !== undefined) {
+        ui.updateTurnHighlight(msg.currentTurn);
+      }
     });
 
     socket.on('TURN_UPDATE', (msg) => {
+      // 新 trick 开始时先清空上一手的出牌记录，再高亮当前玩家
+      if (msg.isNewTrick) {
+        ui.clearAllPlayed();
+      }
       ui.updateTurnHighlight(msg.currentTurn);
     });
 
@@ -413,6 +428,11 @@
       } else {
         socket.pass();
       }
+    });
+
+    // 游戏 - 理牌
+    document.getElementById('sort-btn').addEventListener('click', () => {
+      ui.sortHand();
     });
 
     // 游戏 - 提示

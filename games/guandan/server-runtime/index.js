@@ -276,10 +276,13 @@ export class LoopbackServer {
               mySeat: seat,
             });
           } else if (event.type === 'YOUR_TURN') {
+            // 新 trick = 上一手为空（上一轮结束），或者出牌权回到了发起者（全员PASS）
+            const isNewTrick = !room.gameState.lastPlay || room.gameState.lastPlaySeat === event.seat;
             conn.send({
               type: 'TURN_UPDATE',
               currentTurn: event.seat,
               isMyTurn: event.seat === seat,
+              isNewTrick,
             });
           } else if (event.type === 'CARDS_PLAYED') {
             const isMasked = event.seat !== seat && event.remainingCards > 10;
@@ -395,7 +398,9 @@ export class LoopbackServer {
 
   _handleNPCTurn(room, seat) {
     const npc = room.players[seat];
-    const thinkDelay = 800 + Math.random() * 600;
+    // 新 trick 开始（自由出牌）时给玩家更多时间看清上一手结果
+    const isFreePlay = !room.gameState.lastPlay || room.gameState.lastPlaySeat === seat;
+    const thinkDelay = isFreePlay ? 2000 + Math.random() * 500 : 800 + Math.random() * 400;
 
     setTimeout(async () => {
       if (!room.gameState || room.gameState.currentTurn !== seat) return;

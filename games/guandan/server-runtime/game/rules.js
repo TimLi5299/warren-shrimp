@@ -126,6 +126,27 @@ function findPlayableHands(handCards, lastPlay, currentLevel = 2) {
         }
     }
 
+    // 万能牌填补顺子缺口
+    if (numWilds >= 1) {
+      for (let start = 3; start <= 10; start++) {
+        let gaps = 0, hasRegular = false;
+        for (let r = start; r < start + 5; r++) {
+          if (rankGroups.has(r) && rankGroups.get(r).length > 0) hasRegular = true;
+          else gaps++;
+        }
+        if (hasRegular && gaps > 0 && gaps <= numWilds) {
+          const cards = [];
+          let wIdx = 0;
+          for (let r = start; r < start + 5; r++) {
+            const rCards = rankGroups.get(r);
+            if (rCards && rCards.length > 0) cards.push(rCards[0]);
+            else cards.push(wilds[wIdx++]);
+          }
+          results.push(cards);
+        }
+      }
+    }
+
     // 查找并添加同花顺提示
     const straightFlushes = findStraightFlushes(handCards, 3, 14);
     results.push(...straightFlushes);
@@ -184,7 +205,29 @@ function findPlayableHands(handCards, lastPlay, currentLevel = 2) {
         results.push(seq.map(r => rankGroups.get(r)[0]));
       }
     }
-    // 万能牌提示略（为性能考虑）
+    // 万能牌填补顺子缺口
+    if (numWilds >= 1) {
+      for (let start = 3; start <= 14 - len + 1; start++) {
+        let gaps = 0, hasRegular = false;
+        for (let r = start; r < start + len; r++) {
+          if (rankGroups.has(r) && rankGroups.get(r).length > 0) hasRegular = true;
+          else gaps++;
+        }
+        if (hasRegular && gaps > 0 && gaps <= numWilds) {
+          const cards = [];
+          let wIdx = 0;
+          for (let r = start; r < start + len; r++) {
+            const rCards = rankGroups.get(r);
+            if (rCards && rCards.length > 0) cards.push(rCards[0]);
+            else cards.push(wilds[wIdx++]);
+          }
+          const classified = classifyHand(cards, currentLevel);
+          if (classified.type === HandType.STRAIGHT && classified.mainRank > lastPlay.mainRank) {
+            results.push(cards);
+          }
+        }
+      }
+    }
   } else if (lastPlay.type === HandType.TRIPLE_PAIR) {
     // 三带二：管三张部分
     for (const [r1, c1] of rankGroups) {
