@@ -9,6 +9,13 @@
   const ui = window.gameUI;
   const isStaticHost = !!window.__GUANDAN_STATIC_HOST__;
 
+  // P1.2：?debug=1 模式开关——通过 body class 让 CSS 控制信息泡显隐
+  const isDebugMode = location.search.includes('debug=1');
+  if (isDebugMode) {
+    document.body.classList.add('debug-mode');
+    console.log('[NPC] 调试模式已开启（?debug=1），NPC 决策信息泡将在每次出牌时显示');
+  }
+
   // ====== 单人模式配置 ======
   let appMode = 'solo';   // 'solo' | 'multi'
   let isSoloLaunch = false;
@@ -291,7 +298,12 @@
     });
 
     socket.on('NPC_EXPLAIN', (msg) => {
-      showNPCExplain(msg.seat, msg.explanation);
+      // P1.2：debug 模式 → 每个 NPC 位卡旁的 trace bubble；非 debug → 原全局 explanation
+      if (isDebugMode && msg.activatedSkills && msg.activatedSkills.length > 0) {
+        showNPCTraceBubble(msg);
+      } else if (msg.explanation) {
+        showNPCExplain(msg.seat, msg.explanation);
+      }
     });
 
     socket.on('TRIBUTE_REQUEST', (msg) => {
@@ -573,6 +585,44 @@
     bubble.style.display = 'block';
     clearTimeout(window._npcBubbleTimer);
     window._npcBubbleTimer = setTimeout(() => { bubble.style.display = 'none'; }, 4000);
+  }
+
+  // P1.2：debug 模式下，把 NPC trace 显示在对应位卡旁的信息泡
+  // 内容：主因（PrimaryReason 中文解释）+ 技能 chip 列表 + skillNotes 详细
+  // 显示时长：duration-linger (2500ms)，与 stage-quadrant 出牌停留同步
+  const npcBubbleTimers = { top: null, left: null, right: null };
+  function showNPCTraceBubble(msg) {
+    // 把 absolute seat 映射到相对位置（与 gameUI.getPlayerPosition 同逻辑）
+    const position = ui.getPlayerPosition(msg.seat);
+    if (position === 'bottom') return;  // 自己不显示 trace（自己不是 NPC）
+    const bubble = document.getElementById(`npc-trace-${position}`);
+    if (!bubble) return;
+
+    const skillsHtml = msg.activatedSkills.map(s =>
+      `<span class="npc-trace-skill-chip">${s.toUpperCase()}</span>`
+    ).join('');
+    const notesHtml = (msg.skillNotes || []).map(note =>
+      `<li><b>${note.skill}</b>: ${escapeHtml(note.note)}</li>`
+    ).join('');
+    const action = msg.action === 'PASS' ? '不出' : '出牌';
+
+    bubble.innerHTML = `
+      <div class="npc-trace-header">${action}：${escapeHtml(msg.explanation || '')}</div>
+      <div class="npc-trace-skills">${skillsHtml}</div>
+      <ul class="npc-trace-notes">${notesHtml}</ul>
+    `;
+    bubble.classList.add('visible');
+
+    // 清掉该位置的旧 timer，避免快速 NPC 决策时 timer 互相打架
+    if (npcBubbleTimers[position]) clearTimeout(npcBubbleTimers[position]);
+    npcBubbleTimers[position] = setTimeout(() => {
+      bubble.classList.remove('visible');
+    }, 2500);
+  }
+
+  // 基础 HTML 转义，避免 trace 中的 < > 符号破坏 innerHTML（虽然技能 note 都是受控字符串）
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   function showTributeUI(data) {

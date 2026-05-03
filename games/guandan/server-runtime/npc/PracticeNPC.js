@@ -18,7 +18,7 @@
 import { findPlayableHands } from '../game/rules.js';
 import { isWildCard, classifyHand, isBomb as isBombType, HandType } from '../game/handClassifier.js';
 import { getNormalizedRank } from '../game/deck.js';
-import { createDecisionLog, inferPrimaryReason } from './NPCDecisionLog.js';
+import { createDecisionLog, inferPrimaryReason, logSkill } from './NPCDecisionLog.js';
 import { getMemory } from '../game/llm_ai.js';
 import { SKILLS, profileFromLevel } from './SkillProfiles.js';
 
@@ -659,6 +659,7 @@ function decideStrategic(hints, hand, gameState, mustPlay, profile) {
 
   // ③ R1 配合：让出主动权（全量）
   if (has(profile, SKILLS.R1) && shouldYieldToTeammate(gameState, hand, currentLevel) && !mustPlay) {
+    logSkill(gameState._trace, 'R1', '队友领牌且强势，主动让路（PASS）');
     return null;
   }
   // R1 缺失时：退化为概率让路
@@ -695,7 +696,10 @@ function decideStrategic(hints, hand, gameState, mustPlay, profile) {
       if (isLastPlayUnbeatable(lastPlay, memory, currentLevel)) {
         const cost = evalCardsCost(candidate, currentLevel);
         const avgCost = cost / candidate.length;
-        if (cost >= 50 || avgCost >= 15) return null;
+        if (cost >= 50 || avgCost >= 15) {
+          logSkill(gameState._trace, 'R6', '推断桌面牌已无敌（无人能压），跟牌成本高 → PASS');
+          return null;
+        }
       }
     }
 
@@ -704,7 +708,10 @@ function decideStrategic(hints, hand, gameState, mustPlay, profile) {
       const lastKind = inferKind(lastPlay);
       if (isEffectivelyMax(lastPlay.mainRank, lastKind, memory, currentLevel)) {
         const cost = evalCardsCost(candidate, currentLevel);
-        if (cost >= 100) return null;
+        if (cost >= 100) {
+          logSkill(gameState._trace, 'R4', '记牌推断桌面已是最大，跟牌成本太高 → PASS');
+          return null;
+        }
       }
     }
 
@@ -732,6 +739,7 @@ function decideStrategic(hints, hand, gameState, mustPlay, profile) {
         const altLoss = breakageLoss(hand, alt, currentLevel, myDecomp);
         if (altLoss < breakLoss && evalCardsCost(alt, currentLevel) <= evalCardsCost(candidate, currentLevel) * 1.3) {
           candidate = alt;
+          logSkill(gameState._trace, 'R3', `拆牌优化：换成破坏性更低的替代选项（loss ${breakLoss}→${altLoss}）`);
           break;
         }
       }
@@ -741,7 +749,10 @@ function decideStrategic(hints, hand, gameState, mustPlay, profile) {
     if (has(profile, SKILLS.R12) && !mustPlay && !opponentNearWin && !teammateLeading && hand.length > 8) {
       if (lastPlay && lastPlay.mainRank < 10) {
         const loss = breakageLoss(hand, candidate, currentLevel, myDecomp);
-        if (loss >= 2) return null;
+        if (loss >= 2) {
+          logSkill(gameState._trace, 'R12', `忍牌保型：跟牌会破坏 ${loss} 个手型组合且场面不紧急 → PASS`);
+          return null;
+        }
       }
     }
 
@@ -779,7 +790,11 @@ function decideStrategic(hints, hand, gameState, mustPlay, profile) {
   // ④ R2 炸弹时机：队友领牌时永远不动炸弹
   if (bombs.length > 0 && !teammateLeading && shouldUseBomb(gameState, hand, myDecomp, opponentNearWin, true)) {
     // R2 缺失时：随机用炸弹（退化行为）
-    if (has(profile, SKILLS.R2) || Math.random() < 0.2) return bombs[0];
+    if (has(profile, SKILLS.R2)) {
+      logSkill(gameState._trace, 'R2', `炸弹时机：${opponentNearWin ? '对手快赢，紧急拦截' : '残局优势'} → 出炸弹`);
+      return bombs[0];
+    }
+    if (Math.random() < 0.2) return bombs[0];
   }
   return null;
 }
@@ -796,6 +811,7 @@ function chooseLeading(normalPlays, bombs, hand, decomp, gameState, profile, opp
 
   // ④ R2 炸弹结束：手牌 ≤6 且剩1手就是炸弹
   if (has(profile, SKILLS.R2) && hand.length <= 6 && decomp.tricksNeeded <= 1 && bombs.length > 0) {
+    logSkill(gameState._trace, 'R2', '残局炸弹结束：手牌≤6 且剩1手即可清光，直接出炸弹');
     return bombs[0];
   }
 
@@ -805,6 +821,7 @@ function chooseLeading(normalPlays, bombs, hand, decomp, gameState, profile, opp
       if (b.length !== a.length) return b.length - a.length;
       return Math.max(...b.map(c => c.rank)) - Math.max(...a.map(c => c.rank));
     });
+    logSkill(gameState._trace, 'R1', `护送清场：队友只剩 ${teammateCount} 张，出最难跟的牌压住对手`);
     return difficult[0];
   }
 
@@ -833,7 +850,10 @@ function chooseLeading(normalPlays, bombs, hand, decomp, gameState, profile, opp
   // ⑥ R8 残局解算器优先
   if (has(profile, SKILLS.R8)) {
     const endgamePlay = endgameSolve(hand, filteredPlays, gameState, currentLevel, memory);
-    if (endgamePlay) return endgamePlay;
+    if (endgamePlay) {
+      logSkill(gameState._trace, 'R8', '残局解算：全场剩牌少，找到一个无敌牌型');
+      return endgamePlay;
+    }
   }
 
   // ⑤⑨ R9 + R7 出牌评分 + 信号编码
@@ -877,8 +897,14 @@ function chooseLeading(normalPlays, bombs, hand, decomp, gameState, profile, opp
         if (signal === Signal.STRONG) {
           const top3 = scored.slice(0, 3);
           const complex = top3.find(s => s.play.length >= 4);
-          if (complex) return complex.play;
+          if (complex) {
+            logSkill(gameState._trace, 'R9', `领牌评分：${scored.length} 个候选评分排序后选最高分`);
+            logSkill(gameState._trace, 'R7', '强势信号：top3 中有复杂牌型 → 优先打复杂牌');
+            return complex.play;
+          }
         }
+        logSkill(gameState._trace, 'R9', `领牌评分：${scored.length} 个候选评分排序后选最高分（top: ${scored[0].score.toFixed(0)}）`);
+        if (exitPlan) logSkill(gameState._trace, 'R13', '出口规划：剩 ≤3 手，加权偏好能留无敌后手的出法');
         return scored[0].play;
       }
     }
@@ -907,6 +933,8 @@ function chooseLeading(normalPlays, bombs, hand, decomp, gameState, profile, opp
         }
         return { play: p, score };
       }).sort((a, b) => b.score - a.score);
+      logSkill(gameState._trace, 'R9', `领牌评分（无 R7 信号）：${scored.length} 个候选选最高分（top: ${scored[0].score.toFixed(0)}）`);
+      if (exitPlan) logSkill(gameState._trace, 'R13', '出口规划：剩 ≤3 手，加权偏好能留无敌后手的出法');
       return scored[0].play;
     }
 
@@ -981,9 +1009,13 @@ function breakageLoss(hand, candidate, currentLevel, baseDecomp) {
  * 包装：Practice NPC 决策
  * ========================================================== */
 export function getPracticeNPCDecision(hand, gameState, level = AILevel.NORMAL, seat = 0, skillProfile = null) {
-  const play = getAIDecision(hand, gameState, level, skillProfile);
+  // P1 任务：创建 trace 数组，通过 _trace 字段传入决策路径
+  // 内部函数（decideStrategic / chooseLeading 等）可通过 ctx._trace 直接 push 技能记录
+  const trace = [];
+  const augmentedGameState = { ...gameState, _trace: trace };
+  const play = getAIDecision(hand, augmentedGameState, level, skillProfile);
   const action = play ? 'PLAY' : 'PASS';
   const primaryReason = inferPrimaryReason(action, play, gameState, seat);
-  const decisionLog = createDecisionLog(action, play, primaryReason);
+  const decisionLog = createDecisionLog(action, play, primaryReason, [], trace);
   return { play, decisionLog };
 }

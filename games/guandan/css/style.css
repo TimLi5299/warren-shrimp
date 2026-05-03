@@ -1118,3 +1118,891 @@ html, body {
   flex-direction: column;
   gap: 14px;
 }
+
+/* ============================================================================
+ * 阶段 1 视觉骨架重塑 v2（Phase 1 Override Block · v2）
+ * ----------------------------------------------------------------------------
+ * v2 修复点（针对验收意见）：
+ *   ① 阵营色：用 border 简写覆盖（2px muted / 3px primary），消除原 gray 边
+ *   ② 撤销动效：kill .player-info 的 transition + active-turn 的 scale + animation
+ *   ③ 卡牌底色显化：移除 .card 的 inset 白色内发光，让 #F8F6F0 真实可见
+ *   ④ 顶栏金色清理：current-level-badge 与 vs-text 改为中性面板/弱化文字色
+ *   ⑤ 织物纹理：SVG 加显式 width/height，用 opacity 属性确保跨浏览器一致渲染
+ *
+ * 阶段 1 严格不做：动效、按钮改造、手牌交互、左右家旋转 90°
+ * 回滚：删除本块（从注释起到文件末尾）即可恢复阶段 0 状态
+ * ========================================================================== */
+
+/* ─── 1. 桌面背景：径向渐变 + 极轻 SVG noise 织物纹理（v2: 显式尺寸）─── */
+html, body {
+  background-color: var(--surface-felt-main);
+  background-image:
+    /* 织物纹理：220×220 平铺，4% 不透明度（在 0.03-0.05 范围内）*/
+    url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
+    /* 径向渐变：中心保持主色到 45%，边缘平滑过渡到 surface-felt-edge */
+    radial-gradient(ellipse at center, var(--surface-felt-main) 0%, var(--surface-felt-main) 45%, var(--surface-felt-edge) 100%);
+  background-size: 220px 220px, 100% 100%;
+  background-attachment: fixed, fixed;
+}
+
+/* ─── 2. 玩家位卡阵营色（v2: 显式 border + kill 动效）──────────────── */
+
+/* 2.0 全局 kill：所有玩家位卡的 transition、transform、animation
+       —— 阶段 1 仅允许静态视觉，回合切换的脉冲/缩放留给阶段 3 */
+.player-info,
+.player-info.active-turn {
+  transition: none !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+/* 2a. 队友（对家，player-top）静止态：2px 琥珀 muted 实线边 */
+#player-top .player-info {
+  border: 2px solid var(--faction-ally-muted);
+}
+#player-top .player-avatar {
+  box-shadow: 0 0 0 2px var(--faction-ally-muted);
+}
+#player-top .card-count {
+  background: var(--faction-ally-muted);
+  border: 1px solid var(--faction-ally-highlight);
+}
+
+/* 2b. 队友激活态：3px primary 实线 + 静态 shadow-avatar-ally-active 光晕 */
+#player-top .player-info.active-turn {
+  background: var(--surface-panel);
+  border: 3px solid var(--faction-ally-primary);
+  box-shadow: var(--shadow-avatar-ally-active);
+}
+#player-top .player-info.active-turn .player-avatar {
+  box-shadow: 0 0 0 3px var(--faction-ally-primary);
+}
+#player-top .player-info.active-turn .card-count {
+  background: var(--faction-ally-primary);
+  border: 1px solid var(--faction-ally-highlight);
+}
+
+/* 2c. 对手（左家、右家）静止态：2px 钢蓝 muted 实线边 */
+#player-left .player-info,
+#player-right .player-info {
+  border: 2px solid var(--faction-opp-muted);
+}
+#player-left .player-avatar,
+#player-right .player-avatar {
+  box-shadow: 0 0 0 2px var(--faction-opp-muted);
+}
+#player-left .card-count,
+#player-right .card-count {
+  background: var(--faction-opp-muted);
+  border: 1px solid var(--faction-opp-highlight);
+}
+
+/* 2d. 对手激活态：3px primary 实线 + shadow-avatar-opp-active 光晕 */
+#player-left .player-info.active-turn,
+#player-right .player-info.active-turn {
+  background: var(--surface-panel);
+  border: 3px solid var(--faction-opp-primary);
+  box-shadow: var(--shadow-avatar-opp-active);
+}
+#player-left .player-info.active-turn .player-avatar,
+#player-right .player-info.active-turn .player-avatar {
+  box-shadow: 0 0 0 3px var(--faction-opp-primary);
+}
+#player-left .player-info.active-turn .card-count,
+#player-right .player-info.active-turn .card-count {
+  background: var(--faction-opp-primary);
+  border: 1px solid var(--faction-opp-highlight);
+}
+
+/* ─── 3. 卡牌底色与花色（v2: 移除 inset 白色内发光，让暖白真实可见）─ */
+
+/* 3a. 卡牌底色 + 移除原 inset white glow（这是导致"看起来像纯白"的元凶）*/
+.card {
+  background: var(--surface-card);
+  box-shadow: -2px 0 8px rgba(0,0,0,0.30);  /* 保留外侧投影，去掉 inset 0 0 10px rgba(255,255,255,1) */
+}
+.card:first-child {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.30);
+}
+
+/* 3b. 红色花色（♥♦）：稍深的红，消除与绿桌的补色振动 */
+.card.red {
+  color: var(--suit-red-on-card);
+}
+
+/* 3c. 黑色花色（♠♣）：略带靛色的近黑，视觉更厚 */
+.card.black {
+  color: var(--suit-black-on-card);
+}
+
+/* 3d. 大小王：底色用 surface-card 替换原渐变终点的纯白 */
+.card.joker-red {
+  background: linear-gradient(135deg, #fff0f0, var(--surface-card));
+  color: var(--suit-red-on-card);
+}
+.card.joker-black {
+  background: linear-gradient(135deg, #f0f0ff, var(--surface-card));
+  color: var(--suit-black-on-card);
+}
+
+/* ─── 4. 顶部信息栏 + 汉堡菜单按钮 ───────────────────────────────────── */
+
+/* 4a. 顶栏：从浮动元素升级为全宽 HUD 条 */
+.game-info-bar {
+  top: 0;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-panel);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--surface-panel-border);
+}
+
+/* 4b. 顶栏内 level-display 的旧深底层透明化 */
+.game-info-bar .level-display {
+  background: transparent;
+  border-color: var(--surface-panel-border);
+  box-shadow: none;
+}
+
+/* 4c. 【v2 修复】顶栏金色污染清理 ——
+       级牌标签、VS 指示器从金色改为中性，让金色仅留给"队友阵营"和"出牌按钮 CTA"两个语义槽 */
+.current-level-badge {
+  background: transparent;
+  border: 1px solid var(--surface-panel-border);
+  color: var(--text-primary);
+  box-shadow: none;
+}
+.vs-text {
+  color: var(--text-secondary);
+  font-style: normal;
+}
+
+/* 4d. 汉堡菜单按钮（href 不变，仅改外观为 44×44 token 化按钮）*/
+.back-to-products {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+  background: var(--surface-panel);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-right: 1px solid var(--surface-panel-border);
+  border-bottom: 1px solid var(--surface-panel-border);
+}
+
+/* ============ 阶段 1 块结束 v2 ============ */
+
+
+/* ============================================================================
+ * 阶段 2 组件改造（Phase 2 Override Block）
+ * ----------------------------------------------------------------------------
+ * 改造范围：
+ *   1. 手牌区          → COMPONENT_SPECS §2  (48×72, -16px重叠, 4 态)
+ *   2. 底部操作按钮组   → COMPONENT_SPECS §4  (三级权重 + 左右分组)
+ *   3. 中央舞台视觉锚   → COMPONENT_SPECS §3.1 (480×220 虚线轮廓 + "等待出牌")
+ *
+ * 阶段 2 严格不做：
+ *   ❌ 任何 transition 时长（hover 可改色但即时切换，0ms）
+ *   ❌ 出牌停留 2.5s 等时序逻辑（阶段 3）
+ *   ❌ 旋转左右家位卡（v2 优化项）
+ *   ❌ 改游戏逻辑
+ *
+ * 回滚：删除本块 + 复原 index.html 的 stage-anchor 节点即可
+ * ========================================================================== */
+
+/* ─── 1. 手牌区改造 ─────────────────────────────────────────────────── */
+
+/* 1.0 手牌区容器：底部留 32px 间距，分离"我的牌"与"我的操作" */
+.hand-area {
+  padding: var(--space-lg) 0 var(--space-xl);
+  gap: 0;  /* gap 由 card 的 margin-left 接管 */
+}
+
+/* 1a. 卡牌静止态：48×72，-16px 错位，每张露出 32px */
+.hand-area .card {
+  width: 48px;
+  height: 72px;
+  margin-left: -16px;
+  padding: 4px 4px 0 4px;
+  box-shadow: var(--shadow-card-rest);
+  transition: none;       /* 阶段 2 禁止 transition 时长 */
+  border-radius: var(--radius-card);
+}
+.hand-area .card:first-child {
+  margin-left: 0;
+  box-shadow: var(--shadow-card-rest);
+}
+
+/* 1b. 卡牌点数 / 花色字号按 token 落地 */
+.hand-area .card .card-rank {
+  font-size: var(--type-card-rank-size);
+  font-weight: var(--type-card-rank-weight);
+  line-height: var(--type-card-rank-lh);
+  letter-spacing: var(--type-card-rank-ls);
+}
+.hand-area .card .card-suit {
+  font-size: var(--type-card-suit-size);
+  font-weight: var(--type-card-suit-weight);
+  line-height: var(--type-card-suit-lh);
+  margin-top: 0;
+}
+
+/* 1c. 悬停态（焦点放大）：translateY(-10) + scale(1.08) */
+.hand-area .card:hover:not(.selected):not(.unplayable) {
+  transform: translateY(-10px) scale(1.08);
+  box-shadow: var(--shadow-card-hover);
+  z-index: 10;
+}
+
+/* 1d. 选中态：translateY(-20) + 金色描边阴影（来自 shadow-card-selected token）*/
+.hand-area .card.selected {
+  transform: translateY(-20px);
+  box-shadow: var(--shadow-card-selected);
+  border-color: var(--surface-card);  /* 让外层 token 描边作为唯一选中信号 */
+  z-index: 100 !important;
+}
+
+/* 1e. 不可出牌态（class 由游戏逻辑后续接入）：opacity 0.40 + saturate 0.3 */
+.hand-area .card.unplayable {
+  opacity: 0.40;
+  filter: saturate(0.3);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ─── 2. 底部操作按钮组 ─────────────────────────────────────────────── */
+
+/* 2.0 容器：左工具区 / 右操作区 分组，中间用 margin-left:auto 拉开 */
+.action-buttons {
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0 var(--space-md);
+}
+
+/* 2.0.1 kill 原 .btn 的 transition + transform 高光块阴影残留 */
+.action-buttons .btn {
+  transition: none !important;
+  text-transform: none;
+  letter-spacing: 0;
+  text-shadow: none;
+  border: none;
+}
+
+/* 2a. 工具按钮（理牌、提示）—— 80×32 透明填充，沉入背景 */
+.action-buttons #sort-btn,
+.action-buttons #hint-btn {
+  width: 80px;
+  height: 32px;
+  padding: 0;
+  font-size: var(--type-btn-tertiary-size);
+  font-weight: var(--type-btn-tertiary-weight);
+  background: var(--semantic-tertiary);
+  border: 1px solid var(--semantic-tertiary-border);
+  color: var(--text-on-tertiary-btn);
+  border-radius: var(--radius-btn-tertiary);
+  box-shadow: none;
+}
+.action-buttons #sort-btn:hover,
+.action-buttons #hint-btn:hover {
+  background: rgba(255,255,255,0.14);
+  filter: none;
+}
+.action-buttons #sort-btn:active,
+.action-buttons #hint-btn:active {
+  background: rgba(255,255,255,0.06);
+  transform: none;
+}
+
+/* 2b. 中间分隔：让"不出"开始向右贴齐，与工具区拉开 var(--space-xl) 以上 */
+.action-buttons #pass-btn {
+  margin-left: auto;
+  width: 96px;
+  height: 40px;
+  padding: 0;
+  font-size: var(--type-btn-secondary-size);
+  font-weight: var(--type-btn-secondary-weight);
+  letter-spacing: var(--type-btn-secondary-ls);
+  background: var(--semantic-secondary);
+  color: var(--text-on-secondary-btn);
+  border-radius: var(--radius-btn-secondary);
+  box-shadow: var(--shadow-btn-rest);
+}
+.action-buttons #pass-btn:hover {
+  background: var(--semantic-secondary-hover);
+  filter: none;
+}
+.action-buttons #pass-btn:active {
+  background: var(--semantic-secondary);
+  transform: none;
+  box-shadow: var(--shadow-btn-pressed);
+}
+
+/* 2c. 主 CTA：出牌 —— 120×48 金色填充，最大视觉权重 */
+.action-buttons #play-btn {
+  width: 120px;
+  height: 48px;
+  padding: 0;
+  font-size: var(--type-btn-primary-size);
+  font-weight: var(--type-btn-primary-weight);
+  letter-spacing: var(--type-btn-primary-ls);
+  background: var(--semantic-primary);
+  color: var(--text-on-primary-btn);
+  border-radius: var(--radius-btn-primary);
+  box-shadow: var(--shadow-btn-rest);
+}
+.action-buttons #play-btn:hover {
+  background: var(--semantic-primary-hover);
+  filter: none;
+}
+.action-buttons #play-btn:active {
+  background: var(--semantic-primary-pressed);
+  transform: none;
+  box-shadow: var(--shadow-btn-pressed);
+}
+/* 2c.1 出牌按钮禁用态：保持金色，只降透明度（语义不漂移）*/
+.action-buttons #play-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── 3. 中央舞台视觉锚 ─────────────────────────────────────────────── */
+
+/* 3a. 480×220 虚线舞台框：常驻可见，作为视觉锚和未来出牌的落点 */
+.stage-anchor {
+  width: 480px;
+  height: 220px;
+  background: var(--surface-felt-stage);
+  border: 1px dashed rgba(255,255,255,0.10);
+  border-radius: var(--radius-stage-hint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* 3b. "等待出牌"弱化标签 —— 在舞台中央，告诉玩家"这里是行动会发生的位置" */
+.stage-anchor-label {
+  color: var(--text-muted);
+  font-size: var(--type-system-msg-size);
+  font-weight: var(--type-system-msg-weight);
+  line-height: var(--type-system-msg-lh);
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+/* 3c. center-play-area 内 play-info 浮在舞台之上（"发牌结束"等系统消息的临时显示）*/
+.center-play-area {
+  pointer-events: none;
+}
+.center-play-area .play-info {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* 原 zoomFade 动画继续生效，但用 translate 锚点叠加在舞台中央上层 */
+  transform: translate(-50%, -50%);
+  width: max-content;
+}
+/* 3c.1 重写 zoomFade：保留其他属性，仅修正 transform 起止点为含 translate 锚 */
+@keyframes zoomFade {
+  0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  15%  { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  30%  { transform: translate(-50%, -50%) scale(1.0); opacity: 1; }
+  80%  { transform: translate(-50%, -50%) scale(1.0); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.1); opacity: 0; }
+}
+
+/* ============ 阶段 2 块结束 ============ */
+
+
+/* ============================================================================
+ * 阶段 3 · 任务 1：基础过渡动效（Phase 3 Task 1 Override Block）
+ * ----------------------------------------------------------------------------
+ * 目标：把 Phase 1 v2 / Phase 2 中故意 kill 的 `transition: none` 用
+ *       DESIGN_TOKENS §6 中的时长 + 缓动曲线恢复回来。
+ *
+ * 不做：
+ *   ❌ 回合脉冲光晕（任务 2）
+ *   ❌ 出牌飞行 / 停留时序（任务 3）
+ *   ❌ AI 思考省略号（任务 4）
+ *   ❌ 不改 token 数值，不引入动效库
+ *
+ * Token 引用：
+ *   --duration-fast (150ms)        — 悬停反馈、按钮颜色切换
+ *   --duration-normal (250ms)      — 选中、状态切换
+ *   --ease-out-enter               — 元素入场（hover 上升）
+ *   --ease-in-out-state            — 状态切换（active-turn 切换、按下进入）
+ *   --spring-feedback              — 交互反馈（选中咔哒、按钮松开弹回）
+ *
+ * 实施约束：
+ *   Phase 1 v2 / Phase 2 中用了 `transition: none !important`，必须用 !important
+ *   反向覆盖。这是已知的 anti-pattern 但在阶段化改造中可接受，回滚边界清晰。
+ *
+ * 回滚：删除本块即可回到阶段 2 状态。
+ * ========================================================================== */
+
+/* ─── 1. 玩家位卡（覆盖 Phase 1 v2 的 none !important）─────────────── */
+/* 切换 active-turn 时，边框/光晕/底色 250ms 内平滑过渡 */
+.player-info,
+.player-info.active-turn {
+  transition:
+    border-color var(--duration-normal) var(--ease-in-out-state),
+    border-width var(--duration-normal) var(--ease-in-out-state),
+    background-color var(--duration-normal) var(--ease-in-out-state),
+    box-shadow var(--duration-normal) var(--ease-in-out-state)
+    !important;
+}
+.player-avatar {
+  transition: box-shadow var(--duration-normal) var(--ease-in-out-state);
+}
+.card-count {
+  transition:
+    background-color var(--duration-normal) var(--ease-in-out-state),
+    border-color var(--duration-normal) var(--ease-in-out-state);
+}
+
+/* ─── 2. 卡牌（覆盖 Phase 2 的 transition: none）───────────────────── */
+
+/* 2a. 静止 → 悬停：fast (150ms) + ease-out-enter（上升入场）*/
+.hand-area .card {
+  transition:
+    transform var(--duration-fast) var(--ease-out-enter),
+    box-shadow var(--duration-fast) var(--ease-out-enter)
+    !important;
+}
+
+/* 2b. 静止 → 选中：normal (250ms) + spring-feedback（带 12% 超出回弹的"咔哒"感）*/
+.hand-area .card.selected {
+  transition:
+    transform var(--duration-normal) var(--spring-feedback),
+    box-shadow var(--duration-normal) var(--spring-feedback)
+    !important;
+}
+
+/* ─── 3. 按钮（覆盖 Phase 2 的 transition: none !important）────────── */
+
+/* 3a. baseline transition：松开/默认 → 进入这里
+       transform 用 spring-feedback（松开时带弹回），其他属性用 fast/ease-out */
+.action-buttons .btn {
+  transition:
+    background-color var(--duration-fast) var(--ease-out-enter),
+    box-shadow var(--duration-fast) var(--ease-out-enter),
+    transform var(--duration-fast) var(--spring-feedback)
+    !important;
+}
+
+/* 3b. 按下时进入 :active 的 transition：用 ease-in-out-state（无回弹收紧）*/
+.action-buttons .btn:active {
+  transition:
+    background-color var(--duration-fast) var(--ease-out-enter),
+    box-shadow var(--duration-fast) var(--ease-out-enter),
+    transform var(--duration-fast) var(--ease-in-out-state)
+    !important;
+}
+
+/* 3c. 按下视觉反馈：scale(0.96)（DESIGN_TOKENS §6.3E）
+       Phase 2 中显式 transform: none 仅为禁掉旧 .btn:active 的 scale(0.92)，
+       此处显式声明 0.96 覆盖之 */
+.action-buttons #play-btn:active,
+.action-buttons #pass-btn:active,
+.action-buttons #sort-btn:active,
+.action-buttons #hint-btn:active {
+  transform: scale(0.96) !important;
+}
+
+/* ─── 4. 按钮组整体 opacity 渐变（非我回合 ↔ 我的回合）─────────────── */
+/* JS（gameUI.js:261）改 inline opacity 时，让此过渡平滑生效 */
+.action-buttons {
+  transition: opacity var(--duration-normal) var(--ease-in-out-state);
+}
+
+/* ─── 5. 汉堡菜单按钮 hover 反馈 ────────────────────────────────────── */
+.back-to-products {
+  transition: background-color var(--duration-fast) var(--ease-out-enter);
+}
+.back-to-products:hover {
+  background: rgba(20, 56, 36, 0.92);
+}
+
+/* ============ 阶段 3 任务 1 块结束 ============ */
+
+
+/* ============================================================================
+ * 阶段 3 · 任务 2：回合脉冲光晕（Phase 3 Task 2 Override Block）
+ * ----------------------------------------------------------------------------
+ * 目标：解决初始 REPORT.md 的 P0「回合状态不可感知」。让"当前出牌方"在外周视觉
+ *       中也能被自然捕捉——通过持续的脉冲光晕，玩家不需要专门去看就能知道谁在动。
+ *
+ * 实施 3 件事（来自 DESIGN_TOKENS §6.3D）：
+ *   ① 进入 active-turn 用 slow (400ms) + spring-feedback（光晕"涌现"感）
+ *   ② 队友（player-top）的脉冲：琥珀光晕 alpha 在 0.55 ↔ 0.385 之间循环
+ *   ③ 对手（player-left/right）的脉冲：钢蓝光晕 alpha 在 0.50 ↔ 0.35 之间循环
+ *
+ * 周期：1200ms (var(--duration-pulse-period))，曲线 ease-in-out-state，infinite
+ *
+ * 不做：
+ *   ❌ 出牌按钮的 scale(1.04→1.0) 涌现（需 JS hook 触发，留给任务 3）
+ *   ❌ AI 思考省略号（任务 4）
+ *   ❌ 改 token 数值
+ *
+ * 关键 CSS 行为：
+ *   - CSS animation 优先级 > transition：脉冲跑起来后 box-shadow 由 keyframe 接管
+ *   - 移除 .active-turn 时 animation 立即停止，box-shadow 从最后帧值
+ *     transition 回非 active 基线（task 1 设的 normal+ease-in-out）
+ *
+ * 回滚：删除本块即可回到任务 1 状态。
+ * ========================================================================== */
+
+/* ─── 1. 进入 active-turn 改用 slow + spring（涌现感）────────────────── */
+/* 覆盖任务 1 的 normal + ease-in-out（那个仍用于"离开 active"的过渡）*/
+.player-info.active-turn {
+  transition:
+    border-color   var(--duration-slow) var(--spring-feedback),
+    border-width   var(--duration-slow) var(--spring-feedback),
+    background-color var(--duration-slow) var(--spring-feedback),
+    box-shadow     var(--duration-slow) var(--spring-feedback)
+    !important;
+}
+.player-info.active-turn .player-avatar {
+  transition: box-shadow var(--duration-slow) var(--spring-feedback);
+}
+
+/* ─── 2. 队友（player-top）脉冲：琥珀光晕 alpha 在 0.55 ↔ 0.385 间循环 ─ */
+@keyframes pulse-glow-ally {
+  0%, 100% {
+    box-shadow:
+      0 0 0 3px var(--faction-ally-primary),
+      0 0 16px rgba(232, 162, 48, 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px var(--faction-ally-primary),
+      0 0 16px rgba(232, 162, 48, 0.385);
+  }
+}
+#player-top .player-info.active-turn {
+  animation: pulse-glow-ally var(--duration-pulse-period) var(--ease-in-out-state) infinite !important;
+}
+
+/* ─── 3. 对手（player-left/right）脉冲：钢蓝光晕 alpha 在 0.50 ↔ 0.35 间循环 ─ */
+@keyframes pulse-glow-opp {
+  0%, 100% {
+    box-shadow:
+      0 0 0 3px var(--faction-opp-primary),
+      0 0 16px rgba(75, 143, 196, 0.50);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px var(--faction-opp-primary),
+      0 0 16px rgba(75, 143, 196, 0.35);
+  }
+}
+#player-left .player-info.active-turn,
+#player-right .player-info.active-turn {
+  animation: pulse-glow-opp var(--duration-pulse-period) var(--ease-in-out-state) infinite !important;
+}
+
+/* ============ 阶段 3 任务 2 块结束 ============ */
+
+
+/* ============================================================================
+ * 阶段 3 · 任务 3：出牌飞行与停留（Phase 3 Task 3 Override Block）
+ * ----------------------------------------------------------------------------
+ * 任务 3 是 Phase 3 中最复杂的，分 4 个子任务：
+ *   3.1 ✅ 出牌按钮一次性涌现（scale 1.04 → 1.0，spring 落地）—— 当前 session
+ *   3.2 ⏳ 卡牌从手牌位置弧线飞向中央舞台对应象限
+ *   3.3 ⏳ 牌组停留 2500ms 后淡出
+ *   3.4 ⏳ 出牌方位置 4 象限分布
+ *
+ * 任务 3 是首次需要改 JS 的子任务。
+ * 回滚：删除本块 + 还原 gameUI.js 中 task 3 相关 hook。
+ * ========================================================================== */
+
+/* ─── 子任务 3.1：出牌按钮一次性涌现 ──────────────────────────────────
+ *
+ * spec（DESIGN_TOKENS §6.3D）：
+ *   "我的回合特殊处理：出牌按钮触发一次 spring-feedback scale(1.04→1.0)，
+ *    提示'可以操作了'"
+ *
+ * 实现：
+ *   - keyframe 从 1.04 缩到 1.0
+ *   - 用 spring-feedback 缓动曲线，过 1.0 后会有 ~12% overshoot 短暂跳到
+ *     ~0.99 再回到 1.0 —— 形成"咔哒落地"的物理感
+ *   - JS hook 在 gameUI.js updateTurnHighlight 内：从"非我"切换到"我"
+ *     的瞬间给 #play-btn 加 .summon class，触发动画
+ *   - JS 用 void offsetWidth 强制 reflow 重启动画（仿照已有 triggerBombEffect）
+ * ─────────────────────────────────────────────────────────────────── */
+
+@keyframes play-btn-summon {
+  0%   { transform: scale(1.04); }
+  100% { transform: scale(1.0); }
+}
+
+.action-buttons #play-btn.summon {
+  animation: play-btn-summon var(--duration-normal) var(--spring-feedback) 1;
+}
+
+/* ─── 子任务 3.2：卡牌从手牌位置弧线飞向中央舞台对应象限 ──────────────
+ *
+ * spec（COMPONENT_SPECS §3.2）：
+ *   "出牌后牌组飞入舞台对应象限...多张牌错开 40ms...stagger"
+ *
+ * 简化方案（不算每张手牌精确起点）：
+ *   - 4 个 fly-from-* keyframe，从屏幕外固定方向飞入到 stage 内的象限容器
+ *   - 距离按 280-380px（够大让动效"够气派"，不脱出可视区）
+ *   - 多张牌的 animation-delay 由 JS 在 showPlayedCards 内设
+ *
+ * 简化代价：每张牌的 source 不是它在玩家手中的精确位置（手牌已被 removeCardsFromHand
+ *           移除）。但视觉上方向感正确——玩家从飞入方向能立刻知道是谁出的牌。
+ * ─────────────────────────────────────────────────────────────────── */
+
+/* 4 个象限容器：在 stage-anchor 内绝对定位 */
+.stage-anchor {
+  position: relative;  /* quadrant 用 absolute 相对它定位 */
+}
+
+.stage-quadrant {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* 4 象限位置：spec §3.2 的"南/北/西/东"（玩家视角下/上/左/右）*/
+#stage-bottom { left: 50%; bottom: 12%; transform: translateX(-50%); }
+#stage-top    { left: 50%; top: 12%;    transform: translateX(-50%); }
+#stage-left   { left: 8%;  top: 50%;    transform: translateY(-50%); }
+#stage-right  { right: 8%; top: 50%;    transform: translateY(-50%); }
+
+/* "等待出牌"标签层级压在 quadrant 之下，让牌组覆盖时标签自然消失 */
+.stage-anchor-label {
+  position: relative;
+  z-index: 1;
+}
+
+/* 4 个飞入 keyframes —— 起点距离 280-380px（够气派，不脱出可视）*/
+@keyframes fly-from-bottom {
+  0%   { transform: translateY(280px); opacity: 0; }
+  100% { transform: translateY(0);     opacity: 1; }
+}
+@keyframes fly-from-top {
+  0%   { transform: translateY(-280px); opacity: 0; }
+  100% { transform: translateY(0);      opacity: 1; }
+}
+@keyframes fly-from-left {
+  0%   { transform: translateX(-380px); opacity: 0; }
+  100% { transform: translateX(0);      opacity: 1; }
+}
+@keyframes fly-from-right {
+  0%   { transform: translateX(380px); opacity: 0; }
+  100% { transform: translateX(0);     opacity: 1; }
+}
+
+/* 应用：每张飞入卡牌按方向 + duration-slow + ease-out-enter
+   animation-fill-mode: backwards 让带 delay 的牌在 delay 期间保持 0% 帧（不闪现）*/
+.stage-quadrant .card.flying-from-bottom {
+  animation: fly-from-bottom var(--duration-slow) var(--ease-out-enter) backwards;
+}
+.stage-quadrant .card.flying-from-top {
+  animation: fly-from-top    var(--duration-slow) var(--ease-out-enter) backwards;
+}
+.stage-quadrant .card.flying-from-left {
+  animation: fly-from-left   var(--duration-slow) var(--ease-out-enter) backwards;
+}
+.stage-quadrant .card.flying-from-right {
+  animation: fly-from-right  var(--duration-slow) var(--ease-out-enter) backwards;
+}
+
+/* ─── 子任务 3.3：牌组停留 + 淡出 ─────────────────────────────────────
+ *
+ * spec（COMPONENT_SPECS §3.2）：
+ *   "显示时长：duration-linger（2500ms），之后 fade out（duration-normal）"
+ *   "下家出牌后：前一手牌立即开始淡出，不等满 2500ms"
+ *
+ * 实现：
+ *   - .stage-quadrant 加 opacity transition（duration-normal + ease-in-out-state）
+ *   - .fading-out class 把 opacity 拉到 0
+ *   - JS（gameUI.js::showPlayedCards）：① 新出牌时其他 quadrant 立即 fadeOut
+ *     ② 给当前 quadrant 排 2500ms timer 自动 fadeOut
+ *   - fadeOut 完成后 innerHTML 清空 + 移除 fading-out class，恢复 opacity 1
+ *
+ * "等待出牌"标签自然 re-emerge（z-index 已处理，4 quadrant 都空时无遮挡）
+ * ─────────────────────────────────────────────────────────────────── */
+
+.stage-quadrant {
+  /* 保持 task 3.2 既有 absolute 定位，加 opacity transition */
+  transition: opacity var(--duration-normal) var(--ease-in-out-state);
+  opacity: 1;
+}
+
+.stage-quadrant.fading-out {
+  opacity: 0;
+}
+
+/* ============ 阶段 3 任务 3 块结束（子任务 3.4 已在 3.2 内顺手解决）============ */
+
+
+/* ============================================================================
+ * 阶段 3 · 任务 4：AI 思考省略号（Phase 3 Task 4 Override Block）
+ * ----------------------------------------------------------------------------
+ * spec（COMPONENT_SPECS §1.3 + DESIGN_TOKENS §6.3D）：
+ *   "AI 思考中：在激活光晕基础上，昵称旁显示'…'动态省略号
+ *    （3 点循环，duration-normal × 3 周期 = 750ms）"
+ *
+ * 实现：
+ *   - 3 个 .thinking-dot span，opacity 错开 250ms 淡入淡出
+ *   - 总周期 750ms（3 × duration-normal），形成"波浪"效果
+ *   - 默认隐藏；只在父级 .player-info.active-turn 时可见
+ *   - 因为我（player-bottom）没有 .player-info 容器，省略号天然不在我身上出现
+ *   - 当回合切换时（active-turn class 移走），省略号自动消失
+ *
+ * 零 JS 改动：纯 CSS 通过 .active-turn 父级选择器自动控制显隐
+ * 回滚：删除本块 + 还原 index.html 中 3 个 thinking-dots 节点
+ * ========================================================================== */
+
+.thinking-dots {
+  display: inline-flex;
+  gap: 1px;
+  margin-left: var(--space-xs);
+  visibility: hidden;       /* 默认不占位也不可见 */
+  font-size: 18px;          /* 比昵称稍大让点更明显 */
+  font-weight: 700;
+  color: var(--text-secondary);
+  line-height: 1;
+  letter-spacing: 1px;
+  pointer-events: none;
+}
+
+/* 父级 active-turn 时显示。因为 player-bottom 没有 player-info，
+   所以这条规则只可能匹配 top/left/right 的对手位卡 */
+.player-info.active-turn .thinking-dots {
+  visibility: visible;
+}
+
+/* 阵营色融合：队友（player-top）用琥珀色调，对手（left/right）用钢蓝色调 */
+#player-top .thinking-dots { color: var(--faction-ally-highlight); }
+#player-left .thinking-dots,
+#player-right .thinking-dots { color: var(--faction-opp-highlight); }
+
+/* 单点：默认弱化态（opacity 0.2），动画把它推到峰值 1.0 */
+.thinking-dot {
+  display: inline-block;
+  opacity: 0.2;
+  animation: thinking-dot-fade var(--duration-pulse-period) var(--ease-in-out-state) infinite;
+}
+
+/* 3 个点错开 duration-normal (250ms)，total period 750ms 但用 1200ms 周期更柔和
+   （duration-pulse-period 与回合脉冲共享周期 token，视觉上更协调） */
+.thinking-dots .thinking-dot:nth-child(1) { animation-delay: 0ms; }
+.thinking-dots .thinking-dot:nth-child(2) { animation-delay: 250ms; }
+.thinking-dots .thinking-dot:nth-child(3) { animation-delay: 500ms; }
+
+@keyframes thinking-dot-fade {
+  0%, 60%, 100% { opacity: 0.2; }   /* 大部分时间是弱化态 */
+  20%           { opacity: 1.0; }   /* 短暂峰值 */
+}
+
+/* ============ 阶段 3 任务 4 块结束 ============ */
+
+
+/* ============================================================================
+ * NPC P1.2：可解释性信息泡（NPC Trace Bubble）
+ * ----------------------------------------------------------------------------
+ * 仅在 ?debug=1 模式下显示（body.debug-mode）。
+ * 每个对手位卡（top/left/right）旁有一个独立信息泡，显示该 NPC 最近一次决策的 trace。
+ * 显示时长 = duration-linger (2500ms)，与 stage-quadrant 出牌停留同步。
+ * 阵营色融合：队友琥珀，对手钢蓝。
+ * ========================================================================== */
+
+.npc-trace-bubble {
+  position: absolute;
+  display: none;
+  width: 260px;             /* 明确宽度，避免 left/right 单边定位时 shrink-to-fit 把字撑成竖排 */
+  box-sizing: border-box;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--surface-panel);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--surface-panel-border);
+  font-size: var(--type-hint-size);
+  font-weight: var(--type-hint-weight);
+  line-height: var(--type-hint-lh);
+  color: var(--text-primary);
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-in-out-state);
+}
+
+/* 仅 debug 模式下显示 */
+body.debug-mode .npc-trace-bubble.visible {
+  display: block;
+  opacity: 1;
+}
+
+/* 4 个方向的位置（紧贴对应位卡，保留呼吸距离）*/
+#npc-trace-top   { top: 60px;  left: 50%; transform: translateX(-50%); }
+#npc-trace-left  { left: 130px; top: 50%;  transform: translateY(-50%); }
+#npc-trace-right { right: 130px; top: 50%; transform: translateY(-50%); }
+
+/* 阵营色融合：左边框（≈4px）配合阵营色，与位卡呼应 */
+#player-top  .npc-trace-bubble { border-left: 4px solid var(--faction-ally-primary); }
+#player-left .npc-trace-bubble,
+#player-right .npc-trace-bubble { border-left: 4px solid var(--faction-opp-primary); }
+
+/* 头部主因（PrimaryReason 中文解释）*/
+.npc-trace-header {
+  font-size: var(--type-system-msg-size);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+/* 技能列表 */
+.npc-trace-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
+}
+.npc-trace-skill-chip {
+  padding: 1px 6px;
+  border-radius: var(--radius-badge);
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--faction-ally-muted);
+  color: var(--text-primary);
+}
+#player-left .npc-trace-skill-chip,
+#player-right .npc-trace-skill-chip { background: var(--faction-opp-muted); }
+
+/* 技能详情（skillNotes 列表）*/
+.npc-trace-notes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  color: var(--text-secondary);
+}
+.npc-trace-notes li {
+  margin-bottom: 2px;
+}
+.npc-trace-notes li::before {
+  content: '· ';
+  color: var(--text-muted);
+}
+
+/* ============ NPC P1.2 信息泡块结束 ============ */

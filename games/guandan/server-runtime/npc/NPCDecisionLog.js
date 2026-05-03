@@ -30,16 +30,42 @@ export const ReasonText = {
 /**
  * 创建决策日志对象
  */
-export function createDecisionLog(action, cards, primaryReason, alternativesConsidered = []) {
+export function createDecisionLog(action, cards, primaryReason, alternativesConsidered = [], skillTrace = null) {
   return {
     action,                    // 'PLAY' | 'PASS'
     cards: cards || [],        // 出的牌（PASS时为空）
     primaryReason,             // PrimaryReason枚举值
     explanation: ReasonText[primaryReason] || '',  // 面向玩家的中文解释
     alternativesConsidered,    // [{ cards, rejectedReason }]
+    // P1 任务：技能追踪（哪些 R 技能在本次决策中触发了）
+    activatedSkills: skillTrace ? [...new Set(skillTrace.map(t => t.skill))] : [],
+    skillNotes: skillTrace || [],   // [{ skill: 'R3', note: '拆牌优化推荐...' }]
     confidence: 0.8,           // 决策置信度（规则AI固定0.8，LLM可覆盖）
     timestamp: Date.now(),
   };
+}
+
+/**
+ * P1 任务：技能追踪 helper
+ * 在 PracticeNPC 决策路径中，每个 R 技能分支触发时调用 logSkill 记录
+ *
+ * 用法：const trace = []; logSkill(trace, 'R3', '拆牌优化推荐 X 替代 Y');
+ *      ...最后 createDecisionLog(action, cards, reason, [], trace)
+ *
+ * trace 对象通过 ctx._trace 携带，避免修改 decideStrategic 等函数签名
+ */
+export function logSkill(trace, skill, note) {
+  if (!trace || !Array.isArray(trace)) return;
+  trace.push({ skill, note });
+}
+
+/**
+ * 把 skillTrace 渲染为一段中文摘要，用于 UI 信息泡显示
+ * 例：'R3 拆牌优化推荐 X | R10 形势加权降低出牌优先级'
+ */
+export function renderSkillTrace(skillTrace) {
+  if (!skillTrace || skillTrace.length === 0) return '';
+  return skillTrace.map(t => `${t.skill} ${t.note}`).join(' | ');
 }
 
 /**

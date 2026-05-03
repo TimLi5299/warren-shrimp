@@ -52,12 +52,20 @@ export const SKILLS = {
  * 内置预设
  *   noob   — 无任何高级技能，纯随机/贪心
  *   normal — 基础配合 + 炸弹时机 + 拆牌 + 记牌（R1-R4）
- *   expert — 全部 15 项技能（R1-R15）
+ *   expert — 14 项技能（R1-R15 减 R5；详见下方注释）
+ *
+ * M2 决策（2026-05-03）：从 expert 删除 R5
+ *   依据：M1 v1.0 三维度 t-test 数据（200 场 × 10 重复 × 3 维度）
+ *   - 手数维度：去掉 R5 → -0.64 手数，p<.001（更快赢）
+ *   - 让路率维度：去掉 R5 → +0.2%，p<.001（微改善）
+ *   - 拦截率维度：去掉 R5 → +2.0%，p=.001（拦截率提升）
+ *   三维度都是负贡献，无对冲。R5 实现的"硬阈值"过于保守（lastPlay.mainRank<8 即停手），
+ *   导致 NPC 在低价值跟牌局面无意义放过。R5 编号保留，未来可重做精细级牌保护。
  */
 export const NPC_PRESETS = {
   noob:   new Set([]),
   normal: new Set([SKILLS.R1, SKILLS.R2, SKILLS.R3, SKILLS.R4]),
-  expert: new Set(Object.values(SKILLS)),
+  expert: new Set(Object.values(SKILLS).filter(s => s !== SKILLS.R5)),  // 14 项（去 R5）
 };
 
 /**

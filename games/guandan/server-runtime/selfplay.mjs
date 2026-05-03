@@ -23,6 +23,15 @@ const args = process.argv.slice(2);
 const ABLATION_MODE = args.includes('--ablation');
 const numArgs = args.filter(a => !a.startsWith('--'));
 
+// M1 v1.0 任务：--repeat M 参数，每个条件独立重跑 M 次以支持 t-test
+function parseFlagInt(flag, defaultValue) {
+  const idx = args.indexOf(flag);
+  if (idx === -1 || idx + 1 >= args.length) return defaultValue;
+  const v = parseInt(args[idx + 1]);
+  return Number.isFinite(v) && v > 0 ? v : defaultValue;
+}
+const REPEAT = parseFlagInt('--repeat', 1);
+
 let N_GAMES, levelStr, LEVEL, PROFILE;
 
 if (ABLATION_MODE) {
@@ -58,7 +67,18 @@ function makeStats() {
     totalBombs: 0,
     anomalies: [],
     errors: 0,
+    errorDetails: [],   // E1 任务 instrumentation：每条错误的分类 + 上下文
   };
+}
+
+// E1 任务 instrumentation：把错误分类 + 上下文 push 进 errorDetails
+// 限制总条数避免内存爆，每类前 10 条已经足够找模式
+function logError(S, type, ctx) {
+  S.errors++;
+  const sameTypeCount = S.errorDetails.filter(e => e.type === type).length;
+  if (sameTypeCount < 10) {
+    S.errorDetails.push({ type, ctx });
+  }
 }
 
 // ─────────── 工具 ───────────
@@ -97,8 +117,10 @@ function hasBombInHand(hand) {
 }
 
 // ─────────── 进贡选牌 ───────────
+// E1 修复：与 engine.js line 525 对齐——只排除大小王(>14)和 2，不要再排除级牌
+// 原 bug：当级牌恰好是手中最大可进贡牌时，过滤后会选次大牌，engine 拒绝（"只能进贡最大的牌"）
 function pickTributeCard(hand, currentLevel) {
-  const valid = hand.filter(c => c.rank <= 14 && c.rank !== 2 && c.rank !== currentLevel);
+  const valid = hand.filter(c => c.rank <= 14 && c.rank !== 2);
   if (valid.length === 0) return hand.sort((a, b) => a.rank - b.rank)[0];
   return valid.sort((a, b) => b.rank - a.rank)[0];
 }
@@ -117,9 +139,15 @@ function driveTribute(state, S) {
   for (const fromSeat of ts.fromSeats) {
     if (ts.tributeCards[fromSeat]) continue;
     const card = pickTributeCard(state.hands[fromSeat], state.currentLevel);
-    if (!card) { S.errors++; continue; }
+    if (!card) {
+      logError(S, 'E1_pickTributeCard_null', { fromSeat, handSize: state.hands[fromSeat].length, level: state.currentLevel });
+      continue;
+    }
     const r = handleTribute(state, fromSeat, card.id);
-    if (r.error) { S.errors++; continue; }
+    if (r.error) {
+      logError(S, 'E2_handleTribute_error', { fromSeat, cardRank: card.rank, errorMsg: r.error });
+      continue;
+    }
     S.tributeTotal++;
     const maxCard = pickTributeCard(state.hands[fromSeat].concat([card]), state.currentLevel);
     if (!maxCard || card.rank >= maxCard.rank) S.tributeMaxCard++;
@@ -129,9 +157,15 @@ function driveTribute(state, S) {
   for (const toSeat of ts.toSeats) {
     if (ts.returnCards[toSeat]) continue;
     const card = pickReturnCard(state.hands[toSeat], state.currentLevel);
-    if (!card) { S.errors++; continue; }
+    if (!card) {
+      logError(S, 'E3_pickReturnCard_null', { toSeat, handSize: state.hands[toSeat].length, level: state.currentLevel });
+      continue;
+    }
     const r = handleReturnTribute(state, toSeat, card.id);
-    if (r.error) { S.errors++; continue; }
+    if (r.error) {
+      logError(S, 'E4_handleReturnTribute_error', { toSeat, cardRank: card.rank, errorMsg: r.error });
+      continue;
+    }
     S.returnTotal++;
     if (card.rank <= 8) S.returnSmall++;
   }
@@ -146,7 +180,10 @@ function drivePlay(state, S, profile) {
     const seat = state.currentTurn;
     const hand = state.hands[seat];
 
-    if (!hand || hand.length === 0) { S.errors++; break; }
+    if (!hand || hand.length === 0) {
+      logError(S, 'E5_empty_hand_in_play', { seat, handsAllSizes: state.hands.map(h => h?.length ?? 'null'), phase: state.phase });
+      break;
+    }
 
     const isFreePlay = !state.lastPlay || state.lastPlaySeat === seat;
     const teammateSeat = (seat + 2) % 4;
@@ -194,18 +231,34 @@ function drivePlay(state, S, profile) {
       const r = pass(state, seat);
       if (r.error) {
         const fr = playCards(state, seat, [hand[0].id]);
-        if (fr.error) { S.errors++; break; }
+        if (fr.error) {
+          logError(S, 'E6_pass_then_fallback_failed', {
+            seat, handSize: hand.length, isFreePlay,
+            passError: r.error, fallbackError: fr.error,
+            firstCardRank: hand[0].rank, lastPlayRank: state.lastPlay?.mainRank
+          });
+          break;
+        }
       }
     } else {
       const r = playCards(state, seat, play.map(c => c.id));
       if (r.error) {
         const fr = playCards(state, seat, [hand[0].id]);
-        if (fr.error) { S.errors++; break; }
+        if (fr.error) {
+          logError(S, 'E7_play_then_fallback_failed', {
+            seat, handSize: hand.length, isFreePlay,
+            playRanks: play.map(c => c.rank), playError: r.error, fallbackError: fr.error,
+            lastPlayRank: state.lastPlay?.mainRank, lastPlayType: state.lastPlay?.type
+          });
+          break;
+        }
       }
     }
   }
 
-  if (moves >= MAX_MOVES) S.errors++;
+  if (moves >= MAX_MOVES) {
+    logError(S, 'E8_max_moves_reached', { handsSizes: state.hands.map(h => h?.length ?? 0), phase: state.phase });
+  }
 
   S.totalTricks += state.roundHistory.length;
   S.totalBombs  += state.bombCount;
@@ -243,7 +296,10 @@ function runOneGame(S, profile) {
       startRound(state);
     }
 
-    if (state.phase !== 'playing') { S.errors++; break; }
+    if (state.phase !== 'playing') {
+      logError(S, 'E9_phase_not_playing_after_round', { phase: state.phase, roundsThisGame, finishOrder: state.finishOrder });
+      break;
+    }
     drivePlay(state, S, profile);
     roundsThisGame++;
   }
@@ -297,7 +353,25 @@ function printReport(S, n, label, elapsed) {
     console.log(`\n 异常行为（共${S.anomalies.length}条，前5条）:`);
     show.forEach(a => console.log(`   ⚠  ${a}`));
   }
-  if (S.errors > 0) console.log(`\n ❌ 引擎/逻辑错误: ${S.errors} 次`);
+  if (S.errors > 0) {
+    console.log(`\n ❌ 引擎/逻辑错误: ${S.errors} 次`);
+    // E1 任务 instrumentation：分类汇总
+    const byType = {};
+    for (const e of S.errorDetails) {
+      byType[e.type] = (byType[e.type] || 0) + 1;
+    }
+    // 估算每类总数（errorDetails 每类最多保留 10 条样本）
+    const totalSamples = S.errorDetails.length;
+    console.log(`\n 错误分类（详细样本前 ${totalSamples} 条，每类≤10）：`);
+    for (const [type, count] of Object.entries(byType).sort((a,b) => b[1] - a[1])) {
+      console.log(`   ${type.padEnd(36)} 样本 ${count}`);
+    }
+    console.log('\n 错误样本明细（前 5 条）:');
+    S.errorDetails.slice(0, 5).forEach((e, i) => {
+      console.log(`   [${i+1}] ${e.type}`);
+      console.log(`        ${JSON.stringify(e.ctx)}`);
+    });
+  }
   console.log('');
 }
 
@@ -343,24 +417,180 @@ function printAblationReport(baseline, ablationResults, n) {
   console.log('');
 }
 
+// ─────────── M1 v1.0：统计工具（mean/std/Welch t-test）───────────
+
+function mean(arr) {
+  return arr.reduce((s, x) => s + x, 0) / arr.length;
+}
+function std(arr, mn = mean(arr)) {
+  if (arr.length < 2) return 0;
+  return Math.sqrt(arr.reduce((s, x) => s + (x - mn) ** 2, 0) / (arr.length - 1));
+}
+
+// Abramowitz & Stegun 26.2.17 标准正态 CDF 近似（误差 < 7.5e-8）
+function normalCdf(z) {
+  const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741;
+  const a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+  const sign = z < 0 ? -1 : 1;
+  z = Math.abs(z) / Math.SQRT2;
+  const t = 1 / (1 + p * z);
+  const y = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-z * z);
+  return 0.5 * (1 + sign * y);
+}
+
+// Welch's t-test（不假设方差相等）。df ≥ 20 时正态近似的 p-value 误差很小
+function welchTTest(s1, s2) {
+  const m1 = mean(s1), m2 = mean(s2);
+  const v1 = std(s1, m1) ** 2, v2 = std(s2, m2) ** 2;
+  const n1 = s1.length, n2 = s2.length;
+  const se = Math.sqrt(v1 / n1 + v2 / n2);
+  if (se === 0) return { t: 0, df: Infinity, p: 1 };
+  const t = (m1 - m2) / se;
+  const df = (v1 / n1 + v2 / n2) ** 2 /
+             ((v1 / n1) ** 2 / (n1 - 1) + (v2 / n2) ** 2 / (n2 - 1));
+  // 正态近似（双侧 p 值）；df ≥ 20 时与精确 t-distribution 差异 < 1%
+  const p = 2 * (1 - normalCdf(Math.abs(t)));
+  return { t, df, p };
+}
+
+// ─────────── M2: 三维度统计分析 ───────────
+
+// 从一组 stats 中抽出指定指标的 sample 数组（过滤 null）
+function extractSamples(statsArr, metricName) {
+  return statsArr.map(calcMetrics).map(m => m[metricName]).filter(v => v !== null);
+}
+
+// 通用：对一个维度跑 t-test 表
+function analyzeDimension(label, baselineSamples, ablationResults, skillNames) {
+  const bMean = mean(baselineSamples), bStd = std(baselineSamples, bMean);
+  const baseLine = label === 'avgTricks'
+    ? `   平均手数 = ${bMean.toFixed(2)} ± ${bStd.toFixed(2)}`
+    : label === 'yieldRate'
+    ? `   让路率   = ${bMean.toFixed(2)}% ± ${bStd.toFixed(2)}%`
+    : `   炸弹拦截 = ${bMean.toFixed(2)}% ± ${bStd.toFixed(2)}%`;
+  console.log(baseLine);
+  return ablationResults.map(({ skill, runs }) => {
+    const samples = extractSamples(runs, label);
+    if (samples.length < 2) return { skill, t: 0, p: 1, mean: 0, std: 0, delta: 0 };
+    const m = mean(samples), s = std(samples, m);
+    const delta = m - bMean;
+    const tt = welchTTest(samples, baselineSamples);
+    return { skill, mean: m, std: s, delta, t: tt.t, p: tt.p };
+  });
+}
+
+function fmtTtest(row, label) {
+  const sig = row.p < 0.001 ? '***' : row.p < 0.01 ? '**' : row.p < 0.05 ? '*' : '';
+  const sign = row.delta >= 0 ? '+' : '';
+  const fmt = label === 'avgTricks' ? 2 : 1;
+  const unit = label === 'avgTricks' ? '' : '%';
+  return `${row.mean.toFixed(fmt)}${unit}±${row.std.toFixed(fmt)}${unit} ${sign}${row.delta.toFixed(fmt)} t=${row.t.toFixed(2).padStart(7)} p=${row.p.toFixed(4)}${sig}`;
+}
+
+// ─────────── M1 v1.0 / M2：带统计的消融报告（三维度）───────────
+function printAblationReportWithStats(baselineRuns, ablationResults, n, repeat) {
+  const bar = '='.repeat(110);
+  const skillNames = {
+    [SKILLS.R1]: 'R1 队友让路', [SKILLS.R2]: 'R2 炸弹时机',
+    [SKILLS.R3]: 'R3 拆牌优化', [SKILLS.R4]: 'R4 记牌推断',
+    [SKILLS.R5]: 'R5 级牌保护', [SKILLS.R6]: 'R6 对手推断',
+    [SKILLS.R7]: 'R7 信号传递', [SKILLS.R8]: 'R8 残局解算',
+    [SKILLS.R9]: 'R9 领牌评分', [SKILLS.R10]: 'R10 形势领牌',
+    [SKILLS.R11]: 'R11 万能拆牌', [SKILLS.R12]: 'R12 忍牌保型',
+    [SKILLS.R13]: 'R13 出口规划', [SKILLS.R14]: 'R14 顺子保护',
+    [SKILLS.R15]: 'R15 三张保护',
+  };
+
+  console.log(`\n${bar}`);
+  console.log(` 掼蛋 NPC 技能消融测试 + Welch's t-test  (每组 ${n} 场 × ${repeat} 次重复)  ——三维度`);
+  console.log(bar);
+  console.log(` 基准 (全技能 expert):`);
+
+  // 三维度的 baseline samples
+  const bTricks = extractSamples(baselineRuns, 'avgTricks');
+  const bYield  = extractSamples(baselineRuns, 'yieldRate');
+  const bBlock  = extractSamples(baselineRuns, 'blockRate');
+
+  // 三维度跑 t-test
+  const tricksRows = analyzeDimension('avgTricks', bTricks, ablationResults, skillNames);
+  const yieldRows  = analyzeDimension('yieldRate', bYield,  ablationResults, skillNames);
+  const blockRows  = analyzeDimension('blockRate', bBlock,  ablationResults, skillNames);
+
+  console.log('');
+  console.log(' 三维度 t-test 矩阵（去掉 vs 基准，每行 3 个 p-value 表明该技能在 3 维度上的显著性）:');
+  console.log(' ' + '-'.repeat(108));
+  console.log(' ' +
+    'Skill               '.padEnd(18) +
+    '手数 (avg±std Δ t p)              '.padEnd(38) +
+    '让路率% (avg±std Δ t p)            '.padEnd(36) +
+    '拦截率% (avg±std Δ t p)            '
+  );
+  console.log(' ' + '-'.repeat(108));
+
+  for (let i = 0; i < tricksRows.length; i++) {
+    const tr = tricksRows[i], yr = yieldRows[i], br = blockRows[i];
+    const sigT = tr.p < 0.05 ? (tr.p < 0.001 ? '***' : tr.p < 0.01 ? '**' : '*') : ' ';
+    const sigY = yr.p < 0.05 ? (yr.p < 0.001 ? '***' : yr.p < 0.01 ? '**' : '*') : ' ';
+    const sigB = br.p < 0.05 ? (br.p < 0.001 ? '***' : br.p < 0.01 ? '**' : '*') : ' ';
+    const skillName = skillNames[tr.skill] ?? tr.skill;
+    const cell = (row, sig, fmt = 2, unit = '') => {
+      const sign = row.delta >= 0 ? '+' : '';
+      return `${row.mean.toFixed(fmt)}${unit} Δ${sign}${row.delta.toFixed(fmt)}${unit} p=${row.p.toFixed(3)}${sig}`;
+    };
+    console.log(' ' +
+      skillName.padEnd(18) +
+      cell(tr, sigT, 2).padEnd(38) +
+      cell(yr, sigY, 1, '%').padEnd(36) +
+      cell(br, sigB, 1, '%')
+    );
+  }
+  console.log(' ' + '-'.repeat(108));
+  console.log(' 显著性: * p<.05  ** p<.01  *** p<.001  (双侧 t-test)');
+  console.log('');
+
+  // 三维度矩阵已涵盖手数维度，旧的 ranking 块删除
+}
+
 // ─────────── 主循环 ───────────
 function main() {
   const t0 = Date.now();
 
   if (ABLATION_MODE) {
-    console.log(`\n运行消融测试，每组 ${N_GAMES} 场...`);
-    const baseline = runNGames(N_GAMES, NPC_PRESETS.expert);
+    if (REPEAT === 1) {
+      // 兼容老用法：单次 ablation
+      console.log(`\n运行消融测试，每组 ${N_GAMES} 场...`);
+      const baseline = runNGames(N_GAMES, NPC_PRESETS.expert);
+      const ablationResults = [];
+      for (const [id, skill] of Object.entries(SKILLS)) {
+        const withoutSkill = new Set([...NPC_PRESETS.expert].filter(s => s !== skill));
+        const S = runNGames(N_GAMES, withoutSkill);
+        ablationResults.push({ skill, S });
+      }
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
+      console.log(`(用时 ${elapsed}s)`);
+      printAblationReport(baseline, ablationResults, N_GAMES);
+    } else {
+      // M1 v1.0 新增：M 次重复 + Welch's t-test
+      const totalGames = (1 + Object.keys(SKILLS).length) * REPEAT * N_GAMES;
+      console.log(`\n运行消融测试 + t-test，每组 ${N_GAMES} 场 × ${REPEAT} 次重复 (共 ${totalGames} 局)...`);
 
-    const ablationResults = [];
-    for (const [id, skill] of Object.entries(SKILLS)) {
-      const withoutSkill = new Set([...NPC_PRESETS.expert].filter(s => s !== skill));
-      const S = runNGames(N_GAMES, withoutSkill);
-      ablationResults.push({ skill, S });
+      const baselineRuns = [];
+      for (let i = 0; i < REPEAT; i++) {
+        baselineRuns.push(runNGames(N_GAMES, NPC_PRESETS.expert));
+      }
+      const ablationResults = [];
+      for (const [id, skill] of Object.entries(SKILLS)) {
+        const withoutSkill = new Set([...NPC_PRESETS.expert].filter(s => s !== skill));
+        const runs = [];
+        for (let i = 0; i < REPEAT; i++) {
+          runs.push(runNGames(N_GAMES, withoutSkill));
+        }
+        ablationResults.push({ skill, runs });
+      }
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
+      console.log(`(用时 ${elapsed}s)`);
+      printAblationReportWithStats(baselineRuns, ablationResults, N_GAMES, REPEAT);
     }
-
-    const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
-    console.log(`(用时 ${elapsed}s)`);
-    printAblationReport(baseline, ablationResults, N_GAMES);
   } else {
     const S = runNGames(N_GAMES, PROFILE);
     const elapsed = ((Date.now() - t0) / 1000).toFixed(2);

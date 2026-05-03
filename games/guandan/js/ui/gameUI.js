@@ -14,6 +14,8 @@ class GameUI {
     this.roundCount = 0;
     this.prevTeam1Level = null;
     this.prevTeam2Level = null;
+    // Phase 3 任务 3.3：每个 quadrant 的 2500ms 自动淡出 timer
+    this.quadrantFadeTimers = { bottom: null, top: null, left: null, right: null };
   }
 
   // ====== 画面切换 ======
@@ -181,16 +183,43 @@ class GameUI {
   }
 
   // 显示某个玩家出的牌
+  // Phase 3 任务 3.2：改造为飞入中央舞台对应象限，每张牌错开 40ms
+  // Phase 3 任务 3.3：新出牌时其他 quadrant 立即淡出；本 quadrant 排 2500ms 自动淡出
   showPlayedCards(seat, cards, handType) {
     this.lastPlayedCards[seat] = { cards, handType };
-    const position = this.getPlayerPosition(seat);
-    const container = document.getElementById(`played-${position}`);
+    const position = this.getPlayerPosition(seat);  // 'bottom' | 'top' | 'left' | 'right'
 
-    if (container) {
-      window.CardRenderer.renderPlayedCards(container, cards);
+    // 任务 3.3：新出牌触发其他 quadrant 立即淡出（"下家出牌后，前一手立即淡出"）
+    ['bottom', 'top', 'left', 'right'].forEach(pos => {
+      if (pos !== position) this.fadeOutQuadrant(pos);
+    });
+
+    // 渲染目标改为中央舞台的对应 quadrant
+    const stageContainer = document.getElementById(`stage-${position}`);
+    if (stageContainer) {
+      // 任务 3.3：取消当前 quadrant 的旧 fade timer + 移除 fading-out class（重置）
+      if (this.quadrantFadeTimers[position]) {
+        clearTimeout(this.quadrantFadeTimers[position]);
+        this.quadrantFadeTimers[position] = null;
+      }
+      stageContainer.classList.remove('fading-out');
+
+      window.CardRenderer.renderPlayedCards(stageContainer, cards);
+
+      // 给每张牌加 fly-from-${position} class + 错开 40ms 的 animation-delay
+      const cardEls = stageContainer.querySelectorAll('.card');
+      cardEls.forEach((cardEl, i) => {
+        cardEl.classList.add(`flying-from-${position}`);
+        cardEl.style.animationDelay = `${i * 40}ms`;
+      });
+
+      // 任务 3.3：2500ms 后自动淡出（duration-linger）
+      this.quadrantFadeTimers[position] = setTimeout(() => {
+        this.fadeOutQuadrant(position);
+      }, 2500);
     }
 
-    // 也在中央展示
+    // 中央 play-info 仍显示文字（保持 task 3.3 之前的兼容性）
     const centerInfo = document.getElementById('play-info');
     const playerName = this.getPlayerName(seat);
     centerInfo.textContent = `${playerName}: ${handType}`;
@@ -199,6 +228,27 @@ class GameUI {
     if (handType.includes('炸') || handType.includes('同花顺')) {
       this.triggerBombEffect();
     }
+  }
+
+  // Phase 3 任务 3.3：淡出指定象限（duration-normal 250ms 后清空容器）
+  fadeOutQuadrant(position) {
+    const stageContainer = document.getElementById(`stage-${position}`);
+    if (!stageContainer || stageContainer.children.length === 0) return;
+
+    // 取消该 quadrant 的待执行 timer（如果有）
+    if (this.quadrantFadeTimers[position]) {
+      clearTimeout(this.quadrantFadeTimers[position]);
+      this.quadrantFadeTimers[position] = null;
+    }
+
+    // 触发 CSS opacity transition 淡出
+    stageContainer.classList.add('fading-out');
+
+    // duration-normal (250ms) 后清空容器并复原状态
+    setTimeout(() => {
+      stageContainer.innerHTML = '';
+      stageContainer.classList.remove('fading-out');
+    }, 250);
   }
 
   triggerBombEffect() {
@@ -228,6 +278,19 @@ class GameUI {
       const el = document.getElementById(`played-${pos}`);
       if (el) el.innerHTML = '';
     });
+    // Phase 3 任务 3.2：同时清掉新的中央舞台 4 quadrant（跨局/重新发牌时）
+    // Phase 3 任务 3.3：同时清掉所有自动淡出 timer，避免跨局残留
+    ['bottom', 'top', 'left', 'right'].forEach(pos => {
+      if (this.quadrantFadeTimers[pos]) {
+        clearTimeout(this.quadrantFadeTimers[pos]);
+        this.quadrantFadeTimers[pos] = null;
+      }
+      const el = document.getElementById(`stage-${pos}`);
+      if (el) {
+        el.innerHTML = '';
+        el.classList.remove('fading-out');
+      }
+    });
     document.getElementById('play-info').textContent = '';
   }
 
@@ -242,6 +305,8 @@ class GameUI {
 
   // 更新轮次高亮
   updateTurnHighlight(currentTurn) {
+    // Phase 3 任务 3.1：检测"非我 → 我"切换瞬间，用于触发出牌按钮涌现
+    const wasMyTurn = this.isMyTurn;
     this.isMyTurn = currentTurn === this.mySeat;
 
     // 移除所有高亮
@@ -260,6 +325,17 @@ class GameUI {
     const actionBtns = document.getElementById('action-buttons');
     actionBtns.style.opacity = this.isMyTurn ? '1' : '0.4';
     actionBtns.style.pointerEvents = this.isMyTurn ? 'auto' : 'none';
+
+    // Phase 3 任务 3.1：我的回合刚开始时，出牌按钮一次性涌现（scale 1.04→1.0 spring）
+    if (this.isMyTurn && !wasMyTurn) {
+      const playBtn = document.getElementById('play-btn');
+      if (playBtn) {
+        playBtn.classList.remove('summon');
+        // 强制 reflow，确保即使连续两次"非我→我"也能重启动画（仿照 triggerBombEffect 的模式）
+        void playBtn.offsetWidth;
+        playBtn.classList.add('summon');
+      }
+    }
   }
 
   // 更新玩家名称

@@ -9,15 +9,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <!-- 设计 Token 基础设施（必须先于 style.css，让现有 :root 覆盖同名 token，保持视觉不变）-->
+  <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- ====== 返回主站 ====== -->
-  <a href="../../products.html" style="position:fixed;top:14px;left:14px;z-index:9999;
-    padding:6px 14px;background:rgba(15,23,42,0.85);color:#cbd5e1;
-    border:1px solid rgba(255,255,255,0.15);border-radius:20px;
-    text-decoration:none;font-size:13px;font-family:-apple-system,sans-serif;
-    backdrop-filter:blur(10px);">← 沃伦·巴菲虾</a>
+  <!-- ====== 返回主站（阶段 1：改造为汉堡菜单图标按钮，跳转目标不变）====== -->
+  <a href="../../products.html" class="back-to-products" aria-label="返回主站">≡</a>
 
   <!-- ====== 首页/大厅 ====== -->
   <div id="lobby-screen" class="screen active">
@@ -197,8 +195,11 @@
       <div class="player-info">
         <div class="player-avatar">👤</div>
         <span class="player-name" id="player-top-name">对家</span>
+        <span class="thinking-dots" aria-hidden="true"><span class="thinking-dot">·</span><span class="thinking-dot">·</span><span class="thinking-dot">·</span></span>
         <span class="card-count" id="player-top-count">27</span>
       </div>
+      <!-- P1.2 任务：?debug=1 模式下显示该 NPC 决策 trace 的信息泡 -->
+      <div class="npc-trace-bubble" id="npc-trace-top"></div>
       <div class="played-cards-area" id="played-top"></div>
     </div>
 
@@ -207,8 +208,10 @@
       <div class="player-info">
         <div class="player-avatar">👤</div>
         <span class="player-name" id="player-left-name">左手</span>
+        <span class="thinking-dots" aria-hidden="true"><span class="thinking-dot">·</span><span class="thinking-dot">·</span><span class="thinking-dot">·</span></span>
         <span class="card-count" id="player-left-count">27</span>
       </div>
+      <div class="npc-trace-bubble" id="npc-trace-left"></div>
       <div class="played-cards-area" id="played-left"></div>
     </div>
 
@@ -217,13 +220,24 @@
       <div class="player-info">
         <div class="player-avatar">👤</div>
         <span class="player-name" id="player-right-name">右手</span>
+        <span class="thinking-dots" aria-hidden="true"><span class="thinking-dot">·</span><span class="thinking-dot">·</span><span class="thinking-dot">·</span></span>
         <span class="card-count" id="player-right-count">27</span>
       </div>
+      <div class="npc-trace-bubble" id="npc-trace-right"></div>
       <div class="played-cards-area" id="played-right"></div>
     </div>
 
     <!-- 中央出牌区 -->
     <div class="center-play-area" id="center-play-area">
+      <!-- 阶段 2 新增：常驻舞台视觉锚 -->
+      <!-- 阶段 3 任务 3.2 新增：4 个 quadrant 容器，每家出的牌飞入对应象限 -->
+      <div class="stage-anchor" id="stage-anchor">
+        <span class="stage-anchor-label">等待出牌</span>
+        <div class="stage-quadrant" id="stage-bottom"></div>
+        <div class="stage-quadrant" id="stage-top"></div>
+        <div class="stage-quadrant" id="stage-left"></div>
+        <div class="stage-quadrant" id="stage-right"></div>
+      </div>
       <div class="play-info" id="play-info"></div>
     </div>
 

@@ -428,8 +428,9 @@ export class LoopbackServer {
         }
         this._broadcastGameEvents(room, result.events);
 
-        // 教学 NPC 解释
-        if (npc.npcType === 'teaching' && decisionLog?.explanation && play) {
+        // P1.2 任务：NPC 决策广播给所有玩家（移除 teaching 限制）
+        // 客户端在 ?debug=1 模式下决定是否显示信息泡（payload 单次 < 1KB，开销可忽略）
+        if (decisionLog) {
           for (const player of room.players) {
             if (!player || player.isNPC) continue;
             const conn = this.connections.get(player.id);
@@ -437,8 +438,11 @@ export class LoopbackServer {
               conn.send({
                 type: 'NPC_EXPLAIN',
                 seat,
+                action: decisionLog.action,
                 explanation: decisionLog.explanation,
                 primaryReason: decisionLog.primaryReason,
+                activatedSkills: decisionLog.activatedSkills || [],
+                skillNotes: decisionLog.skillNotes || [],
               });
             }
           }
